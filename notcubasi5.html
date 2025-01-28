@@ -216,6 +216,10 @@
                 <div class="value-item">
                     <h4>Çözülen</h4>
                     <div class="value" id="wcValue">-</div>
+                    <p  style="margin-bottom: 5px;">
+                        <span class="yapimci">doğru: </span> 
+                        <span class="yapimci" id="wdValue">-</div>
+                    </p>
                 </div>
             </div>
         </div>
@@ -256,7 +260,7 @@
             document.getElementById('wValue').textContent = `${finalW}%`;
             document.getElementById('wt2Value').textContent = `${wt2.toFixed(1)}%`;
             document.getElementById('wcValue').textContent = `${D+Y} / ${S}`;
-
+            document.getElementById('wdValue').textContent = `${D}`;
             document.getElementById('wnValue').textContent = `${wn.toFixed(1)}%`;
             document.getElementById('wnnValue').textContent = `(${D-Y/4}/${S})`;
 
@@ -328,14 +332,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
 
 
 
