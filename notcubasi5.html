@@ -230,10 +230,10 @@
 
         function calculate() {
             // Değerleri alma
-            const D = parseInt(document.getElementById('D').value) || None;
-            const Y = parseInt(document.getElementById('Y').value) || None;
+            const D = parseInt(document.getElementById('D').value) || 0;
+            const Y = parseInt(document.getElementById('Y').value) || 0;
             const B = parseInt(document.getElementById('B').value) || 0;
-            const T = parseFloat(document.getElementById('T').value) || None;
+            const T = parseFloat(document.getElementById('T').value) || 0;
             const R = parseFloat(document.getElementById('R').value) || 1;
             const alpha = parseFloat(document.getElementById('alpha').value) || 0.25;
             const beta = parseFloat(document.getElementById('beta').value) || 0.1;
@@ -249,7 +249,7 @@
             const wd = (D / S * 100) || 0;
             const wn = (Net / S * 100) || 0;
             const wt =  (R * S) / T || 0;
-            const wc =  (D + Y)/S || 0;
+            const wc =  ((D + Y)*100/S).toFixed(0) || 0;
 
 
             // Ana W Skoru hesaplama
@@ -332,23 +332,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
