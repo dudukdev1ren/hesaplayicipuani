@@ -211,10 +211,11 @@
                 <div class="value-item">
                     <h4>Net Oranı</h4>
                     <div class="value" id="wnValue">-</div>
+                    <div class="value" id="wnnValue">-</div>
                 </div>
                 <div class="value-item">
-                    <h4>Doğruluk</h4>
-                    <div class="value" id="wdValue">-</div>
+                    <h4>Çözülen</h4>
+                    <div class="value" id="wcValue">-</div>
                 </div>
             </div>
         </div>
@@ -239,11 +240,13 @@
             const Net = D - (Y * alpha) - (B * beta);
             
             // Performans metrikleri
-            const wt2 = (R * S) / T;
+            const wt2 = ((R * S) / T)*100;
             const w2 = (100 * Net * R) / T;
             const wd = (D / S * 100) || 0;
             const wn = (Net / S * 100) || 0;
             const wt =  (R * S) / T || 0;
+            const wc =  (D + Y)/S || 0;
+
 
             // Ana W Skoru hesaplama
             const w = (wn * 0.4 + wt2 * 0.3 + wd * 0.3) * gamma;
@@ -251,14 +254,16 @@
 
             // Değerleri güncelleme
             document.getElementById('wValue').textContent = `${finalW}%`;
-            document.getElementById('wt2Value').textContent = `${wt2.toFixed(1)*100}%`;
+            document.getElementById('wt2Value').textContent = `${wt2.toFixed(1)}%`;
+            document.getElementById('wcValue').textContent = `${D+Y} / ${S}`;
+
             document.getElementById('wnValue').textContent = `${wn.toFixed(1)}%`;
-            document.getElementById('wdValue').textContent = `${wd.toFixed(1)}%`;
+            document.getElementById('wnnValue').textContent = `(${D-Y/4}/${S})`;
 
             // Radar grafiği oluşturma
             updateRadarChart([
                 finalW,
-                wt2 * 20, // Ölçekleme
+                wc,
                 wd,
                 wn,
                 wt * 100 // Ölçekleme
@@ -274,11 +279,11 @@
                 type: 'radar',
                 data: {
                     labels: [
-                        'W Skoru', 
-                        'Zaman Performansı (wt2)', 
-                        'Doğruluk (wd)', 
-                        'Net Oranı (wn)', 
-                        'Süre Verimi (wt)'
+                        'W Skoru',  
+                        'çözülen',
+                        'Doğruluk', 
+                        'Net Oranı', 
+                        'Süre Verimi'
                     ],
                     datasets: [{
                         label: 'Performans Değerleri',
@@ -323,6 +328,14 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
