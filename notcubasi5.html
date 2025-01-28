@@ -210,8 +210,8 @@
                 </div>
                 <div class="value-item">
                     <h4>Net Oranı</h4>
-                    <div class="value" id="wnValue">-</div>
                     <div class="value" id="wnnValue">-</div>
+                    <div class="value" id="wnValue">-</div>
                 </div>
                 <div class="value-item">
                     <h4>Çözülen</h4>
@@ -348,7 +348,7 @@
             document.getElementById('wcValue').textContent = `${D+Y} / ${S}`;
             document.getElementById('wdValue').textContent = `${D}`;
             document.getElementById('wnValue').textContent = `${wn.toFixed(1)}%`;
-            document.getElementById('wnnValue').textContent = `( ${D-Y/4} /${S})`;
+            document.getElementById('wnnValue').textContent = ` ${D-Y/4} / ${S}`;
 
             // Radar grafiği oluşturma
             updateRadarChart([
@@ -418,4 +418,5 @@
     </script>
 </body>
 </html>
+
 
