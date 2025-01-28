@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Analizi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f0f2f5;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #eee;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 8px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #444;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        #resultsSection {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .result-card h4 {
+            color: #1a73e8;
+            margin-bottom: 8px;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            display: block;
+        }
+        .yapimci {
+            color: rgb(0, 61, 0);
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+        }
+        .isimlendisici {
+            color: rgb(36, 123, 238);
+            font-size: 23px;
+            font-style: italic;
+            font-weight: bold;
+            font-family: 'Times New Roman', serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Test Performans Analizi</h2>
+            <p  style="margin-bottom: 16px;">
+                <span class="yapimci">Yapımcı: </span> 
+                <span class="isimlendisici">Can</span>
+            </p>
+
+            <div class="tabs" id="tabs">
+                <button class="tab active" data-tab="math">Matematik</button>
+                <button class="tab" data-tab="turkish">Türkçe</button>
+                <button class="tab" data-tab="science">Fen</button>
+                <button class="tab" data-tab="social">Sosyal</button>
+            </div>
+
+            <form id="analysisForm" onsubmit="return false;">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Doğru Sayısı</label>
+                        <input type="number" id="correct" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Yanlış Sayısı</label>
+                        <input type="number" id="incorrect" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Boş Sayısı</label>
+                        <input type="number" id="empty" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Test Süresi (dk)</label>
+                        <input type="number" id="duration" value="0" min="0" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Referans Süre (dk/soru)</label>
+                        <input type="number" id="refDuration" value="1" min="0.1" step="0.1">
+                    </div>
+                </div>
+
+                <button onclick="calculateAndShow()">Hesapla</button>
+            </form>
+
+            <div id="resultsSection">
+                <h3 style="margin-bottom: 16px;">Sonuçlar</h3>
+                <div id="resultDetails" class="result-card"></div>
+                <canvas id="resultChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab işlemleri
+        const tabs = document.querySelectorAll('.tab');
+        const refDurationInput = document.getElementById('refDuration');
+        
+        const defaultRefDurations = {
+            math: 1.5,
+            turkish: 0.8,
+            science: 1.2,
+            social: 1.0
+        };
+
+        let currentSubject = 'math';
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentSubject = tab.dataset.tab;
+                refDurationInput.value = defaultRefDurations[currentSubject];
+            });
+        });
+
+        function calculateMetrics(D, Y, B, T, R) {
+            const TS = D + Y + B; // Toplam soru
+            if (TS === 0) return null;
+
+            const N = D - (Y / 4); // Net
+            const ZP = Math.min((TS * R) / T, 2) / 2; // Zaman performansı
+            const YK = (Y / TS) * Math.log(1 + Y / TS) * 0.3; // Yanlış katsayısı
+            const BK = (B / TS) * 0.15; // Boş katsayısı
+            const Z = 1 + Math.log(1 + D / TS) * 0.2; // Başarı bonus katsayısı
+            const α = 0.7; // Doğruluk ağırlığı
+            const β = 0.3; // Zaman ağırlığı
+
+            const W = ((N / TS * α) + (ZP * β)) * (1 - (YK + BK)) * Z * 100;
+            
+            return {
+                wScore: Math.max(0, Math.min(100, W)).toFixed(2),
+                netScore: N.toFixed(2),
+                timePerformance: (ZP * 100).toFixed(2),
+                accuracy: ((D / (D + Y)) * 100 || 0).toFixed(2)
+            };
+        }
+
+        function drawChart(results) {
+            const canvas = document.getElementById('resultChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Canvas boyutlarını ayarla
+            canvas.width = 400;
+            canvas.height = 300;
+            
+            // Arka planı temizle
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const metrics = [
+                { label: 'W-Skoru', value: parseFloat(results.wScore), color: '#4285f4' },
+                { label: 'Net', value: parseFloat(results.netScore) * 5, color: '#34a853' }, // Net skorunu ölçekle
+                { label: 'Zaman Perf.', value: parseFloat(results.timePerformance), color: '#fbbc05' },
+                { label: 'Doğruluk', value: parseFloat(results.accuracy), color: '#ea4335' }
+            ];
+            
+            const barWidth = 60;
+            const spacing = 30;
+            const startX = 50;
+            const startY = 250;
+            
+            // Eksenler
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, 50);
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(350, startY);
+            ctx.strokeStyle = '#666';
+            ctx.stroke();
+            
+            // Barlar ve etiketler
+            metrics.forEach((metric, i) => {
+                const x = startX + (barWidth + spacing) * i;
+                const height = (metric.value / 100) * 180;
+                
+                // Bar
+                ctx.fillStyle = metric.color;
+                ctx.fillRect(x + 10, startY - height, barWidth, height);
+                
+                // Etiket
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.save();
+                ctx.translate(x + 40, startY + 20);
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillText(metric.label, 0, 0);
+                ctx.restore();
+                
+                // Değer
+                ctx.fillStyle = '#000';
+                ctx.textAlign = 'center';
+                ctx.fillText(metric.value.toFixed(1), x + 40, startY - height - 10);
+            });
+        }
+
+        function calculateAndShow() {
+            const D = parseInt(document.getElementById('correct').value) || 0;
+            const Y = parseInt(document.getElementById('incorrect').value) || 0;
+            const B = parseInt(document.getElementById('empty').value) || 0;
+            const T = parseFloat(document.getElementById('duration').value) || 0;
+            const R = parseFloat(document.getElementById('refDuration').value) || 1;
+
+            if (T <= 0) {
+                alert('Lütfen geçerli bir süre giriniz!');
+                return;
+            }
+
+            const results = calculateMetrics(D, Y, B, T, R);
+            if (!results) {
+                alert('Lütfen en az bir soru girişi yapınız!');
+                return;
+            }
+
+            // Sonuçları göster
+            const resultsSection = document.getElementById('resultsSection');
+            const resultDetails = document.getElementById('resultDetails');
+            
+            resultDetails.innerHTML = `
+                <h4>${currentSubject.charAt(0).toUpperCase() + currentSubject.slice(1)}</h4>
+                <p><strong>W-Skoru:</strong> ${results.wScore}%</p>
+                <p><strong>Net:</strong> ${results.netScore}</p>
+                <p><strong>Zaman Performansı:</strong> ${results.timePerformance}%</p>
+                <p><strong>Doğruluk Oranı:</strong> ${results.accuracy}%</p>
+            `;
+
+            resultsSection.style.display = 'block';
+            drawChart(results);
+        }
+    </script>
+</body>
+</html>

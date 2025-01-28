@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Analizi</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f0f2f5;
+            padding: 16px;
+            touch-action: manipulation;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #eee;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tab.active {
+            background: #1a73e8;
+            color: white;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 8px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #444;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            -webkit-appearance: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        #resultsSection {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .result-card h4 {
+            color: #1a73e8;
+            margin-bottom: 12px;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .yapimci {
+            color: rgb(0, 61, 0);
+            font-size: 18px;
+            font-family: Arial, sans-serif;
+        }
+
+        .isimlendisici {
+            color: rgb(36, 123, 238);
+            font-size: 23px;
+            font-style: italic;
+            font-weight: bold;
+            font-family: 'Times New Roman', serif;
+        }
+    </style>
+</head>
+<body ontouchstart="">
+    <div class="container">
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Test Performans Analizi</h2>
+            <p style="margin-bottom: 16px;">
+                <span class="yapimci">Yapımcı: </span>
+                <span class="isimlendisici">mehmet</span>
+            </p>
+
+            <div class="tabs" id="tabs">
+                <button class="tab active" data-tab="math">Matematik</button>
+                <button class="tab" data-tab="turkish">Türkçe</button>
+                <button class="tab" data-tab="science">Fen</button>
+                <button class="tab" data-tab="social">Sosyal</button>
+            </div>
+
+            <form id="analysisForm" onsubmit="return false;">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label>Doğru Sayısı</label>
+                        <input type="number" id="correct" min="0" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div class="input-group">
+                        <label>Yanlış Sayısı</label>
+                        <input type="number" id="incorrect" min="0" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div class="input-group">
+                        <label>Boş Sayısı</label>
+                        <input type="number" id="empty" min="0" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                    <div class="input-group">
+                        <label>Test Süresi (dk)</label>
+                        <input type="number" id="duration" min="0" step="0.1" inputmode="decimal">
+                    </div>
+                </div>
+
+                <button type="button" onclick="calculateAndShow()">Hesapla</button>
+            </form>
+
+            <div id="resultsSection">
+                <h3 style="margin-bottom: 16px;">Sonuçlar</h3>
+                <div id="resultDetails"></div>
+                <canvas id="resultChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Veri yapısı
+        const subjectData = {
+            math: { name: 'Matematik', refDuration: 1.5, data: {} },
+            turkish: { name: 'Türkçe', refDuration: 0.8, data: {} },
+            science: { name: 'Fen', refDuration: 1.2, data: {} },
+            social: { name: 'Sosyal', refDuration: 1.0, data: {} }
+        };
+
+        let currentSubject = 'math';
+
+        // Tab işlemleri
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentSubject = tab.dataset.tab;
+                loadSubjectData(currentSubject);
+            });
+        });
+
+        // Form elemanları
+        const inputs = ['correct', 'incorrect', 'empty', 'duration'].reduce((acc, id) => {
+            acc[id] = document.getElementById(id);
+            return acc;
+        }, {});
+
+        // Mevcut sekmenin verilerini yükle
+        function loadSubjectData(subject) {
+            const data = subjectData[subject].data;
+            Object.keys(inputs).forEach(key => {
+                inputs[key].value = data[key] || '';
+            });
+        }
+
+        // Sekme verilerini kaydet
+        function saveSubjectData() {
+            const data = {};
+            Object.keys(inputs).forEach(key => {
+                const value = inputs[key].value.trim();
+                if (value !== '') {
+                    data[key] = parseFloat(value);
+                }
+            });
+            subjectData[currentSubject].data = data;
+        }
+
+        // Metrik hesaplama
+        function calculateMetrics(D, Y, B, T, R) {
+            const TS = D + Y + B;
+            if (TS === 0) return null;
+
+            const N = D - (Y / 4);
+            const ZP = Math.min((TS * R) / T, 2) / 2;
+            const YK = (Y / TS) * Math.log(1 + Y / TS) * 0.3;
+            const BK = (B / TS) * 0.15;
+            const Z = 1 + Math.log(1 + D / TS) * 0.2;
+            const α = 0.7;
+            const β = 0.3;
+
+            const W = ((N / TS * α) + (ZP * β)) * (1 - (YK + BK)) * Z * 100;
+
+            return {
+                wScore: Math.max(0, Math.min(100, W)).toFixed(2),
+                netScore: N.toFixed(2),
+                timePerformance: (ZP * 100).toFixed(2),
+                accuracy: ((D / (D + Y)) * 100 || 0).toFixed(2)
+            };
+        }
+
+        // Grafik çizimi
+        function drawChart(results) {
+            const canvas = document.getElementById('resultChart');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = 400;
+            canvas.height = 300;
+
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const metrics = Object.entries(results).map(([subject, data]) => ({
+                subject: subjectData[subject].name,
+                wScore: parseFloat(data.wScore),
+                netScore: parseFloat(data.netScore) * 5,
+                timePerformance: parseFloat(data.timePerformance),
+                accuracy: parseFloat(data.accuracy)
+            }));
+
+            const barWidth = 40;
+            const groupWidth = barWidth * 4 + 20;
+            const startX = 50;
+            const startY = 250;
+
+            // Eksenler
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, 50);
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(canvas.width - 20, startY);
+            ctx.strokeStyle = '#666';
+            ctx.stroke();
+
+            const colors = ['#4285f4', '#34a853', '#fbbc05', '#ea4335'];
+            const metricLabels = ['W-Skoru', 'Net', 'Zaman', 'Doğruluk'];
+
+            // Lejant
+            metricLabels.forEach((label, i) => {
+                const x = startX + i * 100;
+                const y = 30;
+                
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(x, y - 8, 10, 10);
+                
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(label, x + 15, y);
+            });
+
+            // Grafik çizimi
+            metrics.forEach((subjectMetrics, groupIndex) => {
+                const groupX = startX + groupIndex * groupWidth + 20;
+
+                // Derse ait barlar
+                [subjectMetrics.wScore, subjectMetrics.netScore, 
+                 subjectMetrics.timePerformance, subjectMetrics.accuracy].forEach((value, i) => {
+                    const x = groupX + i * barWidth;
+                    const height = (value / 100) * 180;
+
+                    ctx.fillStyle = colors[i];
+                    ctx.fillRect(x, startY - height, barWidth - 5, height);
+                });
+
+                // Ders etiketi
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.save();
+                ctx.translate(groupX + groupWidth/2 - 10, startY + 20);
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillText(subjectMetrics.subject, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        // Sonuçları göster
+        function showResults(results) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultDetails = document.getElementById('resultDetails');
+            
+            resultDetails.innerHTML = Object.entries(results).map(([subject, data]) => `
+                <div class="result-card">
+                    <h4>${subjectData[subject].name}</h4>
+                    <p><strong>W-Skoru:</strong> ${data.wScore}%</p>
+                    <p><strong>Net:</strong> ${data.netScore}</p>
+                    <p><strong>Zaman Performansı:</strong> ${data.timePerformance}%</p>
+                    <p><strong>Doğruluk Oranı:</strong> ${data.accuracy}%</p>
+                </div>
+            `).join('');
+
+            resultsSection.style.display = 'block';
+            drawChart(results);
+        }
+
+        // Hesaplama ve gösterme
+        function calculateAndShow() {
+            saveSubjectData();
+
+            // Dolu olan sekmeleri bul
+            const filledSubjects = Object.entries(subjectData).filter(([_, data]) => {
+                const subjectData = data.data;
+                return Object.keys(subjectData).length > 0 &&
+                       subjectData.duration > 0;
+            });
+
+            if (filledSubjects.length === 0) {
+                alert('Lütfen en az bir ders için geçerli veriler giriniz!');
+                return;
+            }
+
+            // Her dolu sekme için metrikleri hesapla
+            const results = filledSubjects.reduce((acc, [subject, data]) => {
+                const { correct, incorrect, empty, duration } = data.data;
+                const metrics = calculateMetrics(
+                    correct || 0,
+                    incorrect || 0,
+                    empty || 0,
+                    duration,
+                    data.refDuration
+                );
+                if (metrics) {
+                    acc[subject] = metrics;
+                }
+                return acc;
+            }, {});
+
+            showResults(results);
+        }
+    </script>
+</body>
+</html>
