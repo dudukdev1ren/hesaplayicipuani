@@ -149,7 +149,7 @@
             </p>
     <div class="container">
         <div class="card">
-            <h2>📊 z23 Test Analiz</h2>
+            <h2>📊 Faydalı Test Analiz</h2>
             
             <div class="input-grid">
                 <div class="input-group">
@@ -244,7 +244,7 @@
             const Net = D - (Y * alpha) - (B * beta);
             
             // Performans metrikleri
-            const wt2 = ((R * S) / T)*100;
+            const wt2 = ((R * S) / T);
             const w2 = (100 * Net * R) / T;
             const wd = (D / S * 100) || 0;
             const wn = (Net / S * 100) || 0;
@@ -252,13 +252,99 @@
             const wc =  ((D + Y)*100/S).toFixed(0) || 0;
 
 
+
+            function f1(D, Y, B, T, R, alpha, beta, gamma) {
+                const S = D + Y + B;
+                const Net = D - (Y * alpha) - (B * beta);
+                const wt2 = ((R * S) / T);
+                const wd = (D / S * 100) || 0;
+                const wn = (Net / S * 100) || 0;
+                const w = (wn * 0.4 + wt2 * 0.3 + wd * 0.3) * gamma;
+                const finalW = Math.min(Math.max(w, 0), 100).toFixed(1);    
+                return finalW
+            }
+
+            function f2(D, Y, B, T, R, alpha, beta, gamma) {
+                const totalQuestions = D + Y + B;
+                const idealTime = totalQuestions * R;
+                const excessTime = Math.max(T - idealTime, 0); // Negatif değerleri sıfırla
+                const timePenalty = Math.exp(-gamma * (excessTime / idealTime));
+                const netScore = D - (alpha * Y + beta * B);
+                const W = netScore * timePenalty;
+                return W*5;
+            }
+
+            function f3(D, Y, B, T, R, alpha, beta, gamma) {
+                const totalQuestions = D + Y + B;
+                const idealTime = totalQuestions * R;
+                const netScore = D - (alpha * Y + beta * B);   
+                // Net skoru 100'e normalize et (Max skor = tüm sorular doğru)
+                const normalizedNet = (netScore / totalQuestions) * 100;  
+                // Zaman faktörü: (İdeal Süre / Gerçek Süre)^gamma
+                const timeFactor = Math.pow(idealTime / Math.max(T, 0.001), gamma); // T=0 önlemek için
+                // Nihai başarı puanı
+                const W = normalizedNet * timeFactor;
+                return W;
+            }
+            
+            function f4(D, Y, B, T, R, alpha, beta, gamma) {
+                const totalQuestions = D + Y + B;
+                
+                // Net skor (gamma=0 için)
+                const netScore = D - (alpha * Y + beta * B);
+                const normalizedNet = (netScore / totalQuestions) * 100;
+                
+                // Zaman skoru (gamma > 0 için)
+                const attempted = D + Y; // Çözülen sorular (doğru + yanlış)
+                const idealTimeForAttempted = attempted * R; // Çözülenler için ideal süre
+                const timeScore = (idealTimeForAttempted / T) * 100; // Zaman skoru
+                
+                // Gamma'ya göre nihai skor
+                let W;
+                if (gamma === 0) {
+                    W = normalizedNet; // Sadece net skor
+                } else {
+                    W = timeScore * Math.pow(timeScore / 100, gamma - 1); // Gamma ile ölçekleme
+                }
+                
+                return W;
+            }
+
+            function f5(D, Y, B, T, R, alpha, beta, gamma) {
+                const totalQuestions = D + Y + B;
+                const attempted = D + Y; // Çözülen toplam soru (doğru + yanlış)
+
+                // Gamma=0: Sadece net skor (zaman önemsiz)
+                if (gamma === 0) {
+                    const net = D - (alpha * Y + beta * B);
+                    return (net / totalQuestions) * 100; // 100 üzerinden net
+                }
+
+                // Gamma=0.5 veya 1: Zaman ve çözülen sorulara göre
+                const timeFactor = (attempted * R) / T; // İdeal süre / Gerçek süre
+                const W = timeFactor * 100; // Temel hesaplama
+
+                // Gamma=1 için: (Çözülen soru / Toplam soru) * Zaman faktörü * 100
+                if (gamma === 1) {
+                    const accuracy = attempted / totalQuestions; // Çözülen soru oranı
+                    return accuracy * W; // Örnek: (6/10) * 100 = 60
+                }
+
+                return W; // Gamma=0.5 için direkt zaman faktörü (Örnek: 5/4 → 125)
+            }
+            
+            const finalW = f2(D, Y, B, T, R, alpha, beta, gamma).toFixed(2);
+
+
+
+
             // Ana W Skoru hesaplama
-            const w = (wn * 0.4 + wt2 * 0.3 + wd * 0.3) * gamma;
-            const finalW = Math.min(Math.max(w, 0), 100).toFixed(1);
+            //const w = (wn * 0.4 + wt2 * 0.3 + wd * 0.3) * gamma;
+            //const finalW = Math.min(Math.max(w, 0), 100).toFixed(1);
 
             // Değerleri güncelleme
             document.getElementById('wValue').textContent = `${finalW}%`;
-            document.getElementById('wt2Value').textContent = `${wt2.toFixed(1)}%`;
+            document.getElementById('wt2Value').textContent = `${(wt2*100).toFixed(1)}%`;
             document.getElementById('wcValue').textContent = `${D+Y} / ${S}`;
             document.getElementById('wdValue').textContent = `${D}`;
             document.getElementById('wnValue').textContent = `${wn.toFixed(1)}%`;
@@ -332,3 +418,4 @@
     </script>
 </body>
 </html>
+
