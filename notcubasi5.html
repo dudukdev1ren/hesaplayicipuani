@@ -423,8 +423,111 @@
 
                 return W; // Gamma=0.5 için direkt zaman faktörü (Örnek: 5/4 → 125)
             }
+
+            function f6(D, Y, B, T, R, alpha, beta, gamma) {
+                const S = D + Y + B
+                const N = D-Y*alpha-B*beta
+                const w =  ((gamma)*(R*S/T)*100 + (1-gamma)*((100/S)*N));
+                return w; 
+            }
             
-            const finalW = f2(D, Y, B, T, R, alpha, beta, gamma).toFixed(2);
+            function f7(D, Y, B, T, R, alfa, beta, gamma) {
+                // Toplam soru sayısı
+                let S = D + Y + B;
+
+                // Edge case: Soru yoksa 0 döndür
+                if (S === 0) {
+                    return 0;
+                }
+
+                // İdeal süre ve zaman puanı hesaplama
+                let T_ideal = S * R;
+                let zamanPuani;
+                
+                if (T <= T_ideal) {
+                    zamanPuani = (T_ideal / T) * 100;
+                } else {
+                    zamanPuani = -((T - T_ideal) / T_ideal) * 100;
+                }
+
+                // Net puan hesaplama
+                let netPuan = ((D - Y * alfa - B * beta) / S) * 100;
+
+                // Gamma ile ağırlıklı ortalama
+                let w = gamma * zamanPuani + (1 - gamma) * netPuan;
+
+                return Math.round(w * 100) / 100; // İki ondalık basamağa yuvarlama
+            }
+
+
+            function f72(D, Y, B, T, R, alfa, beta, gamma) {
+                let S = D + Y + B; // Toplam soru sayısı
+
+                if (S === 0) {
+                    return 0; // Edge case
+                }
+
+                // Net puan hesaplama (sadece doğru/yanlış)
+                let netPuan = ((D - Y * alfa) / S) * 100;
+
+                // Zaman puanı revize formülü
+                let T_ideal = S * R;
+                let zamanPuani;
+
+                if (T <= T_ideal) {
+                    zamanPuani = (T_ideal / T) * 100;
+                } else {
+                    zamanPuani = -((T - T_ideal) / T_ideal) * 100;
+                }
+
+                // Boşlar için ek ceza (zaman puanını doğrudan düşürme)
+                zamanPuani -= B * beta * 100;
+
+                // Gamma ile ağırlıklı ortalama
+                let w = gamma * zamanPuani + (1 - gamma) * netPuan;
+
+                return Math.round(w * 100) / 100; // İki ondalık basamağa yuvarlama
+            }
+
+            function f73(D, Y, B, T, R, alfa, beta, gamma) {
+                let S = D + Y + B;
+                if (S === 0) {
+                    return 0.0;
+                }
+
+                let T_ideal = S * R;
+                let answered = D + Y; // Cevaplanan soru sayısı
+
+                // Tüm sorular boşsa özel durum
+                if (answered === 0) {
+                    if (T <= T_ideal) {
+                        return 0.0;
+                    } else {
+                        return Math.round(-((T - T_ideal) / T_ideal) * 100 * 100) / 100;
+                    }
+                }
+
+                // Net puan (boşlar etkilemez)
+                let netPuan = ((D - Y * alfa) / S) * 100;
+
+                // Zaman puanı (boşlar zamanı etkiler)
+                let zamanPuani;
+                if (T <= T_ideal) {
+                    zamanPuani = (T_ideal / T) * 100;
+                } else {
+                    zamanPuani = -((T - T_ideal) / T_ideal) * 100;
+                }
+
+                // Boş cezası (zaman puanına direkt etki)
+                zamanPuani -= B * beta * 100;
+
+                // Sabit gamma = 0.5 ile birleştirme
+                let w = 0.5 * zamanPuani + 0.5 * netPuan;
+
+                return Math.round(w * 100) / 100; // İki ondalık basamağa yuvarlama
+            }
+
+            const finalW = f7(D, Y, B, T, R, alpha, beta, gamma).toFixed(1);
 
 
 
