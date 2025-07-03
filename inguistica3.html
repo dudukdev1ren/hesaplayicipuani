@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Açık Kaynaklı İngilizce Geliştirme Programı v2 (Web)</title>
+    <!-- Tailwind CSS CDN - Sadece temel stil için -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Genel stil ayarları */
@@ -153,6 +154,7 @@
             <button class="tab-button" onclick="showTab('editor-tab')">Liste Düzenleyici ve Çevirmen</button>
         </div>
 
+        <!-- Oxford Kelime Seçici Sekmesi -->
         <div id="selector-tab" class="tab-content">
             <div class="flex flex-wrap items-center gap-4 mb-4">
                 <select id="selector-level-combo" class="p-2 border rounded-md">
@@ -173,7 +175,8 @@
             <div id="selector-status-label" class="mb-4 text-gray-600">Seçilenler: Henüz yok</div>
             <div id="selector-scroll-area" class="scroll-area mb-4">
                 <div id="selector-words-container">
-                    </div>
+                    <!-- Kelimeler buraya yüklenecek -->
+                </div>
             </div>
             <div class="flex justify-between items-center">
                 <button id="selector-export-btn">Seçilen Kelimeleri Dışa Aktar</button>
@@ -181,11 +184,13 @@
             </div>
         </div>
 
+        <!-- Liste Düzenleyici ve Çevirmen Sekmesi -->
         <div id="editor-tab" class="tab-content hidden">
             <div class="border p-4 rounded-md mb-4 bg-gray-50">
                 <h3 class="text-lg font-bold mb-2 text-green-800">📥 Kelime Listesini Yapıştırın veya Dosya Yükleyin</h3>
                 <textarea id="editor-input-area" rows="6" placeholder="Her satıra bir kelime gelecek şekilde yazın veya yapıştırın..." class="mb-2"></textarea>
                 <div class="flex gap-2">
+                    <!-- Dosya yükleme için gizli input -->
                     <input type="file" id="file-upload-input" accept=".txt,.csv" class="hidden">
                     <button id="editor-load-file-btn" class="bg-blue-500 hover:bg-blue-600">📁 Dosya Yükle (.txt)</button>
                     <button id="editor-load-text-btn">📤 Listeye Yükle</button>
@@ -194,7 +199,8 @@
 
             <div id="editor-scroll-area" class="scroll-area mb-4">
                 <div id="editor-words-container">
-                    </div>
+                    <!-- Düzenlenebilir kelimeler buraya yüklenecek -->
+                </div>
             </div>
 
             <div class="flex justify-between items-center gap-2">
@@ -207,6 +213,7 @@
         </div>
     </div>
 
+    <!-- Modallar -->
     <div id="selectorExportModal" class="modal hidden">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal('selectorExportModal')">&times;</span>
@@ -233,20 +240,23 @@
 
     <script>
         // Uzun kelime listesinin bulunduğu internet sitesinin linki buraya gelecek
-        const EXTERNAL_WORD_LIST_URL = 'https://dudukdev1ren.github.io/hesaplayicipuani/inguistica2.html'; // BU SATIRI KENDİ URL'NİZLE DEĞİŞTİRİN
+        // CORS hatasını aşmak için corsproxy.io kullanıldı. Kendi GitHub HTML URL'nizi encodeURIComponent() içine yapıştırın.
+        // Örneğin: 'https://corsproxy.io/?' + encodeURIComponent('https://github.com/kullaniciadi/repoadi/blob/main/kelimeler.html')
+        // DEĞİŞTİRİLDİ: Artık doğrudan JSON dosyası okunacak, corsproxy ihtiyacı kalmayacak.
+        const EXTERNAL_WORD_LIST_URL = 'https://raw.githubusercontent.com/dudukdev1ren/hesaplayicipuani/refs/heads/main/liste-v2.2.json'; // Bu URL'yi kendi JSON dosyanızın URL'siyle değiştirin.
 
         // Deneme için kullanılan yedek mini liste
         const FALLBACK_OXFORD_WORDS = [
-            {"w": "hata", "p": "v.", "l": "B1", "m": "terk etmek"},
-            {"w": "hata", "p": "adj.", "l": "A2", "m": "yapabilen, yetenekli"},
-            {"w": "hata", "p": "prep., n.", "l": "A1", "m": "yukarıda"},
-            {"w": "hata", "p": "adv.", "l": "B2", "m": "yurt dışında"},
-            {"w": "hata", "p": "v.", "l": "A2", "m": "kabul etmek"},
-            {"w": "hata", "p": "n., v.", "l": "B1", "m": "erişim, erişmek"},
-            {"w": "hata", "p": "n.", "l": "A2", "m": "kaza"},
-            {"w": "hata", "p": "n., v.", "l": "B1", "m": "hesap, açıklamak"},
-            {"w": "hata", "p": "v.", "l": "B1", "m": "başarmak"},
-            {"w": "hata", "p": "prep., adv.", "l": "A2", "m": "karşıdan karşıya"}
+            {"w": "Error", "p": "v.", "l": "B1", "m": "terk etmek"},
+            {"w": "Error", "p": "adj.", "l": "A2", "m": "yapabilen, yetenekli"},
+            {"w": "Error", "p": "prep., n.", "l": "A1", "m": "yukarıda"},
+            {"w": "Error", "p": "adv.", "l": "B2", "m": "yurt dışında"},
+            {"w": "accept", "p": "v.", "l": "A2", "m": "kabul etmek"},
+            {"w": "access", "p": "n., v.", "l": "B1", "m": "erişim, erişmek"},
+            {"w": "accident", "p": "n.", "l": "A2", "m": "kaza"},
+            {"w": "account", "p": "n., v.", "l": "B1", "m": "hesap, açıklamak"},
+            {"w": "achieve", "p": "v.", "l": "B1", "m": "başarmak"},
+            {"w": "across", "p": "prep., adv.", "l": "A2", "m": "karşıdan karşıya"}
         ];
 
         let OXFORD_WORDS = []; // Bu, URL'den veya yedek listeden doldurulacak ana kelime listesi
@@ -290,14 +300,17 @@
                 if (!response.ok) {
                     throw new Error(`HTTP hatası! Durum: ${response.status}`);
                 }
-                const data = await response.json();
+
+                const data = await response.json(); // Doğrudan JSON olarak ayrıştır
+
                 // Basit doğrulama: Verinin bir dizi olup olmadığını ve beklenen özellikleri içerip içermediğini kontrol et
                 if (Array.isArray(data) && data.length > 0 && data[0].w && data[0].l) {
                     OXFORD_WORDS = data;
                     console.log(`URL'den ${OXFORD_WORDS.length} kelime başarıyla yüklendi.`);
                 } else {
-                    throw new Error('Çekilen veri beklenen JSON dizi formatında değil.');
+                    throw new Error('Çekilen veri beklenen JSON dizi formatında değil veya boş.');
                 }
+
             } catch (error) {
                 console.error('URL\'den kelime listesi yüklenemedi, yedek liste kullanılıyor:', error);
                 OXFORD_WORDS = FALLBACK_OXFORD_WORDS;
@@ -669,6 +682,34 @@
                 return;
             }
             openModal('editorExportModal');
+        }
+
+        function downloadTextFile(filename, content) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function editorExportTxt(words) {
+            let content = "";
+            words.forEach(item => {
+                content += `${item.word}:${item.meaning}\n`;
+            });
+            downloadTextFile("ozel_liste.txt", content);
+            showMessage("Başarılı", `${words.length} kelimelik metin dosyası oluşturuldu ve indirildi.`);
+        }
+
+        function editorExportPdf(words) {
+            // PDF oluşturma web'de karmaşık bir konudur.
+            // jsPDF gibi kütüphaneler kullanılabilir ancak Python'daki FPDF kadar kolay olmayabilir.
+            // Bu bir simülasyondur.
+            showMessage("Bilgi", "PDF oluşturma web tarayıcısında doğrudan desteklenmez. Bu bir simülasyondur. Gerçek uygulamada bir sunucu tarafı çözümü veya istemci tarafı PDF kütüphanesi (örn. jsPDF) kullanılmalıdır.");
+            const content = words.map(item => `${item.word}: ${item.meaning}`).join('\n');
+            downloadTextFile("kelime_listesi.txt", `(PDF İçeriği Simülasyonu)\n\n${content}`); // PDF yerine TXT indir
         }
 
         // =================================================================
