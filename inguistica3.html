@@ -82,14 +82,15 @@
         }
         .grid-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Dinamik sütunlar */
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Dinamik sütunlar */
+            gap: 5px;
         }
         .word-item {
             display: flex;
             align-items: center;
-            gap: 20px; /* Öğeler arasındaki boşluk */
+            gap: 12px; /* Öğeler arasındaki boşluk */
             font-size: 1.13rem; /* Yazı boyutu (bir tık daha büyük) */
+            margin-bottom: 8px;/* Liste görünümünde satırlar arası boşluk */
         }
         .word-item input[type="checkbox"] {
             transform: scale(1.6); /* Kutucuk boyutu (bir tık daha büyük) */
@@ -150,7 +151,7 @@
 <body>
     <div class="container">
         <div class="flex border-b border-gray-200">
-            <button class="tab-button active" onclick="showTab('selector-tab')">Oxford Kelime Seçici</button>
+            <button class="tab-button active" onclick="showTab('selector-tab')">Kelime Seçici Oxford3000</button>
             <button class="tab-button" onclick="showTab('editor-tab')">Liste Düzenleyici ve Çevirmen</button>
         </div>
 
@@ -164,12 +165,12 @@
                     <option value="B2">B2</option>
                 </select>
                 <button id="selector-view-button" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Izgara</button>
+                <button id="selector-toggle-button"class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md">Hepsini Seç</button>
                 <select id="selector-filter-combo" class="p-2 border rounded-md">
                     <option value="Hepsini Göster">Hepsini Göster</option>
                     <option value="Seçilenleri Göster">Seçilenleri Göster</option>
                     <option value="Seçilmeyenleri Göster">Seçilmeyenleri Göster</option>
                 </select>
-                <button id="selector-toggle-button">Hepsini Seç</button>
                 <input type="text" id="selector-search-box" placeholder="Kelime, anlam, tür veya seviye arayın..." class="flex-grow max-w-xs">
             </div>
             <div id="selector-status-label" class="mb-4 text-gray-600">Seçilenler: Henüz yok</div>
@@ -247,10 +248,10 @@
 
         // Deneme için kullanılan yedek mini liste
         const FALLBACK_OXFORD_WORDS = [
-            {"w": "Error", "p": "v.", "l": "B1", "m": "terk etmek"},
-            {"w": "Error", "p": "adj.", "l": "A2", "m": "yapabilen, yetenekli"},
-            {"w": "Error", "p": "prep., n.", "l": "A1", "m": "yukarıda"},
-            {"w": "Error", "p": "adv.", "l": "B2", "m": "yurt dışında"},
+            {"w": "abandon", "p": "v.", "l": "B1", "m": "terk etmek"},
+            {"w": "able", "p": "adj.", "l": "A2", "m": "yapabilen, yetenekli"},
+            {"w": "above", "p": "prep., n.", "l": "A1", "m": "yukarıda"},
+            {"w": "abroad", "p": "adv.", "l": "B2", "m": "yurt dışında"},
             {"w": "accept", "p": "v.", "l": "A2", "m": "kabul etmek"},
             {"w": "access", "p": "n., v.", "l": "B1", "m": "erişim, erişmek"},
             {"w": "accident", "p": "n.", "l": "A2", "m": "kaza"},
