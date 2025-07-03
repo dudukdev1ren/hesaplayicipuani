@@ -83,18 +83,18 @@
         }
         .grid-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(107px, 1fr)); /* Dinamik sütunlar */
-            gap: 7px;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Dinamik sütunlar */
+            gap: 5px;
         }
         .word-item {
             display: flex;
             align-items: center;
             gap: 12px; /* Öğeler arasındaki boşluk */
-            font-size: 1.2rem; /* Yazı boyutu (bir tık daha büyük) */
+            font-size: 1.13rem; /* Yazı boyutu (bir tık daha büyük) */
             margin-bottom: 8px;/* Liste görünümünde satırlar arası boşluk */
         }
         .word-item input[type="checkbox"] {
-            transform: scale(2); /* Kutucuk boyutu (bir tık daha büyük) */
+            transform: scale(1.6); /* Kutucuk boyutu (bir tık daha büyük) */
         }
 
         /* Modal Stilleri */
@@ -147,6 +147,13 @@
         .close-button:hover {
             color: #333;
         }
+        .action-button {
+            background-color: #52bb22; /* İstenen yeni renk */
+            color: rgb(15, 15, 15)
+        }
+        .action-button:hover {
+            background-color: #277e0f; /* Hover için biraz daha koyu ton */
+        }
     </style>
 </head>
 <body>
@@ -181,8 +188,8 @@
                 </div>
             </div>
             <div class="flex justify-between items-center">
-                <button id="selector-export-btn">Seçilen Kelimeleri Dışa Aktar</button>
-                <button id="send-to-editor-btn">Seçilenleri Çeviri Listesine Gönder</button>
+                <button id="selector-export-btn"class="action-button">Seçilen Kelimeleri Dışa Aktar</button>
+                <button id="send-to-editor-btn"class="action-button">Seçilenleri Çeviri Listesine Gönder</button>
             </div>
         </div>
 
