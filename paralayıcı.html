@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çalışma Süresi Hesaplayıcısı</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .buttons-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .preset-btn {
+            padding: 12px 8px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .preset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .preset-btn:active {
+            transform: translateY(0);
+        }
+
+        .calculation-section {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 25px;
+        }
+
+        .price-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-group label {
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .price-group input {
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .price-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .calculate-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .result {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+
+            .buttons-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .calculation-section {
+                grid-template-columns: 1fr;
+            }
+
+            .calculate-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .preset-btn {
+                font-size: 12px;
+                padding: 10px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Çalışma Süresi Hesaplayıcısı</h1>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="monthlyEarning">Aylık Kazanç (TL)</label>
+                <input type="number" id="monthlyEarning" placeholder="22500">
+            </div>
+            <div class="input-group">
+                <label for="weeklyHours">Haftalık Saat</label>
+                <input type="number" id="weeklyHours" placeholder="45">
+            </div>
+        </div>
+
+        <div class="buttons-section">
+            <button class="preset-btn" onclick="setMinimumWage()">Asgari</button>
+            <button class="preset-btn" onclick="addMoney(1000)">+1000₺</button>
+            <button class="preset-btn" onclick="addMoney(2500)">+2500₺</button>
+            <button class="preset-btn" onclick="addHours(5)">+5 Saat</button>
+            <button class="preset-btn" onclick="addHours(-5)">-5 Saat</button>
+            <button class="preset-btn" onclick="resetInputs()">Sıfırla</button>
+        </div>
+
+        <div class="calculation-section">
+            <div class="price-group">
+                <label for="productPrice">Ürün Fiyatı (TL)</label>
+                <input type="number" id="productPrice" placeholder="15.00">
+            </div>
+            <button class="calculate-btn" onclick="calculateWorkTime()">Hesapla</button>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function setMinimumWage() {
+            document.getElementById('monthlyEarning').value = 22500;
+            document.getElementById('weeklyHours').value = 45;
+        }
+
+        function addMoney(amount) {
+            const earningInput = document.getElementById('monthlyEarning');
+            const currentValue = parseFloat(earningInput.value) || 0;
+            earningInput.value = currentValue + amount;
+        }
+
+        function addHours(hours) {
+            const hoursInput = document.getElementById('weeklyHours');
+            const currentValue = parseFloat(hoursInput.value) || 0;
+            const newValue = currentValue + hours;
+            hoursInput.value = Math.max(0, newValue); // Negatif saat olmayacak
+        }
+
+        function resetInputs() {
+            document.getElementById('monthlyEarning').value = '';
+            document.getElementById('weeklyHours').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('result').classList.remove('show');
+        }
+
+        function calculateWorkTime() {
+            const monthlyEarning = parseFloat(document.getElementById('monthlyEarning').value);
+            const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+
+            if (!monthlyEarning || !weeklyHours || !productPrice) {
+                alert('Lütfen tüm alanları doldurun!');
+                return;
+            }
+
+            // Saatlik kazanç hesaplama (ayda yaklaşık 4.33 hafta var)
+            const hourlyEarning = monthlyEarning / (weeklyHours * 4.33);
+            
+            // Çalışma süresi hesaplama (saat cinsinden)
+            const workTimeHours = productPrice / hourlyEarning;
+            
+            // Saat, dakika, saniye çevirme
+            const hours = Math.floor(workTimeHours);
+            const minutes = Math.floor((workTimeHours - hours) * 60);
+            const seconds = Math.floor(((workTimeHours - hours) * 60 - minutes) * 60);
+
+            let resultText = 'Bu ürünü almak için ';
+            
+            if (hours > 0) {
+                resultText += `${hours} saat `;
+            }
+            if (minutes > 0 || hours > 0) {
+                resultText += `${minutes} dakika `;
+            }
+            resultText += `${seconds} saniye çalıştınız`;
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = resultText;
+            resultDiv.classList.add('show');
+        }
+
+        // Enter tuşu ile hesaplama
+        document.getElementById('productPrice').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateWorkTime();
+            }
+        });
+    </script>
+</body>
+</html>
