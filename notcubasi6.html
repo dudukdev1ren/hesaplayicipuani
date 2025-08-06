@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finans Yöneticisi</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 900px;
+            min-height: 90vh;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .top-bar {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .date-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+        
+        .date-btn, .today-btn, .logout-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+        
+        .date-btn:hover, .today-btn:hover, .logout-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-1px);
+        }
+        
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .dev-message {
+            font-size: 28px;
+            color: #666;
+            margin-bottom: 25px;
+            font-weight: 300;
+        }
+        
+        .status {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f9f1 100%);
+            color: #2d5016;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #4caf50;
+            margin: 20px 0;
+            max-width: 600px;
+            line-height: 1.6;
+            box-shadow: 0 4px 15px rgba(76,175,80,0.1);
+        }
+        
+        /* Login Popup */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .login-popup {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-title {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 300;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 15px;
+            margin: 12px 0;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74,144,226,0.3);
+        }
+        
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 10px;
+            background: #ffeaea;
+            border-radius: 8px;
+            border-left: 3px solid #e74c3c;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Date Dropdown */
+        .date-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            min-width: 180px;
+            display: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+        
+        .month-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            color: #333;
+            transition: background 0.2s ease;
+        }
+        
+        .month-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .month-item.has-data {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+            color: #1976d2;
+            font-weight: 500;
+        }
+        
+        .month-item.no-data {
+            color: #999;
+            font-style: italic;
+        }
+        
+        /* Day Selection Popup */
+        .day-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .day-popup {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .day-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .day-item {
+            padding: 12px 8px;
+            text-align: center;
+            border: 2px solid #e1e5e9;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .day-item:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+        
+        .day-item.has-data {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
+            color: #1976d2;
+            border-color: #1976d2;
+        }
+        
+        .day-item.no-data {
+            background: #f8f9fa;
+            color: #999;
+            border-color: #e1e5e9;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                border-radius: 10px;
+                min-height: 95vh;
+            }
+            
+            .top-bar {
+                padding: 12px 15px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .date-section, .user-section {
+                justify-content: center;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .dev-message {
+                font-size: 22px;
+            }
+            
+            .login-popup {
+                padding: 30px 25px;
+            }
+            
+            .login-title {
+                font-size: 24px;
+            }
+            
+            .date-btn, .today-btn, .logout-btn {
+                padding: 12px 15px;
+                font-size: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .day-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
+            }
+            
+            .day-item {
+                padding: 10px 5px;
+                font-size: 14px;
+            }
+            
+            .login-input {
+                font-size: 16px; /* iOS zoom önleme */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div>Sistem başlatılıyor...</div>
+        </div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="container hidden" id="mainContainer">
+        <div class="top-bar">
+            <div class="date-section">
+                <button class="date-btn" id="dateBtn" onclick="toggleDateDropdown()">Tarih ▼</button>
+                <div class="date-dropdown" id="dateDropdown">
+                    <!-- Aylar dinamik olarak yüklenecek -->
+                </div>
+                <button class="today-btn" onclick="goToToday()">Bugün</button>
+            </div>
+            
+            <div class="user-section">
+                <div class="user-info">
+                    <span>👤</span>
+                    <span id="userName">Kullanıcı</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">Çıkış</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="dev-message">🚧 Geliştirme Aşamasında 🚧</div>
+            <div class="status" id="statusMessage">
+                Sistem yükleniyor...
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Overlay -->
+    <div class="login-overlay hidden" id="loginOverlay">
+        <div class="login-popup">
+            <div class="login-title">🔐 Giriş Yapın</div>
+            <input type="email" class="login-input" id="emailInput" placeholder="E-posta adresi" autocomplete="email">
+            <input type="password" class="login-input" id="passwordInput" placeholder="Şifre" autocomplete="current-password">
+            <button class="login-btn" id="loginBtn" onclick="login()">Giriş Yap</button>
+            <div class="error-message hidden" id="errorMessage"></div>
+        </div>
+    </div>
+    
+    <!-- Day Selection Overlay -->
+    <div class="day-overlay" id="dayOverlay">
+        <div class="day-popup">
+            <div class="day-header">
+                <h3 id="dayPopupTitle">Gün Seçin</h3>
+                <button class="close-btn" onclick="closeDayPopup()">&times;</button>
+            </div>
+            <div class="day-grid" id="dayGrid">
+                <!-- Günler dinamik olarak yüklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // ====== BURAYA Firebase CONFIG'İNİZİ KOYUN ======
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+
+        // ===============================================
+
+
+        // Firebase başlatma
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let currentUser = null;
+        let selectedMonth = null;
+        
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                checkAutoLogin();
+            }, 1000);
+        });
+        
+        // Otomatik giriş kontrolü (Cookie'den)
+        async function checkAutoLogin() {
+            const savedLogin = getCookie('finans_login');
+            
+            if (savedLogin) {
+                try {
+                    const loginData = JSON.parse(atob(savedLogin));
+                    const { email, userId } = loginData;
+                    
+                    // Kullanıcının hala var olup olmadığını kontrol et
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    
+                    if (userDoc.exists() && userDoc.data().email === email) {
+                        // Otomatik giriş başarılı
+                        currentUser = { uid: userId, ...userDoc.data() };
+                        showMainApp();
+                        updateLastLogin();
+                        return;
+                    } else {
+                        // Kullanıcı bulunamadı, cookie'yi sil
+                        deleteCookie('finans_login');
+                    }
+                } catch (error) {
+                    console.error('Auto login error:', error);
+                    deleteCookie('finans_login');
+                }
+            }
+            
+            // Otomatik giriş başarısız, login popup göster
+            showLoginPopup();
+        }
+        
+        // Login fonksiyonu
+        async function login() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            const errorDiv = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (!email || !password) {
+                showError('E-posta ve şifre gerekli!');
+                return;
+            }
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Kontrol ediliyor...';
+            hideError();
+            
+            try {
+                // Database'den kullanıcı kontrolü
+                const usersSnapshot = await db.collection('users')
+                    .where('email', '==', email)
+                    .where('password', '==', password)
+                    .get();
+                
+                if (usersSnapshot.empty) {
+                    showError('E-posta veya şifre hatalı! Kullanıcı bulunamadı.');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Giriş Yap';
+                    return;
+                }
+                
+                // Giriş başarılı
+                const userDoc = usersSnapshot.docs[0];
+                currentUser = { uid: userDoc.id, ...userDoc.data() };
+                
+                // Cookie'ye kaydet (30 gün)
+                const loginData = btoa(JSON.stringify({
+                    email: email,
+                    userId: userDoc.id
+                }));
+                setCookie('finans_login', loginData, 30);
+                
+                // Ana uygulamayı göster
+                showMainApp();
+                updateLastLogin();
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Bağlantı hatası! Lütfen tekrar deneyin.');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Giriş Yap';
+            }
+        }
+        
+        // Son giriş tarihini güncelle
+        async function updateLastLogin() {
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Last login update error:', error);
+            }
+        }
+        
+        // Çıkış yap
+        function logout() {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                deleteCookie('finans_login');
+                currentUser = null;
+                showLoginPopup();
+            }
+        }
+        
+        // Login popup göster
+        function showLoginPopup() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('mainContainer').classList.add('hidden');
+            
+            // Input alanlarını temizle
+            document.getElementById('emailInput').value = '';
+            document.getElementById('passwordInput').value = '';
+            hideError();
+            
+            // İlk input'a focus
+            setTimeout(() => {
+                document.getElementById('emailInput').focus();
+            }, 300);
+        }
+        
+        // Ana uygulamayı göster
+        function showMainApp() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+            
+            // Kullanıcı bilgilerini göster
+            document.getElementById('userName').textContent = currentUser.username || currentUser.email;
+            document.getElementById('statusMessage').innerHTML = 
+                `✅ Hoşgeldiniz <strong>${currentUser.username || 'Kullanıcı'}</strong>!<br>
+                🔒 Oturum otomatik olarak saklandı.<br>
+                📅 Tarih seçerek işlemlerinize başlayabilirsiniz.`;
+            
+            // Ay dropdown'ını yükle
+            loadMonthDropdown();
+        }
+        
+        // Hata mesajı göster
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        // Hata mesajını gizle
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+        
+        // Ay dropdown'ını yükle
+        function loadMonthDropdown() {
+            const dropdown = document.getElementById('dateDropdown');
+            const currentDate = new Date();
+            const months = [
+                'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+            ];
+            
+            dropdown.innerHTML = '';
+            
+            // Son 6 ayı göster
+            for (let i = 0; i < 6; i++) {
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+                const monthName = months[date.getMonth()];
+                const year = date.getFullYear();
+                const monthKey = `${year}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'month-item has-data';
+                monthDiv.textContent = `${monthName} ${year}`;
+                monthDiv.onclick = () => selectMonth(monthKey, `${monthName} ${year}`);
+                
+                dropdown.appendChild(monthDiv);
+            }
+        }
+        
+        // Ay seçimi
+        function selectMonth(monthKey, monthName) {
+            selectedMonth = monthKey;
+            document.getElementById('dateDropdown').style.display = 'none';
+            showDaySelection(monthKey, monthName);
+        }
+        
+        // Gün seçimi popup'ını göster
+        function showDaySelection(monthKey, monthName) {
+            const [year, month] = monthKey.split('-');
+            const daysInMonth = new Date(year, month, 0).getDate();
+            
+            document.getElementById('dayPopupTitle').textContent = monthName;
+            
+            const dayGrid = document.getElementById('dayGrid');
+            dayGrid.innerHTML = '';
+            
+            // Günleri oluştur
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'day-item has-data';
+                dayDiv.textContent = day;
+                dayDiv.onclick = () => selectDay(year, month, day);
+                
+                dayGrid.appendChild(dayDiv);
+            }
+            
+            document.getElementById('dayOverlay').style.display = 'flex';
+        }
+        
+        // Gün seçimi
+        async function selectDay(year, month, day) {
+            const selectedDate = `${day.toString().padStart(2, '0')}.${month}.${year}`;
+            document.getElementById('dateBtn').textContent = selectedDate;
+            document.getElementById('dayOverlay').style.display = 'none';
+            
+            await loadDayData(year, month, day);
+        }
+        
+        // Günün verilerini yükle
+        async function loadDayData(year, month, day) {
+            const dateKey = `${year}-${month.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            
+            try {
+                const recordsRef = db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('records')
+                    .doc(dateKey);
+                
+                const recordDoc = await recordsRef.get();
+                
+                if (recordDoc.exists()) {
+                    document.getElementById('statusMessage').innerHTML = 
+                        `📅 <strong>${day}.${month}.${year}</strong><br>
+                        ✅ Bu tarihe ait kayıtlar mevcut!<br>
+                        📊 Veri düzenleme sistemi hazırlanıyor...`;
+                } else {
+                    document.getElementById('statusMessage').innerHTML = 
+                        `📅 <strong>${day}.${month}.${year}</strong><br>
+                        📝 Yeni kayıt oluşturulacak.<br>
+                        💰 Gelir/gider ekleme sistemi hazırlanıyor...`;
+                }
+                
+            } catch (error) {
+                console.error('Day data load error:', error);
+                document.getElementById('statusMessage').innerHTML = 
+                    `📅 ${day}.${month}.${year}<br>❌ Hata: ${error.message}`;
+            }
+        }
+        
+        // Tarih dropdown toggle
+        function toggleDateDropdown() {
+            const dropdown = document.getElementById('dateDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // Bugüne git
+        function goToToday() {
+            const today = new Date();
+            const todayStr = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+            document.getElementById('dateBtn').textContent = todayStr;
+            loadDayData(today.getFullYear(), today.getMonth() + 1, today.getDate());
+        }
+        
+        // Gün popup'ını kapat
+        function closeDayPopup() {
+            document.getElementById('dayOverlay').style.display = 'none';
+        }
+        
+        // Cookie fonksiyonları
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict;Secure`;
+        }
+        
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+        
+        function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+        
+        // Enter tuşu ile login
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('loginOverlay').classList.contains('hidden')) {
+                login();
+            }
+        });
+        
+        // Dropdown dışına tıklandığında kapat
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.date-btn') && !e.target.closest('.date-dropdown')) {
+                document.getElementById('dateDropdown').style.display = 'none';
+            }
+        });
+        
+        // Touch events için
+        document.addEventListener('touchstart', function(e) {
+            if (!e.target.closest('.date-btn') && !e.target.closest('.date-dropdown')) {
+                document.getElementById('dateDropdown').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
