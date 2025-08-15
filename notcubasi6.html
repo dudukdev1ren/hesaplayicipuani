@@ -80,7 +80,7 @@
             <div class="left-controls">
                 <button class="btn" id="dateBtn" onclick="toggleDateDropdown()">Tarih ▼</button>
                 <select class="btn" id="dateDropdown" style="display:none;" onchange="selectDate()"></select>
-                <button class="btn" onclick="goToToday()">Bugün</button>
+                <button class="btn" onclick="reloadCurrentDate()">🔄 Yenile</button>
                 <button class="btn" onclick="logout()">Çıkış</button>
             </div>
             <div class="user-section">
@@ -101,16 +101,16 @@
                 <!-- Çalışma Bilgileri -->
                 <div class="work-section">
                     <h3>📋 Çalışma Bilgileri</h3>
-                    <div class="work-row">
+                    <div class="time-row">
                         <label>Giriş:</label>
-                        <input type="time" id="startTime" onchange="saveWorkData()">
+                        <input type="text" id="startTime" placeholder="14:30" pattern="[0-9]{2}:[0-9]{2}" maxlength="5" onchange="saveWorkData()" onkeyup="formatTimeInput(this)">
                         <label>Çıkış:</label>
-                        <input type="time" id="endTime" onchange="saveWorkData()">
-                        <label>Mola (dk):</label>
-                        <input type="number" id="breakTime" min="0" step="0.1" value="0" onchange="saveWorkData()">
-                        <div class="holiday-row">
-                            <button class="holiday-btn" id="holidayBtn" onclick="toggleHoliday()">Bugün İzinli</button>
-                        </div>
+                        <input type="text" id="endTime" placeholder="18:00" pattern="[0-9]{2}:[0-9]{2}" maxlength="5" onchange="saveWorkData()" onkeyup="formatTimeInput(this)">
+                    </div>
+                    <div class="break-row">
+                        <label>Mola:</label>
+                        <input type="text" id="breakTime" placeholder="01:00" pattern="[0-9]{2}:[0-9]{2}" maxlength="5" onchange="saveWorkData()" onkeyup="formatTimeInput(this)">
+                        <button class="holiday-btn" id="holidayBtn" onclick="toggleHoliday()">Bugün İzinli</button>
                     </div>
                     <div class="work-summary" id="workSummary"></div>
                 </div>
@@ -118,11 +118,13 @@
                 <!-- Harcamalar -->
                 <div class="expense-section">
                     <h3>💰 Günlük Harcamalar</h3>
-                    <div class="expense-row">
-                        <button class="action-btn add-btn" onclick="addExpense()">🖋️</button>
+                    <div class="expense-input-row">
                         <input type="number" id="expenseAmount" placeholder="Fiyat" min="0" step="0.01">
                         <input type="text" id="expenseName" placeholder="Açıklama">
-                        <button class="action-btn delete-btn" onclick="deleteSelected()">🧻</button>
+                    </div>
+                    <div class="expense-button-row">
+                        <button class="action-btn add-btn" onclick="addExpense()">🖋️ Ekle</button>
+                        <button class="action-btn delete-btn" onclick="deleteSelected()">🧻 Sil</button>
                     </div>
                     
                     <div class="expense-list" id="expenseList">
@@ -139,7 +141,7 @@
     <div class="overlay" id="loginOverlay">
         <div class="popup">
             <h3>🔐 Giriş Yapın</h3>
-            <input type="email" id="emailInput" placeholder="E-posta">
+            <input type="email" id="emailInput" placeholder="E-posta" value="@.">
             <input type="password" id="passwordInput" placeholder="Şifre">
             <button onclick="login()">Giriş Yap</button>
             <div id="errorMessage" style="color: red; margin-top: 10px; display: none;"></div>
@@ -276,15 +278,17 @@
             document.getElementById('mainContainer').classList.add('hidden');
         }
         
-        function showMainApp() {
+        async function showMainApp() {
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContainer').classList.remove('hidden');
             document.getElementById('userName').textContent = currentUser.username || currentUser.email;
+            
+            // Önce tarih seçeneklerini yükle
             loadDateOptions();
             
-            // Otomatik olarak bugünü göster
-            goToToday();
+            // Sonra bugünü seç ve verileri yükle
+            await goToToday();
         }
         
         // Tarih Seçimi
@@ -307,52 +311,178 @@
             dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
         }
         
-        function selectDate() {
-            const dropdown = document.getElementById('dateDropdown');
-            selectedDate = dropdown.value;
-            document.getElementById('dateBtn').textContent = new Date(selectedDate).toLocaleDateString('tr-TR');
-            dropdown.style.display = 'none';
-            
-            loadDayData();
-        }
-        
-        function goToToday() {
+        async function goToToday() {
             const today = new Date().toISOString().split('T')[0];
             selectedDate = today;
             document.getElementById('dateBtn').textContent = new Date(today).toLocaleDateString('tr-TR');
             document.getElementById('dateDropdown').style.display = 'none';
             
-            loadDayData();
+            // Verileri zorla yükle
+            await forceLoadDayData();
         }
         
-        // Günlük Veri Yükleme
+        async function selectDate() {
+            const dropdown = document.getElementById('dateDropdown');
+            selectedDate = dropdown.value;
+            document.getElementById('dateBtn').textContent = new Date(selectedDate).toLocaleDateString('tr-TR');
+            dropdown.style.display = 'none';
+            
+            // Verileri zorla yükle
+            await forceLoadDayData();
+        }
+        
+        // Saat input formatı otomatik düzenleme
+        function formatTimeInput(input) {
+            let value = input.value.replace(/[^\d]/g, ''); // Sadece rakamları al
+            
+            if (value.length >= 3) {
+                // 4 rakam girildiğinde otomatik : koy
+                value = value.substring(0, 2) + ':' + value.substring(2, 4);
+            }
+            
+            input.value = value;
+            
+            // Saat ve dakika kontrolü
+            if (value.length === 5) {
+                const [hours, minutes] = value.split(':');
+                if (parseInt(hours) > 23) {
+                    input.value = '23:' + minutes;
+                }
+                if (parseInt(minutes) > 59) {
+                    input.value = hours + ':59';
+                }
+            }
+        }
+        
+        // Saat formatı doğrulama
+        function validateTimeFormat(timeStr) {
+            if (!timeStr || timeStr.length !== 5) return false;
+            
+            const [hours, minutes] = timeStr.split(':');
+            const h = parseInt(hours);
+            const m = parseInt(minutes);
+            
+            return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+        }
+        async function reloadCurrentDate() {
+            if (!selectedDate) {
+                // Eğer tarih seçilmemişse bugünü seç
+                await goToToday();
+            } else {
+                // Mevcut tarihi yeniden yükle
+                console.log('Tarih yeniden yükleniyor:', selectedDate);
+                await forceLoadDayData();
+            }
+        }
+        
+        // Zorla veri yükleme - cache'i bypass et
+        async function forceLoadDayData() {
+            if (!selectedDate || !currentUser || !currentUser.uid) {
+                console.log('Veri yüklenemez - eksik bilgi');
+                return;
+            }
+            
+            console.log('ZORLA VERİ YÜKLEME:', selectedDate, 'User:', currentUser.uid);
+            
+            try {
+                // Firebase'den fresh veri çek
+                const dayDoc = await db.collection('users').doc(currentUser.uid)
+                    .collection('daily').doc(selectedDate).get({ source: 'server' });
+                
+                if (dayDoc.exists) {
+                    const data = dayDoc.data();
+                    console.log('Fresh veri geldi:', data);
+                    
+                    currentDayData = {
+                        expenses: data.expenses || [],
+                        workData: data.workData || {},
+                        isHoliday: data.isHoliday || false
+                    };
+                } else {
+                    console.log('Bu tarih için veri yok');
+                    currentDayData = { expenses: [], workData: {}, isHoliday: false };
+                }
+                
+                // Seçili harcamayı sıfırla
+                selectedExpenseIndex = -1;
+                
+                // UI'ı güncelle
+                updateWorkUI();
+                updateExpenseList();
+                
+                console.log('UI güncellendi, currentDayData:', currentDayData);
+                
+            } catch (error) {
+                console.error('Zorla veri yükleme hatası:', error);
+                alert('Veriler yüklenemedi: ' + error.message);
+            }
+        }
+        
+        // Günlük Veri Yükleme - Program açıldığında mevcut verileri form alanlarına getir
         async function loadDayData() {
-            if (!selectedDate) return;
+            if (!selectedDate) {
+                console.log('selectedDate boş!');
+                return;
+            }
+            
+            if (!currentUser || !currentUser.uid) {
+                console.log('currentUser yok!');
+                return;
+            }
+            
+            console.log('Veri yükleniyor:', selectedDate, 'User:', currentUser.uid);
             
             try {
                 const dayDoc = await db.collection('users').doc(currentUser.uid)
                     .collection('daily').doc(selectedDate).get();
                 
-                if (dayDoc.exists()) {
-                    currentDayData = dayDoc.data();
+                if (dayDoc.exists) {
+                    const data = dayDoc.data();
+                    console.log('Database den gelen veri:', data);
+                    
+                    currentDayData = {
+                        expenses: data.expenses || [],
+                        workData: data.workData || {},
+                        isHoliday: data.isHoliday || false
+                    };
+                    
+                    console.log('currentDayData güncellendi:', currentDayData);
                 } else {
+                    console.log('Bu tarih için veri bulunamadı');
                     currentDayData = { expenses: [], workData: {}, isHoliday: false };
                 }
+                
+                // Seçili harcamayı sıfırla
+                selectedExpenseIndex = -1;
                 
                 updateWorkUI();
                 updateExpenseList();
                 
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
+                currentDayData = { expenses: [], workData: {}, isHoliday: false };
+                updateWorkUI();
+                updateExpenseList();
             }
         }
         
-        // Çalışma Verileri
+        // Çalışma Verileri - Veritabanındaki verileri form alanlarına getir
         function updateWorkUI() {
             const workData = currentDayData.workData || {};
+            
+            // Form alanlarına veritabanındaki değerleri yükle
             document.getElementById('startTime').value = workData.startTime || '';
             document.getElementById('endTime').value = workData.endTime || '';
-            document.getElementById('breakTime').value = workData.breakTime || 0;
+            
+            // Mola süresini HH:MM formatında göster
+            if (workData.breakTime && workData.breakTime > 0) {
+                const hours = Math.floor(workData.breakTime / 60);
+                const minutes = workData.breakTime % 60;
+                document.getElementById('breakTime').value = 
+                    String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+            } else {
+                document.getElementById('breakTime').value = '';
+            }
             
             const holidayBtn = document.getElementById('holidayBtn');
             if (currentDayData.isHoliday) {
@@ -392,10 +522,21 @@
         }
         
         async function saveWorkData() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const breakTimeValue = document.getElementById('breakTime').value;
+            
+            let breakMinutes = 0;
+            
+            if (breakTimeValue && validateTimeFormat(breakTimeValue)) {
+                const [hours, minutes] = breakTimeValue.split(':');
+                breakMinutes = (parseInt(hours) * 60) + parseInt(minutes);
+            }
+            
             const workData = {
-                startTime: document.getElementById('startTime').value,
-                endTime: document.getElementById('endTime').value,
-                breakTime: parseFloat(document.getElementById('breakTime').value) || 0
+                startTime: validateTimeFormat(startTime) ? startTime : '',
+                endTime: validateTimeFormat(endTime) ? endTime : '',
+                breakTime: breakMinutes
             };
             
             currentDayData.workData = workData;
@@ -409,7 +550,7 @@
             await saveDayData();
         }
         
-        // Harcama İşlemleri
+        // Harcama İşlemleri - Timestamp kaldırıldı, sadece giriş saati kaydediliyor
         function addExpense() {
             const amount = parseFloat(document.getElementById('expenseAmount').value);
             const name = document.getElementById('expenseName').value.trim();
@@ -419,10 +560,11 @@
                 return;
             }
             
+            const now = new Date();
             const expense = {
                 amount: amount,
                 name: name || 'Harcama',
-                timestamp: new Date().toISOString()
+                time: now.toTimeString().slice(0, 5) // Sadece HH:MM formatında saat
             };
             
             currentDayData.expenses.push(expense);
@@ -434,6 +576,7 @@
             saveDayData();
         }
         
+        // Harcama listesi - Veritabanındaki harcamaları göster
         function updateExpenseList() {
             const listDiv = document.getElementById('expenseList');
             const expenses = currentDayData.expenses || [];
@@ -449,6 +592,17 @@
             
             expenses.forEach((expense, index) => {
                 total += expense.amount;
+                
+                // Hem eski timestamp hem yeni time formatını destekle
+                let timeDisplay = '';
+                if (expense.time) {
+                    timeDisplay = expense.time;
+                } else if (expense.timestamp) {
+                    timeDisplay = new Date(expense.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
+                } else {
+                    timeDisplay = '';
+                }
+                
                 html += `
                     <div class="expense-item ${selectedExpenseIndex === index ? 'selected' : ''}" 
                          onclick="selectExpense(${index})">
@@ -456,7 +610,7 @@
                             <span class="expense-amount">${expense.amount.toFixed(2)} TL</span>
                             <span> - ${expense.name}</span>
                         </div>
-                        <span class="expense-time">${new Date(expense.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}</span>
+                        <span class="expense-time">${timeDisplay}</span>
                     </div>
                 `;
             });
@@ -497,20 +651,39 @@
             }
         }
         
-        // Ayarlar
+        // Ayarlar - General koleksiyonundan verileri yükle (her açılışta fresh)
         async function openSettings() {
             document.getElementById('settingsOverlay').style.display = 'flex';
             
+            // Önce alanları temizle
+            document.getElementById('monthlyIncome').value = '';
+            document.getElementById('weeklyHours').value = '';
+            document.getElementById('workDaysPerWeek').value = '';
+            document.getElementById('maxDailyHours').value = '';
+            
             try {
-                const settingsDoc = await db.collection('users').doc(currentUser.uid).get();
-                const settings = settingsDoc.data().settings || {};
+                console.log('Ayarlar yükleniyor...');
+                // Server'dan fresh veri çek
+                const generalDoc = await db.collection('users').doc(currentUser.uid)
+                    .collection('general').doc('settings').get({ source: 'server' });
                 
-                document.getElementById('monthlyIncome').value = settings.monthlyIncome || '';
-                document.getElementById('weeklyHours').value = settings.weeklyHours || '';
-                document.getElementById('workDaysPerWeek').value = settings.workDaysPerWeek || 5;
-                document.getElementById('maxDailyHours').value = settings.maxDailyHours || 8;
+                if (generalDoc.exists) {
+                    const settings = generalDoc.data();
+                    console.log('Ayarlar geldi:', settings);
+                    
+                    document.getElementById('monthlyIncome').value = settings.monthlyIncome || '';
+                    document.getElementById('weeklyHours').value = settings.weeklyHours || '';
+                    document.getElementById('workDaysPerWeek').value = settings.workDaysPerWeek || 5;
+                    document.getElementById('maxDailyHours').value = settings.maxDailyHours || 8;
+                } else {
+                    console.log('Ayarlar bulunamadı, varsayılanlar yükleniyor');
+                    // Varsayılan değerler
+                    document.getElementById('workDaysPerWeek').value = 5;
+                    document.getElementById('maxDailyHours').value = 8;
+                }
             } catch (error) {
                 console.error('Ayarlar yükleme hatası:', error);
+                alert('Ayarlar yüklenemedi: ' + error.message);
             }
         }
         
@@ -527,7 +700,9 @@
             };
             
             try {
-                await db.collection('users').doc(currentUser.uid).update({ settings });
+                // General koleksiyonuna kaydet
+                await db.collection('users').doc(currentUser.uid)
+                    .collection('general').doc('settings').set(settings);
                 alert('Ayarlar kaydedildi!');
                 closeSettings();
             } catch (error) {
@@ -536,27 +711,34 @@
             }
         }
         
-        // Hesaplama
+        // Hesaplama (her açılışta fresh veri çek)
         async function openCalculation() {
             document.getElementById('calculationOverlay').style.display = 'flex';
+            document.getElementById('calculationResults').innerHTML = '<p>Hesaplama yapılıyor...</p>';
             
             try {
-                // Kullanıcı ayarlarını al
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const settings = userDoc.data().settings || {};
+                console.log('Hesaplama verileri yükleniyor...');
                 
-                // Bu ayın verilerini al
+                // General koleksiyonundan ayarları al (fresh)
+                const generalDoc = await db.collection('users').doc(currentUser.uid)
+                    .collection('general').doc('settings').get({ source: 'server' });
+                
+                const settings = generalDoc.exists ? generalDoc.data() : {};
+                console.log('Hesaplama ayarları:', settings);
+                
+                // Bu ayın verilerini al (fresh)
                 const currentMonth = new Date().toISOString().slice(0, 7);
                 const dailyDocs = await db.collection('users').doc(currentUser.uid)
                     .collection('daily')
                     .where('__name__', '>=', currentMonth)
                     .where('__name__', '<', currentMonth + '-32')
-                    .get();
+                    .get({ source: 'server' });
                 
                 let monthlyExpenses = 0;
                 let dailyExpenses = 0;
                 const todayStr = new Date().toISOString().split('T')[0];
                 
+                console.log('Aylık veriler işleniyor...');
                 dailyDocs.forEach(doc => {
                     const data = doc.data();
                     const expenses = data.expenses || [];
@@ -567,6 +749,8 @@
                         dailyExpenses = dayTotal;
                     }
                 });
+                
+                console.log('Aylık harcama:', monthlyExpenses, 'Günlük harcama:', dailyExpenses);
                 
                 // Hesaplamalar
                 const monthlyIncome = settings.monthlyIncome || 0;
@@ -593,7 +777,8 @@
                 `;
                 
             } catch (error) {
-                document.getElementById('calculationResults').innerHTML = '<p style="color: red;">Hesaplama hatası!</p>';
+                console.error('Hesaplama hatası:', error);
+                document.getElementById('calculationResults').innerHTML = '<p style="color: red;">Hesaplama hatası: ' + error.message + '</p>';
             }
         }
         
