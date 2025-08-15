@@ -6,485 +6,137 @@
     <title>Finans Yöneticisi</title>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 10px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 900px;
-            min-height: 90vh;
-            margin: 0 auto;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .top-bar {
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .date-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-        }
-        
-        .date-btn, .today-btn, .logout-btn {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            white-space: nowrap;
-        }
-        
-        .date-btn:hover, .today-btn:hover, .logout-btn:hover {
-            background: rgba(255,255,255,0.25);
-            transform: translateY(-1px);
-        }
-        
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: rgba(255,255,255,0.9);
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .content {
-            flex: 1;
-            padding: 30px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .dev-message {
-            font-size: 28px;
-            color: #666;
-            margin-bottom: 25px;
-            font-weight: 300;
-        }
-        
-        .status {
-            background: linear-gradient(135deg, #e8f5e8 0%, #f1f9f1 100%);
-            color: #2d5016;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #4caf50;
-            margin: 20px 0;
-            max-width: 600px;
-            line-height: 1.6;
-            box-shadow: 0 4px 15px rgba(76,175,80,0.1);
-        }
-        
-        /* Login Popup */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .login-popup {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .login-title {
-            font-size: 28px;
-            margin-bottom: 30px;
-            color: #333;
-            font-weight: 300;
-        }
-        
-        .login-input {
-            width: 100%;
-            padding: 15px;
-            margin: 12px 0;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #4a90e2;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(74,144,226,0.1);
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(74,144,226,0.3);
-        }
-        
-        .login-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .error-message {
-            color: #e74c3c;
-            margin-top: 15px;
-            font-size: 14px;
-            padding: 10px;
-            background: #ffeaea;
-            border-radius: 8px;
-            border-left: 3px solid #e74c3c;
-        }
-        
-        /* Loading Screen */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .loading-content {
-            text-align: center;
-            color: white;
-        }
-        
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Date Dropdown */
-        .date-dropdown {
-            position: absolute;
-            top: calc(100% + 5px);
-            left: 0;
-            background: white;
-            border: 1px solid #e1e5e9;
-            border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            min-width: 180px;
-            display: none;
-            z-index: 100;
-            overflow: hidden;
-        }
-        
-        .month-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            color: #333;
-            transition: background 0.2s ease;
-        }
-        
-        .month-item:hover {
-            background: #f8f9fa;
-        }
-        
-        .month-item.has-data {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
-            color: #1976d2;
-            font-weight: 500;
-        }
-        
-        .month-item.no-data {
-            color: #999;
-            font-style: italic;
-        }
-        
-        /* Day Selection Popup */
-        .day-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .day-popup {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            width: 100%;
-            max-width: 420px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .day-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            padding: 5px;
-            border-radius: 50%;
-            transition: background 0.2s;
-        }
-        
-        .close-btn:hover {
-            background: #f0f0f0;
-        }
-        
-        .day-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-        }
-        
-        .day-item {
-            padding: 12px 8px;
-            text-align: center;
-            border: 2px solid #e1e5e9;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            font-weight: 500;
-        }
-        
-        .day-item:hover {
-            background: #f8f9fa;
-            transform: translateY(-1px);
-        }
-        
-        .day-item.has-data {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%);
-            color: #1976d2;
-            border-color: #1976d2;
-        }
-        
-        .day-item.no-data {
-            background: #f8f9fa;
-            color: #999;
-            border-color: #e1e5e9;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding: 5px;
-            }
-            
-            .container {
-                border-radius: 10px;
-                min-height: 95vh;
-            }
-            
-            .top-bar {
-                padding: 12px 15px;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 15px;
-            }
-            
-            .date-section, .user-section {
-                justify-content: center;
-            }
-            
-            .content {
-                padding: 20px 15px;
-            }
-            
-            .dev-message {
-                font-size: 22px;
-            }
-            
-            .login-popup {
-                padding: 30px 25px;
-            }
-            
-            .login-title {
-                font-size: 24px;
-            }
-            
-            .date-btn, .today-btn, .logout-btn {
-                padding: 12px 15px;
-                font-size: 15px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .day-grid {
-                grid-template-columns: repeat(7, 1fr);
-                gap: 5px;
-            }
-            
-            .day-item {
-                padding: 10px 5px;
-                font-size: 14px;
-            }
-            
-            .login-input {
-                font-size: 16px; /* iOS zoom önleme */
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 10px; }
+        .container { background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 900px; margin: 0 auto; }
+        .top-bar { background: #4a90e2; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; margin: 2px; }
+        .btn:hover { background: rgba(255,255,255,0.3); }
+        .content { padding: 20px; }
+        .work-section { background: #e8f4f8; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .work-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+        .expense-section { background: #fef9e7; padding: 15px; border-radius: 6px; }
+        .expense-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .expense-list { background: white; border: 1px solid #ddd; border-radius: 4px; min-height: 200px; padding: 10px; margin: 15px 0; }
+        .expense-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .expense-item:hover { background: #f0f0f0; }
+        .expense-item.selected { background: #e3f2fd; }
+        .total { font-weight: bold; font-size: 18px; text-align: center; margin-top: 10px; color: #d32f2f; }
+        input, select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .main-buttons { text-align: center; margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 6px; }
+        .main-btn { padding: 12px 25px; margin: 5px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; }
+        .calc-btn { background: #4caf50; color: white; }
+        .settings-btn { background: #ff9800; color: white; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .popup { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .popup h3 { margin-bottom: 15px; text-align: center; }
+        .popup input, .popup button { margin: 5px 0; width: 100%; }
+        .popup button { padding: 10px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .close-btn { float: right; background: #f44336; padding: 5px 10px; }
+        .hidden { display: none !important; }
+        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #4a90e2; display: flex; justify-content: center; align-items: center; z-index: 2000; color: white; }
+        @media (max-width: 768px) { .work-row, .expense-row { flex-direction: column; align-items: stretch; } .main-btn { width: 100%; } }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <div>Sistem başlatılıyor...</div>
-        </div>
+    <!-- Loading -->
+    <div class="loading" id="loadingScreen">
+        <div>Sistem başlatılıyor...</div>
     </div>
     
     <!-- Main Container -->
     <div class="container hidden" id="mainContainer">
         <div class="top-bar">
-            <div class="date-section">
-                <button class="date-btn" id="dateBtn" onclick="toggleDateDropdown()">Tarih ▼</button>
-                <div class="date-dropdown" id="dateDropdown">
-                    <!-- Aylar dinamik olarak yüklenecek -->
-                </div>
-                <button class="today-btn" onclick="goToToday()">Bugün</button>
+            <div>
+                <button class="btn" id="dateBtn" onclick="toggleDateDropdown()">Tarih Seç ▼</button>
+                <select class="btn" id="dateDropdown" style="display:none;" onchange="selectDate()"></select>
+                <button class="btn" onclick="goToToday()">Bugün</button>
             </div>
-            
-            <div class="user-section">
-                <div class="user-info">
-                    <span>👤</span>
-                    <span id="userName">Kullanıcı</span>
-                </div>
-                <button class="logout-btn" onclick="logout()">Çıkış</button>
+            <div>
+                <span>👤 <span id="userName">Kullanıcı</span></span>
+                <button class="btn" onclick="logout()">Çıkış</button>
             </div>
         </div>
         
         <div class="content">
-            <div class="dev-message">🚧 Geliştirme Aşamasında 🚧</div>
-            <div class="status" id="statusMessage">
-                Sistem yükleniyor...
+            <!-- Ana Butonlar - Her Zaman Görünür -->
+            <div class="main-buttons">
+                <button class="main-btn calc-btn" onclick="openCalculation()">Hesapla 📈</button>
+                <button class="main-btn settings-btn" onclick="openSettings()">⚙️</button>
+            </div>
+            
+            <!-- Günlük İçerik -->
+            <div id="dayContent">
+                <!-- Çalışma Bilgileri -->
+                <div class="work-section">
+                    <h3>📋 Çalışma Bilgileri</h3>
+                    <div class="work-row">
+                        <label>Giriş: </label>
+                        <input type="time" id="startTime" onchange="saveWorkData()">
+                        <label>Çıkış: </label>
+                        <input type="time" id="endTime" onchange="saveWorkData()">
+                        <label>Mola (dk): </label>
+                        <input type="number" id="breakTime" min="0" step="0.1" value="0" onchange="saveWorkData()">
+                        <button class="btn" id="holidayBtn" onclick="toggleHoliday()">Bugün İzinli</button>
+                    </div>
+                    <div id="workSummary"></div>
+                </div>
+                
+                <!-- Harcamalar -->
+                <div class="expense-section">
+                    <h3>💰 Günlük Harcamalar</h3>
+                    <div class="expense-row">
+                        <button onclick="addExpense()">🖋️</button>
+                        <input type="number" id="expenseAmount" placeholder="Fiyat" min="0" step="0.01">
+                        <input type="text" id="expenseName" placeholder="Açıklama (ör: su, gazoz)">
+                        <button onclick="deleteSelected()">🧻</button>
+                    </div>
+                    
+                    <div class="expense-list" id="expenseList">
+                        <div style="text-align: center; color: #666; padding: 20px;">Henüz harcama eklenmemiş</div>
+                    </div>
+                    
+                    <div class="total" id="dailyTotal">Günlük Toplam: 0 TL</div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Login Overlay -->
-    <div class="login-overlay hidden" id="loginOverlay">
-        <div class="login-popup">
-            <div class="login-title">🔐 Giriş Yapın</div>
-            <input type="email" class="login-input" id="emailInput" placeholder="E-posta adresi" autocomplete="email">
-            <input type="password" class="login-input" id="passwordInput" placeholder="Şifre" autocomplete="current-password">
-            <button class="login-btn" id="loginBtn" onclick="login()">Giriş Yap</button>
-            <div class="error-message hidden" id="errorMessage"></div>
+    <!-- Login Popup -->
+    <div class="overlay" id="loginOverlay">
+        <div class="popup">
+            <h3>🔐 Giriş Yapın</h3>
+            <input type="email" id="emailInput" placeholder="E-posta">
+            <input type="password" id="passwordInput" placeholder="Şifre">
+            <button onclick="login()">Giriş Yap</button>
+            <div id="errorMessage" style="color: red; margin-top: 10px; display: none;"></div>
         </div>
     </div>
     
-    <!-- Day Selection Overlay -->
-    <div class="day-overlay" id="dayOverlay">
-        <div class="day-popup">
-            <div class="day-header">
-                <h3 id="dayPopupTitle">Gün Seçin</h3>
-                <button class="close-btn" onclick="closeDayPopup()">&times;</button>
-            </div>
-            <div class="day-grid" id="dayGrid">
-                <!-- Günler dinamik olarak yüklenecek -->
+    <!-- Settings Popup -->
+    <div class="overlay" id="settingsOverlay">
+        <div class="popup">
+            <button class="close-btn" onclick="closeSettings()">✕</button>
+            <h3>⚙️ Ayarlar</h3>
+            <label>Aylık Kazanç (TL):</label>
+            <input type="number" id="monthlyIncome" min="0">
+            <label>Haftalık Çalışma Saati:</label>
+            <input type="number" id="weeklyHours" min="0" max="168">
+            <label>Haftada Kaç Gün Çalışıyorsun:</label>
+            <input type="number" id="workDaysPerWeek" min="1" max="7" value="5">
+            <label>Günlük Max Çalışma Süresi (saat):</label>
+            <input type="number" id="maxDailyHours" min="0" max="24" value="8">
+            <button onclick="saveSettings()">Kaydet</button>
+        </div>
+    </div>
+    
+    <!-- Calculation Popup -->
+    <div class="overlay" id="calculationOverlay">
+        <div class="popup">
+            <button class="close-btn" onclick="closeCalculation()">✕</button>
+            <h3>📈 Hesaplama Sonuçları</h3>
+            <div id="calculationResults">
+                <p>Hesaplama yapılıyor...</p>
             </div>
         </div>
     </div>
@@ -494,7 +146,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
     <script>
-        // ====== BURAYA Firebase CONFIG'İNİZİ KOYUN ======
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
             authDomain: "paralayici.firebaseapp.com",
@@ -504,330 +156,424 @@
             appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
         };
 
-        // ===============================================
-
-
-        // Firebase başlatma
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
         let currentUser = null;
-        let selectedMonth = null;
+        let selectedDate = null;
+        let selectedExpenseIndex = -1;
+        let currentDayData = { expenses: [], workData: {}, isHoliday: false };
         
-        // Sayfa yüklendiğinde
+        // Başlangıç
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                checkAutoLogin();
-            }, 1000);
+            setTimeout(() => checkAutoLogin(), 1000);
         });
         
-        // Otomatik giriş kontrolü (Cookie'den)
+        // Otomatik Giriş Kontrolü
         async function checkAutoLogin() {
-            const savedLogin = getCookie('finans_login');
-            
+            const savedLogin = localStorage.getItem('finans_login');
             if (savedLogin) {
                 try {
-                    const loginData = JSON.parse(atob(savedLogin));
-                    const { email, userId } = loginData;
-                    
-                    // Kullanıcının hala var olup olmadığını kontrol et
-                    const userDoc = await db.collection('users').doc(userId).get();
-                    
-                    if (userDoc.exists() && userDoc.data().email === email) {
-                        // Otomatik giriş başarılı
-                        currentUser = { uid: userId, ...userDoc.data() };
+                    const loginData = JSON.parse(savedLogin);
+                    const userDoc = await db.collection('users').doc(loginData.userId).get();
+                    if (userDoc.exists()) {
+                        currentUser = { uid: loginData.userId, ...userDoc.data() };
                         showMainApp();
-                        updateLastLogin();
                         return;
-                    } else {
-                        // Kullanıcı bulunamadı, cookie'yi sil
-                        deleteCookie('finans_login');
                     }
                 } catch (error) {
-                    console.error('Auto login error:', error);
-                    deleteCookie('finans_login');
+                    localStorage.removeItem('finans_login');
                 }
             }
-            
-            // Otomatik giriş başarısız, login popup göster
             showLoginPopup();
         }
         
-        // Login fonksiyonu
+        // Login İşlemi
         async function login() {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value.trim();
-            const errorDiv = document.getElementById('errorMessage');
-            const loginBtn = document.getElementById('loginBtn');
             
             if (!email || !password) {
                 showError('E-posta ve şifre gerekli!');
                 return;
             }
             
-            loginBtn.disabled = true;
-            loginBtn.textContent = 'Kontrol ediliyor...';
-            hideError();
-            
             try {
-                // Database'den kullanıcı kontrolü
                 const usersSnapshot = await db.collection('users')
                     .where('email', '==', email)
                     .where('password', '==', password)
                     .get();
                 
                 if (usersSnapshot.empty) {
-                    showError('E-posta veya şifre hatalı! Kullanıcı bulunamadı.');
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'Giriş Yap';
+                    showError('E-posta veya şifre hatalı!');
                     return;
                 }
                 
-                // Giriş başarılı
                 const userDoc = usersSnapshot.docs[0];
                 currentUser = { uid: userDoc.id, ...userDoc.data() };
                 
-                // Cookie'ye kaydet (30 gün)
-                const loginData = btoa(JSON.stringify({
-                    email: email,
-                    userId: userDoc.id
+                localStorage.setItem('finans_login', JSON.stringify({
+                    userId: userDoc.id,
+                    email: email
                 }));
-                setCookie('finans_login', loginData, 30);
                 
-                // Ana uygulamayı göster
                 showMainApp();
-                updateLastLogin();
-                
             } catch (error) {
-                console.error('Login error:', error);
-                showError('Bağlantı hatası! Lütfen tekrar deneyin.');
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Giriş Yap';
+                showError('Bağlantı hatası!');
             }
         }
         
-        // Son giriş tarihini güncelle
-        async function updateLastLogin() {
-            try {
-                await db.collection('users').doc(currentUser.uid).update({
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch (error) {
-                console.error('Last login update error:', error);
-            }
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
         }
         
-        // Çıkış yap
         function logout() {
             if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
-                deleteCookie('finans_login');
+                localStorage.removeItem('finans_login');
                 currentUser = null;
                 showLoginPopup();
             }
         }
         
-        // Login popup göster
         function showLoginPopup() {
             document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainContainer').classList.add('hidden');
-            
-            // Input alanlarını temizle
-            document.getElementById('emailInput').value = '';
-            document.getElementById('passwordInput').value = '';
-            hideError();
-            
-            // İlk input'a focus
-            setTimeout(() => {
-                document.getElementById('emailInput').focus();
-            }, 300);
         }
         
-        // Ana uygulamayı göster
         function showMainApp() {
             document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainContainer').classList.remove('hidden');
-            
-            // Kullanıcı bilgilerini göster
             document.getElementById('userName').textContent = currentUser.username || currentUser.email;
-            document.getElementById('statusMessage').innerHTML = 
-                `✅ Hoşgeldiniz <strong>${currentUser.username || 'Kullanıcı'}</strong>!<br>
-                🔒 Oturum otomatik olarak saklandı.<br>
-                📅 Tarih seçerek işlemlerinize başlayabilirsiniz.`;
+            loadDateOptions();
             
-            // Ay dropdown'ını yükle
-            loadMonthDropdown();
+            // Otomatik olarak bugünü göster
+            goToToday();
         }
         
-        // Hata mesajı göster
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-        }
-        
-        // Hata mesajını gizle
-        function hideError() {
-            document.getElementById('errorMessage').classList.add('hidden');
-        }
-        
-        // Ay dropdown'ını yükle
-        function loadMonthDropdown() {
+        // Tarih Seçimi
+        function loadDateOptions() {
             const dropdown = document.getElementById('dateDropdown');
-            const currentDate = new Date();
-            const months = [
-                'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-                'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-            ];
-            
             dropdown.innerHTML = '';
             
-            // Son 6 ayı göster
-            for (let i = 0; i < 6; i++) {
-                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-                const monthName = months[date.getMonth()];
-                const year = date.getFullYear();
-                const monthKey = `${year}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                
-                const monthDiv = document.createElement('div');
-                monthDiv.className = 'month-item has-data';
-                monthDiv.textContent = `${monthName} ${year}`;
-                monthDiv.onclick = () => selectMonth(monthKey, `${monthName} ${year}`);
-                
-                dropdown.appendChild(monthDiv);
+            for (let i = 0; i < 30; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const option = document.createElement('option');
+                option.value = date.toISOString().split('T')[0];
+                option.textContent = date.toLocaleDateString('tr-TR');
+                dropdown.appendChild(option);
             }
         }
         
-        // Ay seçimi
-        function selectMonth(monthKey, monthName) {
-            selectedMonth = monthKey;
-            document.getElementById('dateDropdown').style.display = 'none';
-            showDaySelection(monthKey, monthName);
-        }
-        
-        // Gün seçimi popup'ını göster
-        function showDaySelection(monthKey, monthName) {
-            const [year, month] = monthKey.split('-');
-            const daysInMonth = new Date(year, month, 0).getDate();
-            
-            document.getElementById('dayPopupTitle').textContent = monthName;
-            
-            const dayGrid = document.getElementById('dayGrid');
-            dayGrid.innerHTML = '';
-            
-            // Günleri oluştur
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'day-item has-data';
-                dayDiv.textContent = day;
-                dayDiv.onclick = () => selectDay(year, month, day);
-                
-                dayGrid.appendChild(dayDiv);
-            }
-            
-            document.getElementById('dayOverlay').style.display = 'flex';
-        }
-        
-        // Gün seçimi
-        async function selectDay(year, month, day) {
-            const selectedDate = `${day.toString().padStart(2, '0')}.${month}.${year}`;
-            document.getElementById('dateBtn').textContent = selectedDate;
-            document.getElementById('dayOverlay').style.display = 'none';
-            
-            await loadDayData(year, month, day);
-        }
-        
-        // Günün verilerini yükle
-        async function loadDayData(year, month, day) {
-            const dateKey = `${year}-${month.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            
-            try {
-                const recordsRef = db.collection('users')
-                    .doc(currentUser.uid)
-                    .collection('records')
-                    .doc(dateKey);
-                
-                const recordDoc = await recordsRef.get();
-                
-                if (recordDoc.exists()) {
-                    document.getElementById('statusMessage').innerHTML = 
-                        `📅 <strong>${day}.${month}.${year}</strong><br>
-                        ✅ Bu tarihe ait kayıtlar mevcut!<br>
-                        📊 Veri düzenleme sistemi hazırlanıyor...`;
-                } else {
-                    document.getElementById('statusMessage').innerHTML = 
-                        `📅 <strong>${day}.${month}.${year}</strong><br>
-                        📝 Yeni kayıt oluşturulacak.<br>
-                        💰 Gelir/gider ekleme sistemi hazırlanıyor...`;
-                }
-                
-            } catch (error) {
-                console.error('Day data load error:', error);
-                document.getElementById('statusMessage').innerHTML = 
-                    `📅 ${day}.${month}.${year}<br>❌ Hata: ${error.message}`;
-            }
-        }
-        
-        // Tarih dropdown toggle
         function toggleDateDropdown() {
             const dropdown = document.getElementById('dateDropdown');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
         }
         
-        // Bugüne git
+        function selectDate() {
+            const dropdown = document.getElementById('dateDropdown');
+            selectedDate = dropdown.value;
+            document.getElementById('dateBtn').textContent = new Date(selectedDate).toLocaleDateString('tr-TR');
+            dropdown.style.display = 'none';
+            
+            loadDayData();
+        }
+        
         function goToToday() {
-            const today = new Date();
-            const todayStr = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
-            document.getElementById('dateBtn').textContent = todayStr;
-            loadDayData(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            const today = new Date().toISOString().split('T')[0];
+            selectedDate = today;
+            document.getElementById('dateBtn').textContent = new Date(today).toLocaleDateString('tr-TR');
+            document.getElementById('dateDropdown').style.display = 'none';
+            
+            loadDayData();
         }
         
-        // Gün popup'ını kapat
-        function closeDayPopup() {
-            document.getElementById('dayOverlay').style.display = 'none';
-        }
-        
-        // Cookie fonksiyonları
-        function setCookie(name, value, days) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict;Secure`;
-        }
-        
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        // Günlük Veri Yükleme
+        async function loadDayData() {
+            if (!selectedDate) return;
+            
+            try {
+                const dayDoc = await db.collection('users').doc(currentUser.uid)
+                    .collection('daily').doc(selectedDate).get();
+                
+                if (dayDoc.exists()) {
+                    currentDayData = dayDoc.data();
+                } else {
+                    currentDayData = { expenses: [], workData: {}, isHoliday: false };
+                }
+                
+                updateWorkUI();
+                updateExpenseList();
+                
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
             }
-            return null;
         }
         
-        function deleteCookie(name) {
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        // Çalışma Verileri
+        function updateWorkUI() {
+            const workData = currentDayData.workData || {};
+            document.getElementById('startTime').value = workData.startTime || '';
+            document.getElementById('endTime').value = workData.endTime || '';
+            document.getElementById('breakTime').value = workData.breakTime || 0;
+            
+            const holidayBtn = document.getElementById('holidayBtn');
+            if (currentDayData.isHoliday) {
+                holidayBtn.textContent = '✅ İzinli Gün';
+                holidayBtn.style.background = '#4caf50';
+            } else {
+                holidayBtn.textContent = 'Bugün İzinli';
+                holidayBtn.style.background = '';
+            }
+            
+            updateWorkSummary();
         }
         
-        // Enter tuşu ile login
+        function updateWorkSummary() {
+            const workData = currentDayData.workData || {};
+            const summaryDiv = document.getElementById('workSummary');
+            
+            if (currentDayData.isHoliday) {
+                summaryDiv.innerHTML = '<p style="color: #4caf50;">🏖️ Bu gün izinli olarak işaretlenmiş</p>';
+                return;
+            }
+            
+            if (workData.startTime && workData.endTime) {
+                const start = new Date(`2000-01-01T${workData.startTime}`);
+                const end = new Date(`2000-01-01T${workData.endTime}`);
+                const breakMinutes = parseInt(workData.breakTime) || 0;
+                
+                const diffMs = end - start - (breakMinutes * 60000);
+                const totalMinutes = Math.floor(diffMs / 60000);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                
+                summaryDiv.innerHTML = `<p>⏱️ Toplam Çalışma: ${hours}s ${minutes}dk (${breakMinutes}dk mola)</p>`;
+            } else {
+                summaryDiv.innerHTML = '<p style="color: #666;">Çalışma saatleri girilmemiş</p>';
+            }
+        }
+        
+        async function saveWorkData() {
+            const workData = {
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                breakTime: parseFloat(document.getElementById('breakTime').value) || 0
+            };
+            
+            currentDayData.workData = workData;
+            updateWorkSummary();
+            await saveDayData();
+        }
+        
+        async function toggleHoliday() {
+            currentDayData.isHoliday = !currentDayData.isHoliday;
+            updateWorkUI();
+            await saveDayData();
+        }
+        
+        // Harcama İşlemleri
+        function addExpense() {
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const name = document.getElementById('expenseName').value.trim();
+            
+            if (!amount || amount <= 0) {
+                alert('Geçerli bir fiyat girin!');
+                return;
+            }
+            
+            const expense = {
+                amount: amount,
+                name: name || 'Harcama',
+                timestamp: new Date().toISOString()
+            };
+            
+            currentDayData.expenses.push(expense);
+            
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseName').value = '';
+            
+            updateExpenseList();
+            saveDayData();
+        }
+        
+        function updateExpenseList() {
+            const listDiv = document.getElementById('expenseList');
+            const expenses = currentDayData.expenses || [];
+            
+            if (expenses.length === 0) {
+                listDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Henüz harcama eklenmemiş</div>';
+                document.getElementById('dailyTotal').textContent = 'Günlük Toplam: 0 TL';
+                return;
+            }
+            
+            let html = '';
+            let total = 0;
+            
+            expenses.forEach((expense, index) => {
+                total += expense.amount;
+                html += `
+                    <div class="expense-item ${selectedExpenseIndex === index ? 'selected' : ''}" 
+                         onclick="selectExpense(${index})">
+                        <span>${expense.amount.toFixed(2)} TL - ${expense.name}</span>
+                        <span>${new Date(expense.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}</span>
+                    </div>
+                `;
+            });
+            
+            listDiv.innerHTML = html;
+            document.getElementById('dailyTotal').textContent = `Günlük Toplam: ${total.toFixed(2)} TL`;
+        }
+        
+        function selectExpense(index) {
+            selectedExpenseIndex = selectedExpenseIndex === index ? -1 : index;
+            updateExpenseList();
+        }
+        
+        function deleteSelected() {
+            if (selectedExpenseIndex === -1) {
+                alert('Silmek için önce bir harcama seçin!');
+                return;
+            }
+            
+            if (confirm('Seçili harcamayı silmek istediğinizden emin misiniz?')) {
+                currentDayData.expenses.splice(selectedExpenseIndex, 1);
+                selectedExpenseIndex = -1;
+                updateExpenseList();
+                saveDayData();
+            }
+        }
+        
+        // Veri Kaydetme
+        async function saveDayData() {
+            if (!selectedDate) return;
+            
+            try {
+                await db.collection('users').doc(currentUser.uid)
+                    .collection('daily').doc(selectedDate).set(currentDayData);
+            } catch (error) {
+                console.error('Veri kaydetme hatası:', error);
+                alert('Veriler kaydedilemedi!');
+            }
+        }
+        
+        // Ayarlar
+        async function openSettings() {
+            document.getElementById('settingsOverlay').style.display = 'flex';
+            
+            try {
+                const settingsDoc = await db.collection('users').doc(currentUser.uid).get();
+                const settings = settingsDoc.data().settings || {};
+                
+                document.getElementById('monthlyIncome').value = settings.monthlyIncome || '';
+                document.getElementById('weeklyHours').value = settings.weeklyHours || '';
+                document.getElementById('workDaysPerWeek').value = settings.workDaysPerWeek || 5;
+                document.getElementById('maxDailyHours').value = settings.maxDailyHours || 8;
+            } catch (error) {
+                console.error('Ayarlar yükleme hatası:', error);
+            }
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsOverlay').style.display = 'none';
+        }
+        
+        async function saveSettings() {
+            const settings = {
+                monthlyIncome: parseFloat(document.getElementById('monthlyIncome').value) || 0,
+                weeklyHours: parseFloat(document.getElementById('weeklyHours').value) || 0,
+                workDaysPerWeek: parseInt(document.getElementById('workDaysPerWeek').value) || 5,
+                maxDailyHours: parseFloat(document.getElementById('maxDailyHours').value) || 8
+            };
+            
+            try {
+                await db.collection('users').doc(currentUser.uid).update({ settings });
+                alert('Ayarlar kaydedildi!');
+                closeSettings();
+            } catch (error) {
+                console.error('Ayar kaydetme hatası:', error);
+                alert('Ayarlar kaydedilemedi!');
+            }
+        }
+        
+        // Hesaplama
+        async function openCalculation() {
+            document.getElementById('calculationOverlay').style.display = 'flex';
+            
+            try {
+                // Kullanıcı ayarlarını al
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                const settings = userDoc.data().settings || {};
+                
+                // Bu ayın verilerini al
+                const currentMonth = new Date().toISOString().slice(0, 7);
+                const dailyDocs = await db.collection('users').doc(currentUser.uid)
+                    .collection('daily')
+                    .where('__name__', '>=', currentMonth)
+                    .where('__name__', '<', currentMonth + '-32')
+                    .get();
+                
+                let monthlyExpenses = 0;
+                let dailyExpenses = 0;
+                const todayStr = new Date().toISOString().split('T')[0];
+                
+                dailyDocs.forEach(doc => {
+                    const data = doc.data();
+                    const expenses = data.expenses || [];
+                    const dayTotal = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                    monthlyExpenses += dayTotal;
+                    
+                    if (doc.id === todayStr) {
+                        dailyExpenses = dayTotal;
+                    }
+                });
+                
+                // Hesaplamalar
+                const monthlyIncome = settings.monthlyIncome || 0;
+                const dailyIncome = monthlyIncome / 30;
+                
+                const dailyPercentage = monthlyIncome > 0 ? (dailyExpenses / dailyIncome * 100).toFixed(2) : 0;
+                const monthlyPercentage = monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome * 100).toFixed(2) : 0;
+                
+                document.getElementById('calculationResults').innerHTML = `
+                    <div style="text-align: left;">
+                        <h4>📊 Günlük Durum</h4>
+                        <p>• Bugün harcanan: ${dailyExpenses.toFixed(2)} TL</p>
+                        <p>• Günlük kazanç: ${dailyIncome.toFixed(2)} TL</p>
+                        <p>• Günlük kazancın <strong>%${dailyPercentage}</strong>'ini harcadın</p>
+                        
+                        <h4 style="margin-top: 15px;">📈 Aylık Durum</h4>
+                        <p>• Bu ay harcanan: ${monthlyExpenses.toFixed(2)} TL</p>
+                        <p>• Aylık kazanç: ${monthlyIncome.toFixed(2)} TL</p>
+                        <p>• Aylık kazancın <strong>%${monthlyPercentage}</strong>'ini harcadın</p>
+                        
+                        <h4 style="margin-top: 15px;">💡 Öneri</h4>
+                        <p>${monthlyPercentage > 80 ? '⚠️ Harcamalarını kontrol et!' : monthlyPercentage > 50 ? '⚡ Dikkatli ol!' : '✅ İyi gidiyorsun!'}</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                document.getElementById('calculationResults').innerHTML = '<p style="color: red;">Hesaplama hatası!</p>';
+            }
+        }
+        
+        function closeCalculation() {
+            document.getElementById('calculationOverlay').style.display = 'none';
+        }
+        
+        // Enter tuşu desteği
         document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !document.getElementById('loginOverlay').classList.contains('hidden')) {
-                login();
-            }
-        });
-        
-        // Dropdown dışına tıklandığında kapat
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.date-btn') && !e.target.closest('.date-dropdown')) {
-                document.getElementById('dateDropdown').style.display = 'none';
-            }
-        });
-        
-        // Touch events için
-        document.addEventListener('touchstart', function(e) {
-            if (!e.target.closest('.date-btn') && !e.target.closest('.date-dropdown')) {
-                document.getElementById('dateDropdown').style.display = 'none';
+            if (e.key === 'Enter') {
+                if (document.getElementById('loginOverlay').style.display === 'flex') {
+                    login();
+                } else if (document.getElementById('expenseAmount') === document.activeElement || 
+                          document.getElementById('expenseName') === document.activeElement) {
+                    addExpense();
+                }
             }
         });
     </script>
