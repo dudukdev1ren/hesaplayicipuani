@@ -8,6 +8,12 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 8px; padding-top: 60px; }
+        .popup {
+            max-width: 500px; 
+            max-height: 90vh; 
+            overflow-y: auto;
+            width: 90%; /* Eklendi */
+        }
         .container { background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); max-width: 450px; margin: 0 auto; overflow: hidden; }
         .top-bar { background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: calc(min(450px, 100% - 16px)); border-radius: 16px 16px 0 0; z-index: 1000; }
         .left-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -39,21 +45,30 @@
         .expense-section h3 { margin-bottom: 14px; color: #f57c00; font-size: 15px; font-weight: 600; }
         .expense-input-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .expense-input-row input { flex: 1; min-width: 120px; padding: 10px; border: 2px solid #e1e5e9; border-radius: 6px; font-size: 15px; }
-        .expense-button-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-        .action-btn { flex: 1; min-width: 80px; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s ease; }
+        .expense-button-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+        .action-btn { flex: 1; min-width: 80px; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s ease; text-align: center; }
+        .essential-btn { background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%); color: white; box-shadow: 0 2px 6px rgba(229,62,62,0.2); }
         .need-btn { background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; box-shadow: 0 2px 6px rgba(76,175,80,0.2); }
         .want-btn { background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white; box-shadow: 0 2px 6px rgba(33,150,243,0.2); }
-        .delete-btn { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; box-shadow: 0 2px 6px rgba(244,67,54,0.2); }
-        .update-btn { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; box-shadow: 0 2px 6px rgba(255,152,0,0.2); }
+        .loss-btn { background: #9e9e9e; color: white; flex: 0 0 50px; font-size: 16px; padding: 10px 8px; }
+        .expense-edit-row { display: none; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .edit-btn { flex: 1; min-width: 80px; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s ease; }
+        .update-btn { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; }
+        .delete-btn { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; }
+        .cancel-btn { background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%); color: white; }
         .expense-list { background: white; border: 2px solid #f5f5f5; border-radius: 8px; min-height: 160px; padding: 10px; margin: 14px 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
         .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; border-bottom: 1px solid #f0f0f0; cursor: pointer; border-radius: 4px; margin-bottom: 3px; transition: all 0.2s ease; position: relative; }
         .expense-item:hover { background: #f8f9fa; transform: translateX(4px); }
         .expense-item.selected { background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%); border-color: #42a5f5; box-shadow: 0 2px 8px rgba(66,165,245,0.2); }
+        .expense-item.essential { border-left: 4px solid #e53e3e; }
         .expense-item.need { border-left: 4px solid #4caf50; }
         .expense-item.want { border-left: 4px solid #2196f3; }
-        .expense-category { position: absolute; right: 8px; top: 8px; font-size: 10px; padding: 2px 6px; border-radius: 10px; color: white; }
+        .expense-item.loss { border-left: 4px solid #9e9e9e; }
+        .expense-category.essential { background: #e53e3e; }
         .expense-category.need { background: #4caf50; }
         .expense-category.want { background: #2196f3; }
+        .expense-category.loss { background: #9e9e9e; }
+        .expense-category { position: absolute; right: 8px; top: 8px; font-size: 10px; padding: 2px 6px; border-radius: 10px; color: white; }
         .expense-amount { font-weight: 600; color: #d32f2f; }
         .expense-time { font-size: 11px; color: #666; }
         .total { font-weight: 700; font-size: 16px; text-align: center; margin-top: 14px; padding: 10px; background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); color: #c62828; border-radius: 6px; border: 1px solid rgba(229,57,53,0.2); }
@@ -93,6 +108,25 @@
         
         .editing-mode { border: 2px solid #4a90e2; background: #f0f8ff; }
         
+        /* Goal Styles */
+        .goal-section { border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 15px 0; background: #fafafa; }
+        .goal-section h4 { color: #333; margin-bottom: 10px; font-size: 16px; }
+        .tolerance-input { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+        .tolerance-input input { flex: 1; }
+        .tolerance-input span { font-size: 14px; color: #666; }
+        
+        /* Chart Styles */
+        .charts-container { margin-top: 20px; }
+        .chart-item { background: white; border-radius: 10px; padding: 15px; margin: 10px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1);overflow: hidden; /* Önemli: taşmayı engeller */}
+        .chart-item h4 { color: #333; margin-bottom: 10px; font-size: 14px; text-align: center; }
+        .chart-canvas { width: 100% !important; height: 200px !important; max-width: 100% !important;max-height: 200px !important;}
+        
+        /* Status Colors */
+        .status-excellent { color: #4caf50; font-weight: bold; }
+        .status-good { color: #8bc34a; font-weight: bold; }
+        .status-okay { color: #ff9800; font-weight: bold; }
+        .status-bad { color: #f44336; font-weight: bold; }
+        
         @media (max-width: 480px) { 
             body { padding: 4px; padding-top: 70px; } 
             .container { border-radius: 12px; max-width: 100%; } 
@@ -118,7 +152,7 @@
         <div class="top-bar">
             <div class="left-controls">
                 <button class="btn" id="dateBtn" onclick="toggleCalendar()">📅 Takvim</button>
-                <button class="btn" onclick="reloadCurrentDate()">🔄</button>
+                <button class="btn" onclick="goToToday()">Bugün</button>
                 <button class="btn" onclick="logout()">Çıkış</button>
             </div>
             <div class="user-section">
@@ -171,10 +205,16 @@
                         <input type="text" id="expenseName" placeholder="Açıklama">
                     </div>
                     <div class="expense-button-row">
-                        <button class="action-btn need-btn" onclick="addExpense('need')">İhtiyaç</button>
-                        <button class="action-btn want-btn" onclick="addExpense('want')">İstek</button>
-                        <button class="action-btn update-btn" id="updateBtn" onclick="updateExpense()" style="display: none;">Güncelle</button>
-                        <button class="action-btn delete-btn" onclick="deleteSelected()">Sil</button>
+                        <button class="action-btn essential-btn" onclick="addExpense('essential')">ZARURI</button>
+                        <button class="action-btn need-btn" onclick="addExpense('need')">İHTIYAÇ</button>
+                        <button class="action-btn want-btn" onclick="addExpense('want')">İSTEK</button>
+                        <button class="action-btn loss-btn" onclick="addExpense('loss')">🗑️</button>
+                    </div>
+                    
+                    <div class="expense-edit-row" id="editButtonRow">
+                        <button class="edit-btn update-btn" onclick="updateExpense()">GÜNCELLE</button>
+                        <button class="edit-btn delete-btn" onclick="deleteSelected()">SİL</button>
+                        <button class="edit-btn cancel-btn" onclick="cancelEdit()">İPTAL</button>
                     </div>
                     
                     <div class="expense-list" id="expenseList">
@@ -229,21 +269,51 @@
     
     <!-- Goals Popup -->
     <div class="overlay" id="goalsOverlay">
-        <div class="popup">
+        <div class="popup" style="max-height: 90vh; overflow-y: auto;">
             <button class="close-btn" onclick="closeGoals()">✕</button>
-            <h3>🎯 Hedefler</h3>
+            <h3>🎯 Hedefler ve Toleranslar</h3>
             
-            <label>Birikim Hedefi (TL):</label>
-            <input type="number" id="savingsGoal" min="0" placeholder="Örn: 5000">
+            <div class="goal-section">
+                <h4>📅 Günlük Harcama Hedefi</h4>
+                <input type="number" id="dailyGoal" min="0" placeholder="Örn: 100">
+                <div class="tolerance-input">
+                    <span>Tolerans:</span>
+                    <input type="number" id="dailyTolerance" min="0" placeholder="Örn: 20">
+                    <span>TL</span>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    • Hedef altı: Mükemmel<br>
+                    • Hedef + tolerans arası: Makul<br>
+                    • Tolerans üstü: Limit aşımı
+                </div>
+            </div>
             
-            <label>Günlük Harcama Limiti (TL):</label>
-            <input type="number" id="dailyLimit" min="0" placeholder="Örn: 100">
+            <div class="goal-section">
+                <h4>📊 Haftalık Harcama Hedefi</h4>
+                <input type="number" id="weeklyGoal" min="0" placeholder="Örn: 700">
+                <div class="tolerance-input">
+                    <span>Tolerans:</span>
+                    <input type="number" id="weeklyTolerance" min="0" placeholder="Örn: 100">
+                    <span>TL</span>
+                </div>
+            </div>
             
-            <label>Haftalık Harcama Limiti (TL):</label>
-            <input type="number" id="weeklyLimit" min="0" placeholder="Örn: 700">
+            <div class="goal-section">
+                <h4>📈 Aylık Harcama Hedefi</h4>
+                <input type="number" id="monthlyGoal" min="0" placeholder="Örn: 3000">
+                <div class="tolerance-input">
+                    <span>Tolerans:</span>
+                    <input type="number" id="monthlyTolerance" min="0" placeholder="Örn: 500">
+                    <span>TL</span>
+                </div>
+            </div>
             
-            <label>Aylık Harcama Limiti (TL):</label>
-            <input type="number" id="monthlyLimit" min="0" placeholder="Örn: 3000">
+            <div class="goal-section">
+                <h4>💰 Birikim Hedefi</h4>
+                <input type="number" id="savingsGoal" min="0" placeholder="Örn: 5000">
+                <label style="margin-top: 10px;">Hedef Tarihi:</label>
+                <input type="date" id="savingsDeadline">
+            </div>
             
             <button onclick="saveGoals()">Hedefleri Kaydet</button>
         </div>
@@ -251,15 +321,36 @@
     
     <!-- Calculation Popup -->
     <div class="overlay" id="calculationOverlay">
-        <div class="popup" style="max-width: 500px;">
+        <div class="popup" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
             <button class="close-btn" onclick="closeCalculation()">✕</button>
-            <h3>📈 Hesaplama Sonuçları</h3>
+            <h3>📈 Detaylı Finansal Analiz</h3>
             <div id="calculationResults">
                 <p>Hesaplama yapılıyor...</p>
+            </div>
+            
+            <!-- Charts Container -->
+            <div class="charts-container" id="chartsContainer">
+                <div class="chart-item">
+                    <h4>📊 Son 7 Günün Harcama Trendi</h4>
+                    <canvas id="dailyChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-item">
+                    <h4>📈 Aylık Kümülatif Harcama</h4>
+                    <canvas id="cumulativeChart" class="chart-canvas"></canvas>
+                </div>
+                
+                <div class="chart-item">
+                    <h4>🎯 Günlük Hedef Durumu</h4>
+                    <canvas id="goalChart" class="chart-canvas"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -284,6 +375,7 @@
         let editingExpenseIndex = -1;
         let currentDayData = { expenses: [], workData: {}, isHoliday: false };
         let calendarCurrentMonth = new Date();
+        let editingCategory = null; // Düzenleme sırasında seçilen kategori
         
         // Başlangıç
         document.addEventListener('DOMContentLoaded', function() {
@@ -374,7 +466,7 @@
             renderCalendar();
         }
         
-        // Takvim İşlevleri
+        // Takvim İşlevleri - Tarih kayması düzeltildi
         function toggleCalendar() {
             const calendar = document.getElementById('calendarContainer');
             calendar.style.display = calendar.style.display === 'none' ? 'block' : 'none';
@@ -428,11 +520,18 @@
                 dayEl.className = 'calendar-day';
                 dayEl.textContent = day;
                 
+                // Tarih oluşturma düzeltildi - yerel saat dilimi kullanılıyor
                 const currentDate = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), day);
-                const dateStr = currentDate.toISOString().split('T')[0];
+                const dateStr = currentDate.getFullYear() + '-' + 
+                    String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(currentDate.getDate()).padStart(2, '0');
                 
                 // Bugün mü?
-                if (currentDate.toDateString() === today.toDateString()) {
+                const todayStr = today.getFullYear() + '-' + 
+                    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(today.getDate()).padStart(2, '0');
+                
+                if (dateStr === todayStr) {
                     dayEl.classList.add('today');
                 }
                 
@@ -458,8 +557,12 @@
                 const startOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), 1);
                 const endOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth() + 1, 0);
                 
-                const startStr = startOfMonth.toISOString().split('T')[0];
-                const endStr = endOfMonth.toISOString().split('T')[0];
+                const startStr = startOfMonth.getFullYear() + '-' + 
+                    String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(startOfMonth.getDate()).padStart(2, '0');
+                const endStr = endOfMonth.getFullYear() + '-' + 
+                    String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(endOfMonth.getDate()).padStart(2, '0');
                 
                 const dailyDocs = await db.collection('users').doc(currentUser.uid)
                     .collection('daily')
@@ -484,26 +587,23 @@
         
         async function selectCalendarDate(dateStr) {
             selectedDate = dateStr;
-            document.getElementById('dateBtn').textContent = '📅 ' + new Date(dateStr).toLocaleDateString('tr-TR');
+            const dateObj = new Date(dateStr + 'T12:00:00'); // Noon to avoid timezone issues
+            document.getElementById('dateBtn').textContent = '📅 ' + dateObj.toLocaleDateString('tr-TR');
             document.getElementById('calendarContainer').style.display = 'none';
             await forceLoadDayData();
             renderCalendar(); // Seçili günü güncellemek için
         }
         
         async function goToToday() {
-            const today = new Date().toISOString().split('T')[0];
-            selectedDate = today;
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + 
+                String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(today.getDate()).padStart(2, '0');
+            
+            selectedDate = todayStr;
             calendarCurrentMonth = new Date();
-            document.getElementById('dateBtn').textContent = '📅 ' + new Date(today).toLocaleDateString('tr-TR');
+            document.getElementById('dateBtn').textContent = '📅 ' + today.toLocaleDateString('tr-TR');
             await forceLoadDayData();
-        }
-        
-        async function reloadCurrentDate() {
-            if (!selectedDate) {
-                await goToToday();
-            } else {
-                await forceLoadDayData();
-            }
         }
         
         // Saat input formatı otomatik düzenleme
@@ -560,6 +660,7 @@
                 
                 selectedExpenseIndex = -1;
                 editingExpenseIndex = -1;
+                editingCategory = null;
                 clearEditingMode();
                 updateWorkUI();
                 updateExpenseList();
@@ -653,7 +754,7 @@
             renderCalendar(); // Takvimi güncelle
         }
         
-        // Harcama İşlemleri - Geliştirilmiş
+        // Harcama İşlemleri - Geliştirilmiş kategori sistemi
         function addExpense(category) {
             const amount = parseFloat(document.getElementById('expenseAmount').value);
             const name = document.getElementById('expenseName').value.trim();
@@ -664,7 +765,8 @@
             }
             
             if (editingExpenseIndex >= 0) {
-                alert('Düzenleme modundasınız! Önce güncelleme yapın veya iptal edin.');
+                // Düzenleme modundayken kategori değişikliği
+                editingCategory = category;
                 return;
             }
             
@@ -673,7 +775,8 @@
                 amount: amount,
                 name: name || 'Harcama',
                 time: now.toTimeString().slice(0, 5),
-                category: category // 'need' veya 'want'
+                category: category,
+                timestamp: now.toISOString()
             };
             
             currentDayData.expenses.push(expense);
@@ -683,17 +786,47 @@
             
             updateExpenseList();
             saveDayData();
+            
+            // Tavsiye sistemi
+            setTimeout(() => showExpenseRecommendation(category, amount), 500);
+        }
+        
+        function showExpenseRecommendation(category, amount) {
+            let message = '';
+            const dayTotal = currentDayData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            
+            if (category === 'want' && amount > 50) {
+                message = '💡 İpucu: Bu büyük bir istek harcaması! Gerçekten gerekli miydi?';
+            } else if (category === 'essential' && amount > 100) {
+                message = '📊 Not: Büyük bir zorunlu harcama. Bütçenizi kontrol edin.';
+            } else if (dayTotal > 200) {
+                message = '⚠️ Dikkat: Günlük harcamanız 200 TL\'yi aştı!';
+            } else if (category === 'need') {
+                message = '✅ İyi tercih: İhtiyaç harcaması yapıyorsunuz.';
+            }
+            
+            if (message) {
+                // Geçici bildirim göster
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+                    background: #333; color: white; padding: 10px 15px; border-radius: 8px;
+                    font-size: 12px; z-index: 1001; max-width: 300px; text-align: center;
+                    animation: slideDown 0.3s ease-out;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+            }
         }
         
         function selectExpense(index) {
-            if (editingExpenseIndex >= 0) {
-                // Düzenleme modundayken farklı bir öğeye tıklanırsa önce kaydet
-                if (editingExpenseIndex !== index) {
-                    if (confirm('Değişiklikler kaydedilsin mi?')) {
-                        updateExpense();
-                    } else {
-                        clearEditingMode();
-                    }
+            if (editingExpenseIndex >= 0 && editingExpenseIndex !== index) {
+                if (confirm('Değişiklikleri kaydetmek istiyor musunuz?')) {
+                    updateExpense();
+                } else {
+                    cancelEdit();
                 }
             }
             
@@ -711,6 +844,7 @@
         function enterEditingMode(index) {
             editingExpenseIndex = index;
             const expense = currentDayData.expenses[index];
+            editingCategory = expense.category;
             
             // Formu doldur
             document.getElementById('expenseAmount').value = expense.amount;
@@ -719,12 +853,33 @@
             // Form stilini değiştir
             document.querySelector('.expense-input-row').classList.add('editing-mode');
             
-            // Güncelle butonunu göster
-            document.getElementById('updateBtn').style.display = 'block';
+            // Edit buton satırını göster
+            document.getElementById('editButtonRow').style.display = 'flex';
+            
+            // Kategori butonlarını highlight et
+            updateCategoryButtons();
+        }
+        
+        function updateCategoryButtons() {
+            const buttons = document.querySelectorAll('.expense-button-row .action-btn');
+            buttons.forEach(btn => {
+                btn.style.opacity = '0.5';
+                btn.style.transform = 'scale(0.95)';
+            });
+            
+            if (editingCategory) {
+                const activeBtn = document.querySelector(`.${editingCategory}-btn`);
+                if (activeBtn) {
+                    activeBtn.style.opacity = '1';
+                    activeBtn.style.transform = 'scale(1.05)';
+                    activeBtn.style.boxShadow = '0 4px 15px rgba(74,144,226,0.4)';
+                }
+            }
         }
         
         function clearEditingMode() {
             editingExpenseIndex = -1;
+            editingCategory = null;
             
             // Formu temizle
             document.getElementById('expenseAmount').value = '';
@@ -733,8 +888,16 @@
             // Form stilini sıfırla
             document.querySelector('.expense-input-row').classList.remove('editing-mode');
             
-            // Güncelle butonunu gizle
-            document.getElementById('updateBtn').style.display = 'none';
+            // Edit buton satırını gizle
+            document.getElementById('editButtonRow').style.display = 'none';
+            
+            // Kategori butonlarını normale döndür
+            const buttons = document.querySelectorAll('.expense-button-row .action-btn');
+            buttons.forEach(btn => {
+                btn.style.opacity = '1';
+                btn.style.transform = 'scale(1)';
+                btn.style.boxShadow = '';
+            });
         }
         
         function updateExpense() {
@@ -752,10 +915,21 @@
             currentDayData.expenses[editingExpenseIndex].amount = amount;
             currentDayData.expenses[editingExpenseIndex].name = name || 'Harcama';
             
+            // Kategori değişikliği varsa uygula
+            if (editingCategory) {
+                currentDayData.expenses[editingExpenseIndex].category = editingCategory;
+            }
+            
             clearEditingMode();
             selectedExpenseIndex = -1;
             updateExpenseList();
             saveDayData();
+        }
+        
+        function cancelEdit() {
+            clearEditingMode();
+            selectedExpenseIndex = -1;
+            updateExpenseList();
         }
         
         function updateExpenseList() {
@@ -769,14 +943,18 @@
             }
             
             let html = '';
+            let totalEssential = 0;
             let totalNeed = 0;
             let totalWant = 0;
+            let totalLoss = 0;
             
             expenses.forEach((expense, index) => {
-                if (expense.category === 'need') {
-                    totalNeed += expense.amount;
-                } else {
-                    totalWant += expense.amount;
+                switch(expense.category) {
+                    case 'essential': totalEssential += expense.amount; break;
+                    case 'need': totalNeed += expense.amount; break;
+                    case 'want': totalWant += expense.amount; break;
+                    case 'loss': totalLoss += expense.amount; break;
+                    default: totalNeed += expense.amount; // Fallback
                 }
                 
                 let timeDisplay = expense.time || '';
@@ -785,7 +963,13 @@
                 }
                 
                 const categoryClass = expense.category || 'need';
-                const categoryText = expense.category === 'want' ? 'İstek' : 'İhtiyaç';
+                const categoryTexts = {
+                    essential: 'Zaruri',
+                    need: 'İhtiyaç', 
+                    want: 'İstek',
+                    loss: 'Kayıp'
+                };
+                const categoryText = categoryTexts[categoryClass] || 'İhtiyaç';
                 
                 html += `
                     <div class="expense-item ${selectedExpenseIndex === index ? 'selected' : ''} ${categoryClass}" 
@@ -804,11 +988,11 @@
             
             listDiv.innerHTML = html;
             
-            const total = totalNeed + totalWant;
+            const total = totalEssential + totalNeed + totalWant + totalLoss;
             document.getElementById('dailyTotal').innerHTML = `
                 <div>Günlük Toplam: ${total.toFixed(2)} TL</div>
-                <div style="font-size: 12px; margin-top: 5px;">
-                    İhtiyaç: ${totalNeed.toFixed(2)} TL | İstek: ${totalWant.toFixed(2)} TL
+                <div style="font-size: 11px; margin-top: 5px;">
+                    Zaruri: ${totalEssential.toFixed(0)}₺ | İhtiyaç: ${totalNeed.toFixed(0)}₺ | İstek: ${totalWant.toFixed(0)}₺ | Kayıp: ${totalLoss.toFixed(0)}₺
                 </div>
             `;
         }
@@ -898,7 +1082,7 @@
             }
         }
         
-        // Hedefler
+        // Geliştirilmiş Hedefler
         function openGoals() {
             document.getElementById('goalsOverlay').style.display = 'flex';
             loadGoals();
@@ -916,15 +1100,14 @@
                 if (goalsDoc.exists) {
                     const goals = goalsDoc.data();
                     
+                    document.getElementById('dailyGoal').value = goals.dailyGoal || '';
+                    document.getElementById('dailyTolerance').value = goals.dailyTolerance || '';
+                    document.getElementById('weeklyGoal').value = goals.weeklyGoal || '';
+                    document.getElementById('weeklyTolerance').value = goals.weeklyTolerance || '';
+                    document.getElementById('monthlyGoal').value = goals.monthlyGoal || '';
+                    document.getElementById('monthlyTolerance').value = goals.monthlyTolerance || '';
                     document.getElementById('savingsGoal').value = goals.savingsGoal || '';
-                    document.getElementById('dailyLimit').value = goals.dailyLimit || '';
-                    document.getElementById('weeklyLimit').value = goals.weeklyLimit || '';
-                    document.getElementById('monthlyLimit').value = goals.monthlyLimit || '';
-                } else {
-                    document.getElementById('savingsGoal').value = '';
-                    document.getElementById('dailyLimit').value = '';
-                    document.getElementById('weeklyLimit').value = '';
-                    document.getElementById('monthlyLimit').value = '';
+                    document.getElementById('savingsDeadline').value = goals.savingsDeadline || '';
                 }
             } catch (error) {
                 console.error('Hedefler yükleme hatası:', error);
@@ -933,10 +1116,14 @@
         
         async function saveGoals() {
             const goals = {
+                dailyGoal: parseFloat(document.getElementById('dailyGoal').value) || 0,
+                dailyTolerance: parseFloat(document.getElementById('dailyTolerance').value) || 0,
+                weeklyGoal: parseFloat(document.getElementById('weeklyGoal').value) || 0,
+                weeklyTolerance: parseFloat(document.getElementById('weeklyTolerance').value) || 0,
+                monthlyGoal: parseFloat(document.getElementById('monthlyGoal').value) || 0,
+                monthlyTolerance: parseFloat(document.getElementById('monthlyTolerance').value) || 0,
                 savingsGoal: parseFloat(document.getElementById('savingsGoal').value) || 0,
-                dailyLimit: parseFloat(document.getElementById('dailyLimit').value) || 0,
-                weeklyLimit: parseFloat(document.getElementById('weeklyLimit').value) || 0,
-                monthlyLimit: parseFloat(document.getElementById('monthlyLimit').value) || 0
+                savingsDeadline: document.getElementById('savingsDeadline').value || ''
             };
             
             try {
@@ -950,13 +1137,28 @@
             }
         }
         
-        // Geliştirilmiş Hesaplama
+        // Hedef durumu hesaplama
+        function getGoalStatus(actual, goal, tolerance) {
+            if (!goal) return { status: 'none', text: 'Hedef yok', class: '' };
+            
+            if (actual <= goal) {
+                return { status: 'excellent', text: 'Mükemmel', class: 'status-excellent' };
+            } else if (actual <= goal + tolerance) {
+                return { status: 'good', text: 'Makul', class: 'status-good' };
+            } else if (actual <= goal + (tolerance * 2)) {
+                return { status: 'okay', text: 'Fena değil', class: 'status-okay' };
+            } else {
+                return { status: 'bad', text: 'Limit aşımı', class: 'status-bad' };
+            }
+        }
+        
+        // Geliştirilmiş Hesaplama ve Grafikler
         async function openCalculation() {
             document.getElementById('calculationOverlay').style.display = 'flex';
             document.getElementById('calculationResults').innerHTML = '<p>Hesaplama yapılıyor...</p>';
             
             try {
-                // Ayarları ve hedefleri yükle
+                // Ayarları, hedefleri ve verileri yükle
                 const [settingsDoc, goalsDoc] = await Promise.all([
                     db.collection('users').doc(currentUser.uid).collection('general').doc('settings').get({ source: 'server' }),
                     db.collection('users').doc(currentUser.uid).collection('general').doc('goals').get({ source: 'server' })
@@ -973,170 +1175,14 @@
                     .where('__name__', '<', currentMonth + '-32')
                     .get({ source: 'server' });
                 
-                let monthlyExpenses = 0;
-                let monthlyNeedExpenses = 0;
-                let monthlyWantExpenses = 0;
-                let dailyExpenses = 0;
-                let dailyNeedExpenses = 0;
-                let dailyWantExpenses = 0;
-                let totalWorkMinutes = 0;
-                let workDays = 0;
+                // Veri analizi
+                const analysisData = analyzeExpenseData(dailyDocs, settings, goals);
                 
-                const todayStr = new Date().toISOString().split('T')[0];
+                // Hesaplama sonuçlarını göster
+                displayCalculationResults(analysisData, settings, goals);
                 
-                dailyDocs.forEach(doc => {
-                    const data = doc.data();
-                    const expenses = data.expenses || [];
-                    
-                    let dayNeed = 0, dayWant = 0;
-                    expenses.forEach(exp => {
-                        if (exp.category === 'want') {
-                            dayWant += exp.amount;
-                        } else {
-                            dayNeed += exp.amount;
-                        }
-                    });
-                    
-                    monthlyNeedExpenses += dayNeed;
-                    monthlyWantExpenses += dayWant;
-                    monthlyExpenses += (dayNeed + dayWant);
-                    
-                    if (doc.id === todayStr) {
-                        dailyNeedExpenses = dayNeed;
-                        dailyWantExpenses = dayWant;
-                        dailyExpenses = dayNeed + dayWant;
-                    }
-                    
-                    // Çalışma süreleri
-                    const workData = data.workData || {};
-                    if (workData.startTime && workData.endTime && !data.isHoliday) {
-                        const start = new Date(`2000-01-01T${workData.startTime}`);
-                        const end = new Date(`2000-01-01T${workData.endTime}`);
-                        const breakMinutes = parseInt(workData.breakTime) || 0;
-                        
-                        const workMinutes = (end - start) / 60000 - breakMinutes;
-                        if (workMinutes > 0) {
-                            totalWorkMinutes += workMinutes;
-                            workDays++;
-                        }
-                    }
-                });
-                
-                // Hesaplamalar
-                const monthlyIncome = settings.monthlyIncome || 0;
-                const dailyIncome = monthlyIncome / 30;
-                const maxDailyHours = settings.maxDailyHours || 8;
-                const financialStatus = settings.financialStatus || 3;
-                
-                // Saatlik kazanç hesaplamaları
-                const totalWorkHours = totalWorkMinutes / 60;
-                const avgDailyWorkHours = workDays > 0 ? totalWorkHours / workDays : 0;
-                const hourlyEarning = avgDailyWorkHours > 0 ? dailyIncome / avgDailyWorkHours : 0;
-                
-                // Bugünün çalışma verisi
-                const todayWorkData = currentDayData.workData || {};
-                let todayWorkMinutes = 0;
-                let overtimeMinutes = 0;
-                
-                if (todayWorkData.startTime && todayWorkData.endTime && !currentDayData.isHoliday) {
-                    const start = new Date(`2000-01-01T${todayWorkData.startTime}`);
-                    const end = new Date(`2000-01-01T${todayWorkData.endTime}`);
-                    const breakMinutes = parseInt(todayWorkData.breakTime) || 0;
-                    
-                    todayWorkMinutes = (end - start) / 60000 - breakMinutes;
-                    const maxMinutes = maxDailyHours * 60;
-                    
-                    if (todayWorkMinutes > maxMinutes) {
-                        overtimeMinutes = todayWorkMinutes - maxMinutes;
-                    }
-                }
-                
-                const todayWorkHours = todayWorkMinutes / 60;
-                const overtimeHours = overtimeMinutes / 60;
-                const normalHours = todayWorkHours - overtimeHours;
-                
-                // Mali durum önerileri
-                const statusTexts = [
-                    '', // 0 kullanılmıyor
-                    'çok sıkışık dönemdesin',
-                    'sıkışık dönemdesin', 
-                    'normal dönemdesin',
-                    'rahat dönemdesin',
-                    'çok rahat dönemdesin'
-                ];
-                
-                const statusText = statusTexts[financialStatus] || 'normal dönemdesin';
-                
-                let recommendation = '';
-                const monthlyPercentage = monthlyIncome > 0 ? (monthlyExpenses / monthlyIncome * 100) : 0;
-                
-                if (financialStatus <= 2) { // Sıkışık dönem
-                    if (monthlyPercentage > 70) {
-                        recommendation = '🚨 Acil durum! Sadece zorunlu harcamaları yap.';
-                    } else if (monthlyPercentage > 50) {
-                        recommendation = '⚠️ Dikkatli ol, sadece ihtiyaçlarını karşıla.';
-                    } else {
-                        recommendation = '✅ İyi gidiyorsun, bu tempoyu koru.';
-                    }
-                } else if (financialStatus >= 4) { // Rahat dönem
-                    if (monthlyPercentage > 80) {
-                        recommendation = '💸 Rahat dönemde bile çok harcıyorsun!';
-                    } else if (monthlyPercentage > 60) {
-                        recommendation = '💰 Biraz daha tasarruf edebilirsin.';
-                    } else {
-                        recommendation = '🎉 Harika! Hem yaşıyor hem biriktiriyorsun.';
-                    }
-                } else { // Normal dönem
-                    if (monthlyPercentage > 80) {
-                        recommendation = '⚠️ Harcamalarını kontrol et!';
-                    } else if (monthlyPercentage > 50) {
-                        recommendation = '⚡ Dikkatli ol!';
-                    } else {
-                        recommendation = '✅ İyi gidiyorsun!';
-                    }
-                }
-                
-                document.getElementById('calculationResults').innerHTML = `
-                    <div style="text-align: left; font-size: 14px;">
-                        <h4>📊 Bugünkü Durum</h4>
-                        <p>• Bugün harcanan: <strong>${dailyExpenses.toFixed(2)} TL</strong></p>
-                        <p>&nbsp;&nbsp;- İhtiyaç: ${dailyNeedExpenses.toFixed(2)} TL</p>
-                        <p>&nbsp;&nbsp;- İstek: ${dailyWantExpenses.toFixed(2)} TL</p>
-                        <p>• Günlük kazanç: ${dailyIncome.toFixed(2)} TL</p>
-                        <p>• Kazancının <strong>%${monthlyIncome > 0 ? (dailyExpenses / dailyIncome * 100).toFixed(1) : 0}</strong>'ini harcadın</p>
-                        
-                        <h4 style="margin-top: 15px;">💼 Çalışma Analizi</h4>
-                        ${todayWorkHours > 0 ? `
-                            <p>• Bugün çalışılan: <strong>${todayWorkHours.toFixed(1)} saat</strong></p>
-                            ${overtimeHours > 0 ? `<p>• Mesai: <strong>${overtimeHours.toFixed(1)} saat</strong> ⏰</p>` : ''}
-                            <p>• Saatlik kazanç: <strong>${hourlyEarning.toFixed(2)} TL</strong></p>
-                            <p>• Bugünkü iş değeri: <strong>${(todayWorkHours * hourlyEarning).toFixed(2)} TL</strong></p>
-                            ${overtimeHours > 0 ? `<p>• Normal mesai ücreti: <strong>${(normalHours * hourlyEarning).toFixed(2)} TL</strong></p>
-                            <p>• Mesai ücreti (1.5x): <strong>${(overtimeHours * hourlyEarning * 1.5).toFixed(2)} TL</strong></p>` : ''}
-                        ` : '<p>• Bugün çalışma verisi girilmemiş</p>'}
-                        
-                        <h4 style="margin-top: 15px;">📈 Aylık Durum</h4>
-                        <p>• Bu ay harcanan: <strong>${monthlyExpenses.toFixed(2)} TL</strong></p>
-                        <p>&nbsp;&nbsp;- İhtiyaç: ${monthlyNeedExpenses.toFixed(2)} TL (${monthlyExpenses > 0 ? (monthlyNeedExpenses/monthlyExpenses*100).toFixed(1) : 0}%)</p>
-                        <p>&nbsp;&nbsp;- İstek: ${monthlyWantExpenses.toFixed(2)} TL (${monthlyExpenses > 0 ? (monthlyWantExpenses/monthlyExpenses*100).toFixed(1) : 0}%)</p>
-                        <p>• Aylık kazanç: <strong>${monthlyIncome.toFixed(2)} TL</strong></p>
-                        <p>• Kazancının <strong>%${monthlyPercentage.toFixed(1)}</strong>'ini harcadın</p>
-                        
-                        ${goals.dailyLimit || goals.weeklyLimit || goals.monthlyLimit ? `
-                            <h4 style="margin-top: 15px;">🎯 Hedef Durumu</h4>
-                            ${goals.dailyLimit ? `<p>• Günlük limit: ${goals.dailyLimit} TL ${dailyExpenses > goals.dailyLimit ? '🔴 Aşıldı!' : '🟢 Uygun'}</p>` : ''}
-                            ${goals.monthlyLimit ? `<p>• Aylık limit: ${goals.monthlyLimit} TL ${monthlyExpenses > goals.monthlyLimit ? '🔴 Aşıldı!' : '🟢 Uygun'}</p>` : ''}
-                        ` : ''}
-                        
-                        <h4 style="margin-top: 15px;">💡 Durum Değerlendirmesi</h4>
-                        <p>• Şu an <strong>${statusText}</strong></p>
-                        <p>• ${recommendation}</p>
-                        
-                        ${monthlyWantExpenses > monthlyNeedExpenses ? 
-                            '<p>• ⚠️ İstek harcamaların ihtiyaçlarından fazla!</p>' : 
-                            '<p>• ✅ İhtiyaçları önceliklendiriyorsun.</p>'}
-                    </div>
-                `;
+                // Grafikleri çiz
+                await drawCharts(analysisData, goals);
                 
             } catch (error) {
                 console.error('Hesaplama hatası:', error);
@@ -1144,8 +1190,428 @@
             }
         }
         
+        function analyzeExpenseData(dailyDocs, settings, goals) {
+            let monthlyExpenses = { essential: 0, need: 0, want: 0, loss: 0, total: 0 };
+            let dailyExpenses = { essential: 0, need: 0, want: 0, loss: 0, total: 0 };
+            let totalWorkMinutes = 0;
+            let workDays = 0;
+            let dailyData = [];
+            let cumulativeData = [];
+            let cumulativeSum = 0;
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 6);
+            
+            dailyDocs.forEach(doc => {
+                const data = doc.data();
+                const expenses = data.expenses || [];
+                const date = doc.id;
+                
+                let dayExpenses = { essential: 0, need: 0, want: 0, loss: 0, total: 0 };
+                
+                expenses.forEach(exp => {
+                    const category = exp.category || 'need';
+                    const amount = exp.amount || 0;
+                    
+                    dayExpenses[category] += amount;
+                    dayExpenses.total += amount;
+                    monthlyExpenses[category] += amount;
+                    monthlyExpenses.total += amount;
+                });
+                
+                // Bugünkü harcamalar
+                if (date === todayStr) {
+                    dailyExpenses = dayExpenses;
+                }
+                
+                // Son 7 gün için daily chart data
+                if (date >= weekAgo.toISOString().split('T')[0]) {
+                    dailyData.push({
+                        date: date,
+                        amount: dayExpenses.total,
+                        essential: dayExpenses.essential,
+                        need: dayExpenses.need,
+                        want: dayExpenses.want,
+                        loss: dayExpenses.loss
+                    });
+                }
+                
+                // Kümülatif veri
+                cumulativeSum += dayExpenses.total;
+                cumulativeData.push({
+                    date: date,
+                    cumulative: cumulativeSum
+                });
+                
+                // Çalışma süreleri
+                const workData = data.workData || {};
+                if (workData.startTime && workData.endTime && !data.isHoliday) {
+                    const start = new Date(`2000-01-01T${workData.startTime}`);
+                    const end = new Date(`2000-01-01T${workData.endTime}`);
+                    const breakMinutes = parseInt(workData.breakTime) || 0;
+                    
+                    const workMinutes = (end - start) / 60000 - breakMinutes;
+                    if (workMinutes > 0) {
+                        totalWorkMinutes += workMinutes;
+                        workDays++;
+                    }
+                }
+            });
+            
+            // Sırala
+            dailyData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            cumulativeData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            return {
+                monthly: monthlyExpenses,
+                daily: dailyExpenses,
+                totalWorkMinutes,
+                workDays,
+                dailyChartData: dailyData,
+                cumulativeChartData: cumulativeData
+            };
+        }
+        
+        function displayCalculationResults(analysis, settings, goals) {
+            const monthlyIncome = settings.monthlyIncome || 0;
+            const dailyIncome = monthlyIncome / 30;
+            const maxDailyHours = settings.maxDailyHours || 8;
+            const financialStatus = settings.financialStatus || 3;
+            
+            // Çalışma analizi
+            const totalWorkHours = analysis.totalWorkMinutes / 60;
+            const avgDailyWorkHours = analysis.workDays > 0 ? totalWorkHours / analysis.workDays : 0;
+            const hourlyEarning = avgDailyWorkHours > 0 ? dailyIncome / avgDailyWorkHours : 0;
+            
+            // Bugünün çalışma verisi
+            const todayWorkData = currentDayData.workData || {};
+            let todayWorkHours = 0;
+            let overtimeHours = 0;
+            
+            if (todayWorkData.startTime && todayWorkData.endTime && !currentDayData.isHoliday) {
+                const start = new Date(`2000-01-01T${todayWorkData.startTime}`);
+                const end = new Date(`2000-01-01T${todayWorkData.endTime}`);
+                const breakMinutes = parseInt(todayWorkData.breakTime) || 0;
+                
+                const todayWorkMinutes = (end - start) / 60000 - breakMinutes;
+                todayWorkHours = todayWorkMinutes / 60;
+                const maxMinutes = maxDailyHours * 60;
+                
+                if (todayWorkMinutes > maxMinutes) {
+                    overtimeHours = (todayWorkMinutes - maxMinutes) / 60;
+                }
+            }
+            
+            // Hedef durumları
+            const dailyGoalStatus = getGoalStatus(analysis.daily.total, goals.dailyGoal, goals.dailyTolerance);
+            const monthlyGoalStatus = getGoalStatus(analysis.monthly.total, goals.monthlyGoal, goals.monthlyTolerance);
+            
+            // Mali durum
+            const statusTexts = ['', 'çok sıkışık', 'sıkışık', 'normal', 'rahat', 'çok rahat'];
+            const statusText = statusTexts[financialStatus] || 'normal';
+            
+            // Akıllı öneriler
+            const recommendations = generateSmartRecommendations(analysis, settings, goals);
+            
+            // Verimlilik metrikleri
+            const productivityMetrics = calculateProductivityMetrics(analysis, settings, monthlyIncome);
+            
+            document.getElementById('calculationResults').innerHTML = `
+                <div style="text-align: left; font-size: 13px; line-height: 1.4;">
+                    <h4>💼 Çalışma & Kazanç Analizi</h4>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                        ${todayWorkHours > 0 ? `
+                            <p><strong>Bugün:</strong> ${todayWorkHours.toFixed(1)} saat çalışıldı</p>
+                            ${overtimeHours > 0 ? `<p style="color: #ff9800;"><strong>Mesai:</strong> +${overtimeHours.toFixed(1)} saat ⏰</p>` : ''}
+                            <p><strong>Saatlik kazanç:</strong> ${hourlyEarning.toFixed(2)} TL/saat</p>
+                            <p><strong>Bugünkü iş değeri:</strong> ${(todayWorkHours * hourlyEarning).toFixed(2)} TL</p>
+                        ` : '<p style="color: #666;">Bugün çalışma verisi girilmemiş</p>'}
+                        
+                        <p><strong>Ortalama günlük çalışma:</strong> ${avgDailyWorkHours.toFixed(1)} saat</p>
+                        <p><strong>Bu ay toplam:</strong> ${totalWorkHours.toFixed(1)} saat (${analysis.workDays} gün)</p>
+                    </div>
+                    
+                    <h4>💰 Harcama Dağılımı</h4>
+                    <div style="background: #fff3e0; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                        <p><strong>Bugün:</strong> ${analysis.daily.total.toFixed(2)} TL 
+                        ${dailyGoalStatus.status !== 'none' ? `<span class="${dailyGoalStatus.class}"> (${dailyGoalStatus.text})</span>` : ''}</p>
+                        <div style="font-size: 11px; margin-left: 10px;">
+                            • Zaruri: ${analysis.daily.essential.toFixed(0)} TL<br>
+                            • İhtiyaç: ${analysis.daily.need.toFixed(0)} TL<br>
+                            • İstek: ${analysis.daily.want.toFixed(0)} TL<br>
+                            • Kayıp: ${analysis.daily.loss.toFixed(0)} TL
+                        </div>
+                        
+                        <p style="margin-top: 8px;"><strong>Bu ay:</strong> ${analysis.monthly.total.toFixed(2)} TL 
+                        ${monthlyGoalStatus.status !== 'none' ? `<span class="${monthlyGoalStatus.class}"> (${monthlyGoalStatus.text})</span>` : ''}</p>
+                        <p><strong>Aylık gelirin:</strong> %${monthlyIncome > 0 ? (analysis.monthly.total / monthlyIncome * 100).toFixed(1) : 0}\'i harcanmış</p>
+                    </div>
+                    
+                    ${productivityMetrics.length > 0 ? `
+                        <h4>📊 Verimlilik Metrikleri</h4>
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                            ${productivityMetrics.map(metric => `<p>• ${metric}</p>`).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    <h4>🎯 Akıllı Öneriler</h4>
+                    <div style="background: #f3e5f5; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                        ${recommendations.map(rec => `<p>• ${rec}</p>`).join('')}
+                    </div>
+                    
+                    <h4>📈 Trend Analizi</h4>
+                    <div style="background: #e8f5e8; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                        <p><strong>Mali durumun:</strong> ${statusText} seviyesinde</p>
+                        ${analysis.daily.want > analysis.daily.need + analysis.daily.essential ? 
+                            '<p style="color: #f44336;">⚠️ İstek harcamaların çok yüksek!</p>' : 
+                            '<p style="color: #4caf50;">✅ Önceliklendirme dengeli görünüyor.</p>'}
+                        <p><strong>Harcama verimliliği:</strong> ${calculateEfficiencyScore(analysis)}%</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateSmartRecommendations(analysis, settings, goals) {
+            const recommendations = [];
+            const financialStatus = settings.financialStatus || 3;
+            const monthlyIncome = settings.monthlyIncome || 0;
+            
+            // Harcama pattern analizi
+            const wantRatio = analysis.monthly.total > 0 ? (analysis.monthly.want / analysis.monthly.total) : 0;
+            const essentialRatio = analysis.monthly.total > 0 ? (analysis.monthly.essential / analysis.monthly.total) : 0;
+            
+            if (wantRatio > 0.4) {
+                recommendations.push('İstek harcamalarınız %40\'ı aşıyor. Biraz daha dikkatli olun.');
+            }
+            
+            if (essentialRatio > 0.6) {
+                recommendations.push('Zorunlu harcamalarınız yüksek. Alternatif çözümler araştırın.');
+            }
+            
+            if (analysis.daily.total > 0 && goals.dailyGoal > 0) {
+                if (analysis.daily.total < goals.dailyGoal * 0.8) {
+                    recommendations.push('Bugün hedefin altındasın! Biriktirme fırsatı.');
+                } else if (analysis.daily.total > goals.dailyGoal + goals.dailyTolerance) {
+                    recommendations.push('Günlük limitini aştın. Yarın daha dikkatli ol.');
+                }
+            }
+            
+            if (financialStatus <= 2 && wantRatio > 0.2) {
+                recommendations.push('Sıkışık dönemde istek harcamalarını minimize et.');
+            }
+            
+            if (monthlyIncome > 0 && analysis.monthly.total / monthlyIncome > 0.8) {
+                recommendations.push('Aylık gelirinin %80\'ini harcamışsın. Acil fren çek!');
+            }
+            
+            // Çalışma önerileri
+            if (analysis.workDays > 0) {
+                const avgDaily = analysis.totalWorkMinutes / 60 / analysis.workDays;
+                if (avgDaily < 6) {
+                    recommendations.push('Çalışma saatlerin düşük. Ek gelir kaynakları düşün.');
+                } else if (avgDaily > 10) {
+                    recommendations.push('Çok çalışıyorsun! İş-yaşam dengeni kontrol et.');
+                }
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push('Finansal durumun dengeli görünüyor. Bu tempoyu koru!');
+            }
+            
+            return recommendations;
+        }
+        
+        function calculateProductivityMetrics(analysis, settings, monthlyIncome) {
+            const metrics = [];
+            
+            if (analysis.totalWorkMinutes > 0 && monthlyIncome > 0) {
+                const hourlyValue = (monthlyIncome / 30) / (analysis.totalWorkMinutes / 60 / analysis.workDays);
+                metrics.push(`Saatlik değerin: ${hourlyValue.toFixed(2)} TL`);
+                
+                const workEfficiency = (analysis.totalWorkMinutes / 60) / (analysis.workDays * (settings.maxDailyHours || 8));
+                metrics.push(`Çalışma verimliliği: %${(workEfficiency * 100).toFixed(1)}`);
+            }
+            
+            if (analysis.monthly.total > 0) {
+                const needRatio = analysis.monthly.need / analysis.monthly.total;
+                metrics.push(`İhtiyaç odaklılık: %${(needRatio * 100).toFixed(1)}`);
+                
+                const spendingSpeed = analysis.monthly.total / new Date().getDate();
+                metrics.push(`Günlük ortalama harcama: ${spendingSpeed.toFixed(2)} TL`);
+            }
+            
+            return metrics;
+        }
+        
+        function calculateEfficiencyScore(analysis) {
+            let score = 100;
+            
+            // İstek harcaması penaltısı
+            const wantRatio = analysis.monthly.total > 0 ? (analysis.monthly.want / analysis.monthly.total) : 0;
+            score -= (wantRatio * 30);
+            
+            // Kayıp penaltısı
+            const lossRatio = analysis.monthly.total > 0 ? (analysis.monthly.loss / analysis.monthly.total) : 0;
+            score -= (lossRatio * 50);
+            
+            // Zaruri harcama fazlalığı penaltısı
+            const essentialRatio = analysis.monthly.total > 0 ? (analysis.monthly.essential / analysis.monthly.total) : 0;
+            if (essentialRatio > 0.5) {
+                score -= ((essentialRatio - 0.5) * 40);
+            }
+            
+            return Math.max(0, Math.round(score));
+        }
+        
+        async function drawCharts(analysisData, goals) {
+            // Önce mevcut grafikleri temizle
+            ['dailyChart', 'cumulativeChart', 'goalChart'].forEach(chartId => {
+                const existingChart = Chart.getChart(chartId);
+                if (existingChart) {
+                    existingChart.destroy();
+                }
+            });
+            // Grafik verilerini hazırla
+            const dailyData = analysisData.dailyChartData.slice(-7); // Son 7 gün
+            const cumulativeData = analysisData.cumulativeChartData;
+            
+            // 1. Günlük Harcama Trendi
+            const dailyChart = new Chart(document.getElementById('dailyChart'), {
+                type: 'line',
+                data: {
+                    labels: dailyData.map(d => new Date(d.date).toLocaleDateString('tr-TR', {day: '2-digit', month: '2-digit'})),
+                    datasets: [
+                        {
+                            label: 'Toplam',
+                            data: dailyData.map(d => d.amount),
+                            borderColor: '#4a90e2',
+                            backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'İstek',
+                            data: dailyData.map(d => d.want),
+                            borderColor: '#e53e3e',
+                            backgroundColor: 'rgba(229, 62, 62, 0.1)',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    // EKLENECEK
+                    onResize: function(chart, size) {
+                        chart.canvas.style.height = '200px';
+                    }
+                }
+            });
+            
+            // 2. Kümülatif Harcama
+            const cumulativeChart = new Chart(document.getElementById('cumulativeChart'), {
+                type: 'line',
+                data: {
+                    labels: cumulativeData.map(d => new Date(d.date).toLocaleDateString('tr-TR', {day: '2-digit'})),
+                    datasets: [{
+                        label: 'Kümülatif Harcama',
+                        data: cumulativeData.map(d => d.cumulative),
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    // EKLENECEK
+                    onResize: function(chart, size) {
+                        chart.canvas.style.height = '200px';
+                    }
+                }
+            });
+            
+            // 3. Hedef Durumu
+            if (goals.dailyGoal > 0) {
+                const goalChart = new Chart(document.getElementById('goalChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: dailyData.map(d => new Date(d.date).toLocaleDateString('tr-TR', {day: '2-digit'})),
+                        datasets: [
+                            {
+                                label: 'Günlük Harcama',
+                                data: dailyData.map(d => d.amount),
+                                backgroundColor: dailyData.map(d => {
+                                    if (d.amount <= goals.dailyGoal) return 'rgba(76, 175, 80, 0.8)';
+                                    if (d.amount <= goals.dailyGoal + goals.dailyTolerance) return 'rgba(255, 152, 0, 0.8)';
+                                    return 'rgba(244, 67, 54, 0.8)';
+                                })
+                            },
+                            {
+                                label: 'Hedef',
+                                data: new Array(dailyData.length).fill(goals.dailyGoal),
+                                type: 'line',
+                                borderColor: '#2196f3',
+                                backgroundColor: 'transparent',
+                                borderWidth: 2,
+                                pointRadius: 0
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                max: Math.max(goals.dailyGoal + goals.dailyTolerance + 50, Math.max(...dailyData.map(d => d.amount)) + 50)
+                            }
+                        },
+                        // EKLENECEK
+                        onResize: function(chart, size) {
+                            chart.canvas.style.height = '200px';
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('goalChart').parentElement.innerHTML = '<p style="text-align: center; color: #666;">Günlük hedef belirlenmemiş</p>';
+            }
+        }
+        
         function closeCalculation() {
             document.getElementById('calculationOverlay').style.display = 'none';
+            
+            // Chart.js instances temizle - GELİŞTİRİLMİŞ
+            ['dailyChart', 'cumulativeChart', 'goalChart'].forEach(chartId => {
+                const chart = Chart.getChart(chartId);
+                if (chart) {
+                    chart.destroy();
+                }
+                
+                // Canvas'ı da temizle
+                const canvas = document.getElementById(chartId);
+                if (canvas) {
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = 200;
+                }
+            });
         }
         
         // Enter tuşu desteği
@@ -1157,7 +1623,6 @@
                     updateExpense();
                 } else if (document.getElementById('expenseAmount') === document.activeElement || 
                           document.getElementById('expenseName') === document.activeElement) {
-                    // Enter'a basıldığında hangi kategoriye ekleyeceğini belirlemek için son eklenen türü hatırla
                     addExpense('need'); // Varsayılan olarak ihtiyaç
                 }
             }
@@ -1168,13 +1633,21 @@
             if (e.key === 'Escape') {
                 if (editingExpenseIndex >= 0) {
                     if (confirm('Değişiklikleri iptal etmek istediğinizden emin misiniz?')) {
-                        clearEditingMode();
-                        selectedExpenseIndex = -1;
-                        updateExpenseList();
+                        cancelEdit();
                     }
                 }
             }
         });
+        
+        // CSS animasyonu ekle
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
