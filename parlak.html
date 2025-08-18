@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💡 Akıllı Işık Kontrol Sistemi</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --bg-secondary: rgba(255, 255, 255, 0.95); --bg-card: rgba(255, 255, 255, 0.9); --text-primary: #333; --text-secondary: #666; --text-accent: #4a90e2; --border-color: rgba(255, 255, 255, 0.2); --shadow: rgba(0, 0, 0, 0.1); --green: #4caf50; --red: #f44336; --orange: #ff9800; --blue: #2196f3; }
+        [data-theme="dark"] { --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); --bg-secondary: rgba(30, 30, 50, 0.95); --bg-card: rgba(40, 40, 60, 0.9); --text-primary: #e0e6ed; --text-secondary: #b0b7c3; --text-accent: #64b5f6; --border-color: rgba(255, 255, 255, 0.1); --shadow: rgba(0, 0, 0, 0.3); }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-primary); min-height: 100vh; padding: 20px; color: var(--text-primary); transition: all 0.3s ease; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 300px 1fr; gap: 20px; height: calc(100vh - 40px); }
+        .sidebar { background: var(--bg-secondary); border-radius: 20px; padding: 25px; backdrop-filter: blur(10px); border: 1px solid var(--border-color); box-shadow: 0 8px 32px var(--shadow); overflow-y: auto; }
+        .main-content { display: grid; grid-template-rows: auto 1fr auto; gap: 20px; overflow: hidden; }
+        .header { background: var(--bg-secondary); border-radius: 20px; padding: 20px 25px; backdrop-filter: blur(10px); border: 1px solid var(--border-color); box-shadow: 0 8px 32px var(--shadow); display: flex; justify-content: space-between; align-items: center; }
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; overflow: hidden; }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 20px; backdrop-filter: blur(10px); border: 1px solid var(--border-color); box-shadow: 0 8px 32px var(--shadow); transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px var(--shadow); }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--text-accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4); transition: all 0.3s ease; z-index: 1000; }
+        .theme-toggle:hover { transform: scale(1.1); }
+        .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
+        .login-popup { background: var(--bg-secondary); padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); backdrop-filter: blur(10px); }
+        .login-popup h3 { margin-bottom: 20px; text-align: center; color: var(--text-accent); font-size: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-secondary); }
+        .form-group input { width: 100%; padding: 12px 15px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--bg-card); color: var(--text-primary); font-size: 16px; transition: all 0.3s ease; }
+        .form-group input:focus { outline: none; border-color: var(--text-accent); box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1); }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--text-accent); color: white; width: 100%; justify-content: center; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4); }
+        .btn-success { background: var(--green); color: white; }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-warning { background: var(--orange); color: white; }
+        .status-indicator { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; animation: pulse 2s infinite; }
+        .status-on { background: var(--green); }
+        .status-off { background: var(--red); }
+        .status-auto { background: var(--blue); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .schedule-item { background: var(--bg-card); border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 2px solid transparent; transition: all 0.3s ease; }
+        .schedule-item.active { border-color: var(--green); background: rgba(76, 175, 80, 0.1); }
+        .schedule-time { font-weight: 600; font-size: 16px; }
+        .schedule-action { font-size: 14px; color: var(--text-secondary); }
+        .sensor-data { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .sensor-item { background: var(--bg-card); border-radius: 10px; padding: 15px; text-align: center; }
+        .sensor-value { font-size: 24px; font-weight: bold; color: var(--text-accent); }
+        .sensor-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .log-time { font-size: 12px; color: var(--text-secondary); }
+        .log-action { font-size: 14px; font-weight: 500; }
+        .time-input { display: flex; gap: 10px; margin-bottom: 15px; }
+        .time-input input { flex: 1; padding: 10px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-primary); }
+        .command-selector { margin-bottom: 15px; }
+        .command-selector select { width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-card); color: var(--text-primary); }
+        .hidden { display: none !important; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border-color); border-radius: 50%; border-top-color: var(--text-accent); animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .user-info { background: var(--bg-card); border-radius: 10px; padding: 15px; margin-bottom: 20px; text-align: center; }
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; background: var(--text-accent); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 20px; color: white; }
+        .user-name { font-weight: 600; font-size: 16px; margin-bottom: 5px; }
+        .user-role { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .error-message { color: var(--red); text-align: center; margin-top: 15px; padding: 10px; background: rgba(244, 67, 54, 0.1); border-radius: 8px; border: 1px solid rgba(244, 67, 54, 0.3); }
+        .success-message { color: var(--green); text-align: center; margin-top: 15px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; } .content-grid { grid-template-columns: 1fr; } .sidebar { order: 3; height: auto; } }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-popup">
+            <h3>🔐 Akıllı Işık Sistemi</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Kullanıcı Adı:</label>
+                    <input type="text" id="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Şifre:</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span id="loginBtnText">Giriş Yap</span>
+                    <span id="loginLoader" class="loading hidden"></span>
+                </button>
+            </form>
+            <div id="loginError" class="hidden error-message"></div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContent" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="user-info" id="userInfo">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-name" id="userName">Kullanıcı</div>
+                <div class="user-role" id="userRole">user</div>
+            </div>
+
+            <h2 style="margin-bottom: 20px; color: var(--text-accent);">⚡ Kontrol Paneli</h2>
+            
+            <!-- Main Control -->
+            <div class="card" style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 15px;">Ana Kontrol</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-success" id="lightOnBtn">💡 Işığı Aç</button>
+                    <button class="btn btn-danger" id="lightOffBtn">🌙 Işığı Kapat</button>
+                    <button class="btn btn-warning" id="autoModeBtn">🤖 Otomatik Mod</button>
+                </div>
+            </div>
+            
+            <!-- Quick Commands -->
+            <div class="card">
+                <h4 style="margin-bottom: 15px;">Hızlı Komutlar</h4>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="btn" style="background: var(--blue); color: white;" onclick="sendCommand('light_check')">🔍 Işık Durumu Kontrol Et</button>
+                    <button class="btn" style="background: #9c27b0; color: white;" onclick="sendCommand('always_on_if_dark')">🌃 Karanlıkta Herzaman Aç</button>
+                    <button class="btn" style="background: #607d8b; color: white;" onclick="sendCommand('always_off_if_light')">☀️ Aydınlıkta Herzaman Kapat</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div>
+                    <h1>💡 Akıllı Işık Kontrol Sistemi</h1>
+                    <p style="color: var(--text-secondary); margin-top: 5px;">Ev Otomasyonu v2.0</p>
+                </div>
+                <div class="status-indicator" id="systemStatus">
+                    <div class="status-dot status-off"></div>
+                    <span>Sistem Kapalı</span>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Light Status & Sensor Data -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h4 style="margin-bottom: 15px;">📊 Sistem Durumu</h4>
+                    <div class="sensor-data">
+                        <div class="sensor-item">
+                            <div class="sensor-value" id="lightStatus">❓</div>
+                            <div class="sensor-label">Işık Durumu</div>
+                        </div>
+                        <div class="sensor-item">
+                            <div class="sensor-value" id="ldrValue">---</div>
+                            <div class="sensor-label">LDR Sensör</div>
+                        </div>
+                        <div class="sensor-item">
+                            <div class="sensor-value" id="lastUpdate">--:--</div>
+                            <div class="sensor-label">Son Güncelleme</div>
+                        </div>
+                        <div class="sensor-item">
+                            <div class="sensor-value" id="activeMode">Manuel</div>
+                            <div class="sensor-label">Aktif Mod</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Control -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h4 style="margin-bottom: 15px;">⏰ Zamanlama Kontrolü</h4>
+                    <div class="time-input">
+                        <input type="time" id="scheduleTime" placeholder="Saat">
+                        <select id="scheduleAction" class="command-selector">
+                            <option value="turn_on">Işığı Aç</option>
+                            <option value="turn_off">Işığı Kapat</option>
+                            <option value="check_light">Işığı Kontrol Et</option>
+                            <option value="auto_on_if_dark">Karanlıksa Aç</option>
+                            <option value="auto_off_if_light">Aydınlıksa Kapat</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="addSchedule()">📅 Zamanlama Ekle</button>
+                    
+                    <div style="margin-top: 20px; max-height: 200px; overflow-y: auto;" id="scheduleList">
+                        <!-- Schedule items will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Activity Log -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h4 style="margin-bottom: 15px;">📝 Aktivite Günlüğü</h4>
+                    <div style="max-height: 300px; overflow-y: auto;" id="activityLog">
+                        <!-- Log entries will be populated here -->
+                    </div>
+                </div>
+
+                <!-- System Settings -->
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h4 style="margin-bottom: 15px;">⚙️ Sistem Ayarları</h4>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: var(--text-secondary);">LDR Eşik Değeri:</label>
+                            <input type="range" id="ldrThreshold" min="100" max="800" value="300" style="width: 100%; margin-bottom: 10px;">
+                            <div style="text-align: center; font-size: 14px;" id="thresholdValue">300</div>
+                        </div>
+                        <button class="btn" style="background: var(--orange); color: white;" onclick="saveSettings()">💾 Ayarları Kaydet</button>
+                        <button class="btn" style="background: var(--red); color: white;" onclick="logout()">🚪 Çıkış Yap</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            // Firebase config buraya gelecek
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Global variables
+        let currentUser = null;
+        let userRole = null;
+        let schedules = [];
+        let activityLog = [];
+        let systemData = {
+            lightStatus: false,
+            ldrValue: 0,
+            lastUpdate: null,
+            activeMode: 'manual',
+            ldrThreshold: 300
+        };
+
+        // Theme Management
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function setAutoTheme() {
+            const hour = new Date().getHours();
+            const savedTheme = localStorage.getItem('theme');
+            
+            if (!savedTheme) {
+                const theme = (hour >= 18 || hour < 6) ? 'dark' : 'light';
+                document.body.setAttribute('data-theme', theme);
+                document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+            } else {
+                document.body.setAttribute('data-theme', savedTheme);
+                document.getElementById('themeToggle').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            }
+        }
+
+        // Firebase Authentication System
+        async function authenticateUser(username, password) {
+            try {
+                const usersDoc = await db.collection('lightSystem').doc('users').get();
+                if (!usersDoc.exists) {
+                    throw new Error('Kullanıcı database\'i bulunamadı!');
+                }
+
+                const usersData = usersDoc.data();
+                const users = usersData.users || [];
+
+                // Kullanıcı araması
+                const user = users.find(u => u.username === username && u.active === true);
+                if (!user) {
+                    throw new Error('Kullanıcı bulunamadı veya devre dışı!');
+                }
+
+                // Şifre kontrolü (Base64 decode)
+                const decodedPassword = atob(user.password);
+                if (decodedPassword !== password) {
+                    throw new Error('Hatalı şifre!');
+                }
+
+                // Başarılı giriş - oturum kaydet
+                const sessionData = {
+                    username: user.username,
+                    role: user.role,
+                    loginTime: new Date(),
+                    lastActivity: new Date(),
+                    sessionId: Date.now().toString()
+                };
+
+                // Session bilgisini Firebase'e kaydet
+                await db.collection('lightSystem').doc('sessions').update({
+                    activeSessions: firebase.firestore.FieldValue.arrayUnion(sessionData)
+                });
+
+                // Aktivite log'u ekle
+                await addActivityLogToFirebase(`Kullanıcı girişi: ${user.username} (${user.role})`, 'info');
+
+                return {
+                    success: true,
+                    user: user,
+                    session: sessionData
+                };
+
+            } catch (error) {
+                console.error('Authentication error:', error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginLoader = document.getElementById('loginLoader');
+            const loginError = document.getElementById('loginError');
+
+            if (!username || !password) {
+                showLoginError('Kullanıcı adı ve şifre boş olamaz!');
+                return;
+            }
+
+            // Loading state
+            loginBtn.disabled = true;
+            loginBtnText.style.display = 'none';
+            loginLoader.classList.remove('hidden');
+            loginError.classList.add('hidden');
+
+            try {
+                const authResult = await authenticateUser(username, password);
+
+                if (authResult.success) {
+                    currentUser = authResult.user.username;
+                    userRole = authResult.user.role;
+                    
+                    // UI güncellemeleri
+                    updateUserInfo(authResult.user);
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'grid';
+                    
+                    // Session bilgisini localStorage'a kaydet
+                    localStorage.setItem('lightSystemAuth', JSON.stringify({
+                        username: currentUser,
+                        role: userRole,
+                        sessionId: authResult.session.sessionId
+                    }));
+
+                    // Form temizle
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    
+                    await initializeSystem();
+                    
+                } else {
+                    showLoginError(authResult.error);
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoginError('Giriş işlemi sırasında bir hata oluştu!');
+            } finally {
+                // Loading state reset
+                loginBtn.disabled = false;
+                loginBtnText.style.display = 'inline';
+                loginLoader.classList.add('hidden');
+            }
+        }
+
+        function showLoginError(message) {
+            const loginError = document.getElementById('loginError');
+            loginError.textContent = message;
+            loginError.classList.remove('hidden');
+            
+            // 5 saniye sonra hata mesajını gizle
+            setTimeout(() => {
+                loginError.classList.add('hidden');
+            }, 5000);
+        }
+
+        function updateUserInfo(user) {
+            document.getElementById('userName').textContent = user.username;
+            document.getElementById('userRole').textContent = user.role;
+            
+            // Avatar ikonu role göre değiştir
+            const avatar = document.getElementById('userAvatar');
+            switch (user.role) {
+                case 'admin':
+                    avatar.textContent = '👑';
+                    break;
+                case 'user':
+                    avatar.textContent = '👤';
+                    break;
+                case 'viewer':
+                    avatar.textContent = '👁️';
+                    break;
+                default:
+                    avatar.textContent = '👤';
+            }
+        }
+
+        async function logout() {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                try {
+                    // Session'ı Firebase'den kaldır
+                    const authData = JSON.parse(localStorage.getItem('lightSystemAuth') || '{}');
+                    if (authData.sessionId) {
+                        const sessionsDoc = await db.collection('lightSystem').doc('sessions').get();
+                        if (sessionsDoc.exists) {
+                            const sessionsData = sessionsDoc.data();
+                            const updatedSessions = sessionsData.activeSessions.filter(s => s.sessionId !== authData.sessionId);
+                            
+                            await db.collection('lightSystem').doc('sessions').update({
+                                activeSessions: updatedSessions
+                            });
+                        }
+                    }
+
+                    // Aktivite log'u ekle
+                    await addActivityLogToFirebase(`Kullanıcı çıkışı: ${currentUser}`, 'info');
+
+                } catch (error) {
+                    console.error('Logout error:', error);
+                } finally {
+                    // Local temizlik
+                    currentUser = null;
+                    userRole = null;
+                    localStorage.removeItem('lightSystemAuth');
+                    
+                    document.getElementById('loginOverlay').style.display = 'flex';
+                    document.getElementById('mainContent').style.display = 'none';
+                }
+            }
+        }
+
+        // Role-based Access Control
+        function checkUserPermission(action) {
+            if (!userRole) return false;
+            
+            switch (userRole) {
+                case 'admin':
+                    return true; // Admin her şeyi yapabilir
+                case 'user':
+                    // User schedule oluşturabilir, temel kontrolları yapabilir
+                    return !['system_reset', 'delete_all_data'].includes(action);
+                case 'viewer':
+                    // Viewer sadece görüntüleyebilir
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        // System Control Functions
+        async function sendCommand(command, value = null) {
+            if (!checkUserPermission(command)) {
+                alert('Bu işlem için yetkiniz bulunmamaktadır!');
+                addActivityLog(`Yetkisiz erişim denemesi: ${command}`, 'error');
+                return;
+            }
+
+            try {
+                const commandData = {
+                    command: command,
+                    value: value,
+                    timestamp: new Date(),
+                    user: currentUser,
+                    role: userRole
+                };
+
+                await db.collection('lightSystem').doc('commands').set({
+                    latest: commandData,
+                    history: firebase.firestore.FieldValue.arrayUnion(commandData)
+                }, { merge: true });
+
+                updateSystemStatus(command, value);
+                addActivityLog(`Komut gönderildi: ${getCommandText(command)}`);
+
+            } catch (error) {
+                console.error('Komut gönderilemedi:', error);
+                addActivityLog('Komut gönderme hatası!', 'error');
+            }
+        }
+
+        function getCommandText(command) {
+            const commands = {
+                'turn_on': 'Işığı Aç',
+                'turn_off': 'Işığı Kapat',
+                'auto_mode': 'Otomatik Mod',
+                'light_check': 'Işık Durumu Kontrol',
+                'always_on_if_dark': 'Karanlıkta Herzaman Aç',
+                'always_off_if_light': 'Aydınlıkta Herzaman Kapat'
+            };
+            return commands[command] || command;
+        }
+
+        function updateSystemStatus(command, value) {
+            const statusElement = document.getElementById('systemStatus');
+            const statusDot = statusElement.querySelector('.status-dot');
+            const statusText = statusElement.querySelector('span');
+
+            switch (command) {
+                case 'turn_on':
+                    statusDot.className = 'status-dot status-on';
+                    statusText.textContent = 'Sistem Açık';
+                    systemData.lightStatus = true;
+                    document.getElementById('lightStatus').textContent = '💡';
+                    break;
+                case 'turn_off':
+                    statusDot.className = 'status-dot status-off';
+                    statusText.textContent = 'Sistem Kapalı';
+                    systemData.lightStatus = false;
+                    document.getElementById('lightStatus').textContent = '🌙';
+                    break;
+                case 'auto_mode':
+                    statusDot.className = 'status-dot status-auto';
+                    statusText.textContent = 'Otomatik Mod';
+                    systemData.activeMode = 'auto';
+                    document.getElementById('activeMode').textContent = 'Otomatik';
+                    break;
+            }
+
+            systemData.lastUpdate = new Date();
+            document.getElementById('lastUpdate').textContent = formatTime(systemData.lastUpdate);
+        }
+
+        // Schedule Management
+        function addSchedule() {
+            if (!checkUserPermission('add_schedule')) {
+                alert('Zamanlama ekleme yetkiniz bulunmamaktadır!');
+                return;
+            }
+
+            const time = document.getElementById('scheduleTime').value;
+            const action = document.getElementById('scheduleAction').value;
+
+            if (!time) {
+                alert('Lütfen bir saat seçin!');
+                return;
+            }
+
+            const schedule = {
+                id: Date.now(),
+                time: time,
+                action: action,
+                active: true,
+                created: new Date(),
+                createdBy: currentUser
+            };
+
+            schedules.push(schedule);
+            saveSchedules();
+            renderSchedules();
+            addActivityLog(`Yeni zamanlama eklendi: ${time} - ${getCommandText(action)}`);
+
+            document.getElementById('scheduleTime').value = '';
+            document.getElementById('scheduleAction').selectedIndex = 0;
+        }
+
+        function toggleSchedule(id) {
+            if (!checkUserPermission('toggle_schedule')) {
+                alert('Zamanlama düzenleme yetkiniz bulunmamaktadır!');
+                return;
+            }
+
+            const schedule = schedules.find(s => s.id === id);
+            if (schedule) {
+                schedule.active = !schedule.active;
+                saveSchedules();
+                renderSchedules();
+                addActivityLog(`Zamanlama ${schedule.active ? 'aktifleştirildi' : 'devre dışı bırakıldı'}: ${schedule.time}`);
+            }
+        }
+
+        function deleteSchedule(id) {
+            if (!checkUserPermission('delete_schedule')) {
+                alert('Zamanlama silme yetkiniz bulunmamaktadır!');
+                return;
+            }
+
+            if (confirm('Bu zamanlamayı silmek istediğinizden emin misiniz?')) {
+                schedules = schedules.filter(s => s.id !== id);
+                saveSchedules();
+                renderSchedules();
+                addActivityLog('Zamanlama silindi');
+            }
+        }
+
+        function renderSchedules() {
+            const container = document.getElementById('scheduleList');
+            
+            if (schedules.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Henüz zamanlama eklenmemiş</p>';
+                return;
+            }
+
+            container.innerHTML = schedules.map(schedule => `
+                <div class="schedule-item ${schedule.active ? 'active' : ''}" onclick="toggleSchedule(${schedule.id})">
+                    <div>
+                        <div class="schedule-time">${schedule.time}</div>
+                        <div class="schedule-action">${getCommandText(schedule.action)}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <span style="color: ${schedule.active ? 'var(--green)' : 'var(--text-secondary)'};">
+                            ${schedule.active ? '✅' : '⏸️'}
+                        </span>
+                        ${userRole === 'admin' || userRole === 'user' ? `
+                        <button onclick="event.stopPropagation(); deleteSchedule(${schedule.id})" 
+                                style="background: none; border: none; color: var(--red); cursor: pointer;">🗑️</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Activity Log
+        function addActivityLog(message, type = 'info') {
+            const logEntry = {
+                timestamp: new Date(),
+                message: message,
+                type: type,
+                user: currentUser
+            };
+
+            activityLog.unshift(logEntry);
+            if (activityLog.length > 50) {
+                activityLog = activityLog.slice(0, 50);
+            }
+
+            renderActivityLog();
+            
+            // Firebase'e de kaydet
+            addActivityLogToFirebase(message, type);
+        }
+
+        async function addActivityLogToFirebase(message, type = 'info') {
+            try {
+                const logEntry = {
+                    timestamp: new Date(),
+                    message: message,
+                    type: type,
+                    user: currentUser || 'system'
+                };
+
+                await db.collection('lightSystem').doc('activityLog').update({
+                    logs: firebase.firestore.FieldValue.arrayUnion(logEntry),
+                    lastUpdate: new Date()
+                });
+            } catch (error) {
+                console.error('Activity log kaydedilemedi:', error);
+            }
+        }
+
+        function renderActivityLog() {
+            const container = document.getElementById('activityLog');
+            
+            if (activityLog.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Henüz aktivite kaydı yok</p>';
+                return;
+            }
+
+            container.innerHTML = activityLog.map(log => `
+                <div class="log-item">
+                    <div class="log-action" style="color: ${log.type === 'error' ? 'var(--red)' : 'var(--text-primary)'};">
+                        ${log.message}
+                    </div>
+                    <div class="log-time">${formatTime(log.timestamp)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Data Management
+        async function saveSchedules() {
+            try {
+                await db.collection('lightSystem').doc('schedules').set({
+                    schedules: schedules,
+                    lastUpdate: new Date(),
+                    updatedBy: currentUser
+                });
+            } catch (error) {
+                console.error('Zamanlamalar kaydedilemedi:', error);
+            }
+        }
+
+        async function loadSchedules() {
+            try {
+                const doc = await db.collection('lightSystem').doc('schedules').get();
+                if (doc.exists) {
+                    schedules = doc.data().schedules || [];
+                    renderSchedules();
+                }
+            } catch (error) {
+                console.error('Zamanlamalar yüklenemedi:', error);
+            }
+        }
+
+        async function saveSettings() {
+            if (!checkUserPermission('save_settings')) {
+                alert('Ayar kaydetme yetkiniz bulunmamaktadır!');
+                return;
+            }
+
+            try {
+                const threshold = document.getElementById('ldrThreshold').value;
+                systemData.ldrThreshold = parseInt(threshold);
+
+                await db.collection('lightSystem').doc('settings').set({
+                    ldrThreshold: systemData.ldrThreshold,
+                    lastUpdate: new Date(),
+                    updatedBy: currentUser
+                });
+
+                addActivityLog(`Ayarlar kaydedildi - LDR Eşik: ${threshold}`);
+                alert('Ayarlar başarıyla kaydedildi!');
+
+                await sendCommand('set_threshold', systemData.ldrThreshold);
+
+            } catch (error) {
+                console.error('Ayarlar kaydedilemedi:', error);
+                addActivityLog('Ayar kaydetme hatası!', 'error');
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const doc = await db.collection('lightSystem').doc('settings').get();
+                if (doc.exists) {
+                    const settings = doc.data();
+                    systemData.ldrThreshold = settings.ldrThreshold || 300;
+                    document.getElementById('ldrThreshold').value = systemData.ldrThreshold;
+                    document.getElementById('thresholdValue').textContent = systemData.ldrThreshold;
+                }
+            } catch (error) {
+                console.error('Ayarlar yüklenemedi:', error);
+            }
+        }
+
+        async function loadActivityLog() {
+            try {
+                const doc = await db.collection('lightSystem').doc('activityLog').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    activityLog = data.logs || [];
+                    renderActivityLog();
+                }
+            } catch (error) {
+                console.error('Aktivite günlüğü yüklenemedi:', error);
+            }
+        }
+
+        // System Monitoring
+        async function loadSystemData() {
+            try {
+                const doc = await db.collection('lightSystem').doc('status').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    systemData = { ...systemData, ...data };
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Sistem verileri yüklenemedi:', error);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('lightStatus').textContent = systemData.lightStatus ? '💡' : '🌙';
+            document.getElementById('ldrValue').textContent = systemData.ldrValue || '---';
+            
+            if (systemData.lastUpdate) {
+                document.getElementById('lastUpdate').textContent = formatTime(new Date(systemData.lastUpdate));
+            }
+            
+            document.getElementById('activeMode').textContent = systemData.activeMode === 'auto' ? 'Otomatik' : 'Manuel';
+            
+            const statusElement = document.getElementById('systemStatus');
+            const statusDot = statusElement.querySelector('.status-dot');
+            const statusText = statusElement.querySelector('span');
+            
+            if (systemData.activeMode === 'auto') {
+                statusDot.className = 'status-dot status-auto';
+                statusText.textContent = 'Otomatik Mod';
+            } else if (systemData.lightStatus) {
+                statusDot.className = 'status-dot status-on';
+                statusText.textContent = 'Sistem Açık';
+            } else {
+                statusDot.className = 'status-dot status-off';
+                statusText.textContent = 'Sistem Kapalı';
+            }
+        }
+
+        // Schedule Checker
+        function checkSchedules() {
+            const now = new Date();
+            const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                               now.getMinutes().toString().padStart(2, '0');
+
+            schedules.forEach(schedule => {
+                if (schedule.active && schedule.time === currentTime) {
+                    sendCommand(schedule.action);
+                    addActivityLog(`Zamanlama çalıştırıldı: ${schedule.time} - ${getCommandText(schedule.action)}`);
+                }
+            });
+        }
+
+        // Real-time data listener
+        function startRealtimeListener() {
+            db.collection('lightSystem').doc('sensorData')
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        systemData.ldrValue = data.ldrValue;
+                        systemData.lightStatus = data.lightStatus;
+                        systemData.lastUpdate = data.timestamp;
+                        updateUI();
+                        
+                        if (data.newReading) {
+                            addActivityLog(`Sensör verisi güncellendi - LDR: ${data.ldrValue}, Işık: ${data.lightStatus ? 'Açık' : 'Kapalı'}`);
+                        }
+                    }
+                });
+        }
+
+        // Session Validation
+        async function validateSession() {
+            const authData = JSON.parse(localStorage.getItem('lightSystemAuth') || '{}');
+            if (!authData.sessionId) {
+                return false;
+            }
+
+            try {
+                const sessionsDoc = await db.collection('lightSystem').doc('sessions').get();
+                if (!sessionsDoc.exists) {
+                    return false;
+                }
+
+                const sessionsData = sessionsDoc.data();
+                const activeSession = sessionsData.activeSessions.find(s => s.sessionId === authData.sessionId);
+                
+                if (!activeSession) {
+                    localStorage.removeItem('lightSystemAuth');
+                    return false;
+                }
+
+                // Session geçerli, kullanıcı bilgilerini güncelle
+                currentUser = activeSession.username;
+                userRole = activeSession.role;
+                
+                // Son aktivite zamanını güncelle
+                const updatedSessions = sessionsData.activeSessions.map(s => 
+                    s.sessionId === authData.sessionId 
+                        ? { ...s, lastActivity: new Date() }
+                        : s
+                );
+
+                await db.collection('lightSystem').doc('sessions').update({
+                    activeSessions: updatedSessions
+                });
+
+                return true;
+
+            } catch (error) {
+                console.error('Session validation error:', error);
+                return false;
+            }
+        }
+
+        // Utility Functions
+        function formatTime(date) {
+            if (!date) return '--:--';
+            if (typeof date === 'string') date = new Date(date);
+            return date.toLocaleTimeString('tr-TR', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            login();
+        });
+
+        document.getElementById('lightOnBtn').addEventListener('click', () => sendCommand('turn_on'));
+        document.getElementById('lightOffBtn').addEventListener('click', () => sendCommand('turn_off'));
+        document.getElementById('autoModeBtn').addEventListener('click', () => sendCommand('auto_mode'));
+
+        document.getElementById('ldrThreshold').addEventListener('input', function() {
+            document.getElementById('thresholdValue').textContent = this.value;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        if (checkUserPermission('turn_on')) sendCommand('turn_on');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        if (checkUserPermission('turn_off')) sendCommand('turn_off');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        if (checkUserPermission('auto_mode')) sendCommand('auto_mode');
+                        break;
+                }
+            }
+        });
+
+        // System Initialization
+        async function initializeSystem() {
+            try {
+                setAutoTheme();
+                await loadSchedules();
+                await loadSettings();
+                await loadSystemData();
+                await loadActivityLog();
+                
+                // Kullanıcı bilgilerini güncelle
+                const usersDoc = await db.collection('lightSystem').doc('users').get();
+                if (usersDoc.exists) {
+                    const users = usersDoc.data().users || [];
+                    const userData = users.find(u => u.username === currentUser);
+                    if (userData) {
+                        updateUserInfo(userData);
+                    }
+                }
+                
+                setInterval(checkSchedules, 60000);
+                setInterval(loadSystemData, 30000);
+                setInterval(validateSession, 300000); // Session kontrolü her 5 dakikada
+                
+                startRealtimeListener();
+                addActivityLog('Sistem başlatıldı');
+                
+            } catch (error) {
+                console.error('Sistem başlatılamadı:', error);
+                addActivityLog('Sistem başlatma hatası!', 'error');
+            }
+        }
+
+        // Auto-login check
+        document.addEventListener('DOMContentLoaded', async function() {
+            setAutoTheme();
+            
+            const authData = localStorage.getItem('lightSystemAuth');
+            if (authData) {
+                const sessionValid = await validateSession();
+                if (sessionValid) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'grid';
+                    await initializeSystem();
+                } else {
+                    document.getElementById('loginOverlay').style.display = 'flex';
+                }
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        });
+
+        // Advanced Features
+        async function exportData() {
+            if (!checkUserPermission('export_data')) {
+                alert('Veri dışa aktarma yetkiniz bulunmamaktadır!');
+                return;
+            }
+
+            try {
+                const data = {
+                    schedules: schedules,
+                    activityLog: activityLog,
+                    systemData: systemData,
+                    exportDate: new Date(),
+                    exportedBy: currentUser
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `light-system-export-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                addActivityLog('Veri dışa aktarıldı');
+                
+            } catch (error) {
+                console.error('Veri dışa aktarılamadı:', error);
+                addActivityLog('Veri dışa aktarma hatası!', 'error');
+            }
+        }
+
+        function clearAllData() {
+            if (!checkUserPermission('clear_data')) {
+                alert('Veri temizleme yetkiniz bulunmamaktadır!');
+                return;
+            }
+
+            if (confirm('Tüm verileri silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                schedules = [];
+                activityLog = [];
+                renderSchedules();
+                renderActivityLog();
+                saveSchedules();
+                addActivityLog('Tüm veriler temizlendi');
+                alert('Tüm veriler başarıyla temizlendi!');
+            }
+        }
+
+        // System Health Check
+        async function systemHealthCheck() {
+            try {
+                const healthData = {
+                    timestamp: new Date(),
+                    status: 'healthy',
+                    schedulesCount: schedules.length,
+                    lastActivity: activityLog[0]?.timestamp || null,
+                    systemUptime: Date.now() - (systemData.startTime || Date.now()),
+                    activeUser: currentUser,
+                    userRole: userRole
+                };
+
+                await db.collection('lightSystem').doc('health').set(healthData);
+                
+            } catch (error) {
+                console.error('Sistem sağlığı kontrol edilemedi:', error);
+            }
+        }
+
+        setInterval(systemHealthCheck, 300000);
+
+        // Emergency functions (sadece admin)
+        window.emergencyStop = async function() {
+            if (userRole !== 'admin') {
+                alert('Bu işlem sadece admin kullanıcıları tarafından kullanılabilir!');
+                return;
+            }
+
+            if (confirm('Acil durdurma yapılacak! Tüm otomatik işlemler durdurulacak. Onaylıyor musunuz?')) {
+                await sendCommand('emergency_stop');
+                schedules.forEach(s => s.active = false);
+                saveSchedules();
+                renderSchedules();
+                addActivityLog('ACİL DURDURMA AKTİF!', 'error');
+                alert('Acil durdurma aktif edildi!');
+            }
+        };
+
+        window.resetSystem = async function() {
+            if (userRole !== 'admin') {
+                alert('Bu işlem sadece admin kullanıcıları tarafından kullanılabilir!');
+                return;
+            }
+
+            if (confirm('Sistem tamamen sıfırlanacak! Tüm ayarlar ve zamanlamalar silinecek. Onaylıyor musunuz?')) {
+                await sendCommand('system_reset');
+                schedules = [];
+                activityLog = [];
+                systemData = {
+                    lightStatus: false,
+                    ldrValue: 0,
+                    lastUpdate: null,
+                    activeMode: 'manual',
+                    ldrThreshold: 300
+                };
+                
+                await db.collection('lightSystem').doc('schedules').delete();
+                await db.collection('lightSystem').doc('settings').delete();
+                
+                renderSchedules();
+                renderActivityLog();
+                updateUI();
+                
+                addActivityLog('Sistem tamamen sıfırlandı');
+                alert('Sistem başarıyla sıfırlandı!');
+            }
+        };
+
+        console.log('💡 Akıllı Işık Kontrol Sistemi v2.0 hazır!');
+        console.log('🔧 Admin komutları: emergencyStop(), resetSystem(), exportData()');
+        console.log('👥 Mevcut kullanıcı:', currentUser, 'Rol:', userRole);
+    </script>
+</body>
+</html>
