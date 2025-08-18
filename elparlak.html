@@ -62,6 +62,9 @@
         .user-role { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
         .error-message { color: var(--red); text-align: center; margin-top: 15px; padding: 10px; background: rgba(244, 67, 54, 0.1); border-radius: 8px; border: 1px solid rgba(244, 67, 54, 0.3); }
         .success-message { color: var(--green); text-align: center; margin-top: 15px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .test-mode-btn { position: absolute; top: 15px; right: 15px; width: 35px; height: 35px; border-radius: 50%; border: none; background: var(--orange); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4); transition: all 0.3s ease; }
+        .test-mode-btn:hover { transform: scale(1.1); background: #f57c00; }
+        .login-popup { position: relative; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; } .content-grid { grid-template-columns: 1fr; } .sidebar { order: 3; height: auto; } }
     </style>
 </head>
@@ -69,6 +72,11 @@
     <!-- Login Overlay -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-popup">
+            <!-- Test Mode Button -->
+            <button class="test-mode-btn" onclick="testLogin()" title="Test Mode - Şifresiz Giriş">
+                🔓
+            </button>
+            
             <h3>🔐 Akıllı Işık Sistemi</h3>
             <form id="loginForm">
                 <div class="form-group">
@@ -212,9 +220,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Firebase Configuration
+        // Firebase Configuration - BURAYA KENDİ CONFIG'İNİZİ EKLEYİN
         const firebaseConfig = {
-            // Firebase config buraya gelecek
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -262,22 +275,32 @@
         // Firebase Authentication System
         async function authenticateUser(username, password) {
             try {
+                console.log('Login denemesi:', username);
+                
                 const usersDoc = await db.collection('lightSystem').doc('users').get();
                 if (!usersDoc.exists) {
-                    throw new Error('Kullanıcı database\'i bulunamadı!');
+                    console.error('Users document bulunamadı!');
+                    throw new Error('Kullanıcı database\'i bulunamadı! Lütfen önce database creator ile kullanıcıları oluşturun.');
                 }
 
                 const usersData = usersDoc.data();
+                console.log('Database\'den alınan kullanıcı verisi:', usersData);
+                
                 const users = usersData.users || [];
+                console.log('Kullanıcı listesi:', users);
 
                 // Kullanıcı araması
                 const user = users.find(u => u.username === username && u.active === true);
+                console.log('Bulunan kullanıcı:', user);
+                
                 if (!user) {
                     throw new Error('Kullanıcı bulunamadı veya devre dışı!');
                 }
 
                 // Şifre kontrolü (Base64 decode)
                 const decodedPassword = atob(user.password);
+                console.log('Girilen şifre:', password, 'Database şifre:', decodedPassword);
+                
                 if (decodedPassword !== password) {
                     throw new Error('Hatalı şifre!');
                 }
@@ -296,9 +319,7 @@
                     activeSessions: firebase.firestore.FieldValue.arrayUnion(sessionData)
                 });
 
-                // Aktivite log'u ekle
-                await addActivityLogToFirebase(`Kullanıcı girişi: ${user.username} (${user.role})`, 'info');
-
+                console.log('Giriş başarılı!', sessionData);
                 return {
                     success: true,
                     user: user,
@@ -382,6 +403,43 @@
             setTimeout(() => {
                 loginError.classList.add('hidden');
             }, 5000);
+        }
+
+        // Test Mode Login - Geliştirme aşaması için
+        function testLogin() {
+            console.log('🧪 TEST MODE: Şifresiz giriş yapılıyor...');
+            
+            // Test kullanıcı bilgileri
+            currentUser = 'admin';
+            userRole = 'admin';
+            
+            // Test kullanıcı objesi
+            const testUser = {
+                username: 'admin',
+                role: 'admin',
+                active: true
+            };
+            
+            // UI güncellemeleri
+            updateUserInfo(testUser);
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'grid';
+            
+            // Test session kaydet
+            localStorage.setItem('lightSystemAuth', JSON.stringify({
+                username: currentUser,
+                role: userRole,
+                sessionId: 'test-' + Date.now(),
+                testMode: true
+            }));
+            
+            // Sistem başlat
+            initializeSystem();
+            
+            // Test mode uyarısı
+            addActivityLog('🧪 TEST MODE: Şifresiz giriş yapıldı!', 'info');
+            
+            console.log('✅ Test mode aktif! Kullanıcı:', currentUser, 'Rol:', userRole);
         }
 
         function updateUserInfo(user) {
