@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proje Takip Sistemi</title>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57); background-size: 300% 300%; animation: gradientShift 8s ease infinite; min-height: 100vh; padding: 8px; padding-top: 60px; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .container { background: rgba(255, 255, 255, 0.95); border: 4px solid #333; border-radius: 20px; box-shadow: 8px 8px 0px #333, 0 0 30px rgba(0,0,0,0.3); max-width: 500px; margin: 0 auto; overflow: hidden; }
+        .top-bar { background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: calc(min(500px, 100% - 16px)); border: 4px solid #333; border-bottom: none; border-radius: 20px 20px 0 0; z-index: 1000; text-shadow: 2px 2px 0px #333; }
+        .retro-btn { background: #fff; border: 3px solid #333; color: #333; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; font-family: 'Courier New', monospace; transition: all 0.2s ease; box-shadow: 3px 3px 0px #333; text-transform: uppercase; }
+        .retro-btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0px #333; }
+        .retro-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #333; }
+        .content { padding: 20px; }
+        .main-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .main-btn { padding: 20px 15px; font-size: 16px; font-weight: bold; border: 4px solid #333; border-radius: 15px; cursor: pointer; transition: all 0.3s ease; font-family: 'Courier New', monospace; text-transform: uppercase; position: relative; overflow: hidden; }
+        .calendar-btn { background: linear-gradient(45deg, #ff6b6b, #feca57); color: white; text-shadow: 2px 2px 0px #333; box-shadow: 6px 6px 0px #333; }
+        .projects-btn { background: linear-gradient(45deg, #4ecdc4, #45b7d1); color: white; text-shadow: 2px 2px 0px #333; box-shadow: 6px 6px 0px #333; }
+        .main-btn:hover { transform: translate(-3px, -3px); box-shadow: 9px 9px 0px #333; }
+        .main-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #333; }
+        .calendar-container { background: rgba(255, 255, 255, 0.9); border: 3px solid #333; border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 5px 5px 0px #333; display: none; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-nav { background: #ff6b6b; color: white; border: 3px solid #333; border-radius: 8px; padding: 8px 15px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; box-shadow: 3px 3px 0px #333; }
+        .calendar-nav:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px #333; }
+        .calendar-title { font-size: 18px; font-weight: bold; color: #333; text-transform: uppercase; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .calendar-day { padding: 10px 5px; text-align: center; border: 2px solid #333; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; min-height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; background: #fff; }
+        .calendar-day:hover { background: #feca57; transform: scale(1.1); z-index: 10; position: relative; }
+        .calendar-day.today { background: #ff6b6b; color: white; box-shadow: 3px 3px 0px #333; }
+        .calendar-day.selected { background: #4ecdc4; color: white; box-shadow: 3px 3px 0px #333; }
+        .calendar-day.has-notes { background: #96ceb4; color: white; }
+        .calendar-weekday { font-weight: bold; color: #333; text-align: center; padding: 8px; background: #feca57; border: 2px solid #333; border-radius: 5px; }
+        .daily-section { background: rgba(255, 255, 255, 0.9); border: 3px solid #333; border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 5px 5px 0px #333; display: none; }
+        .section-title { font-size: 20px; font-weight: bold; color: #333; text-transform: uppercase; margin-bottom: 15px; text-align: center; }
+        .notes-area { width: 100%; min-height: 120px; border: 3px solid #333; border-radius: 10px; padding: 15px; font-family: 'Courier New', monospace; font-size: 14px; background: #fff; resize: vertical; }
+        .notes-area:focus { outline: none; box-shadow: 0 0 10px rgba(78, 205, 196, 0.5); }
+        .action-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 120px; padding: 12px; border: 3px solid #333; border-radius: 10px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; transition: all 0.2s ease; box-shadow: 4px 4px 0px #333; }
+        .save-btn { background: #96ceb4; color: white; text-shadow: 1px 1px 0px #333; }
+        .add-action-btn { background: #45b7d1; color: white; text-shadow: 1px 1px 0px #333; }
+        .action-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #333; }
+        .action-btn:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0px #333; }
+        .projects-container { background: rgba(255, 255, 255, 0.9); border: 3px solid #333; border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 5px 5px 0px #333; display: none; }
+        .projects-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .new-project-btn { background: #4ecdc4; color: white; border: 3px solid #333; border-radius: 10px; padding: 10px 15px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; box-shadow: 4px 4px 0px #333; }
+        .new-project-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #333; }
+        .category-section { background: rgba(255, 255, 255, 0.8); border: 2px solid #333; border-radius: 10px; padding: 15px; margin: 15px 0; }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .category-title { font-size: 16px; font-weight: bold; color: #333; text-transform: uppercase; }
+        .project-item { background: #fff; border: 2px solid #333; border-radius: 8px; padding: 12px; margin: 8px 0; cursor: pointer; transition: all 0.2s ease; }
+        .project-item:hover { background: #feca57; transform: translate(-2px, -2px); box-shadow: 4px 4px 0px #333; }
+        .project-name { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .project-last-update { font-size: 12px; color: #666; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .popup { background: white; padding: 25px; border: 4px solid #333; border-radius: 15px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 10px 10px 0px #333; animation: popupBounce 0.3s ease-out; }
+        @keyframes popupBounce { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .popup-title { font-size: 20px; font-weight: bold; color: #333; text-transform: uppercase; margin-bottom: 20px; text-align: center; font-family: 'Courier New', monospace; }
+        .popup input, .popup select, .popup textarea { width: 100%; padding: 12px; border: 3px solid #333; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px; margin: 8px 0; background: #fff; }
+        .popup input:focus, .popup select:focus, .popup textarea:focus { outline: none; box-shadow: 0 0 10px rgba(78, 205, 196, 0.5); }
+        .popup-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .popup-btn { flex: 1; padding: 12px; border: 3px solid #333; border-radius: 10px; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; transition: all 0.2s ease; box-shadow: 4px 4px 0px #333; }
+        .popup-save { background: #96ceb4; color: white; text-shadow: 1px 1px 0px #333; }
+        .popup-cancel { background: #ff6b6b; color: white; text-shadow: 1px 1px 0px #333; }
+        .popup-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px #333; }
+        .close-btn { position: absolute; top: 10px; right: 15px; background: #ff6b6b; color: white; border: 2px solid #333; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+        .project-detail { background: rgba(255, 255, 255, 0.9); border: 3px solid #333; border-radius: 15px; padding: 20px; margin: 15px 0; box-shadow: 5px 5px 0px #333; display: none; }
+        .project-entries { margin-top: 20px; }
+        .project-entry { background: #fff; border: 2px solid #333; border-radius: 8px; padding: 15px; margin: 10px 0; }
+        .entry-date { font-size: 12px; color: #666; margin-bottom: 5px; }
+        .entry-title { font-weight: bold; color: #333; margin-bottom: 8px; }
+        .entry-content { color: #555; line-height: 1.4; }
+        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; color: white; }
+        .loading-spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loading-text { font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 0px #333; }
+        .hidden { display: none !important; }
+        .user-name { font-weight: bold; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        @media (max-width: 480px) { 
+            body { padding: 4px; padding-top: 70px; } 
+            .container { border-radius: 15px; max-width: 100%; } 
+            .top-bar { padding: 8px 12px; font-size: 12px; } 
+            .content { padding: 15px; } 
+            .main-buttons { grid-template-columns: 1fr; gap: 10px; }
+            .popup { padding: 20px; max-width: 95%; }
+            .calendar-grid { gap: 3px; }
+            .calendar-day { min-height: 35px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Sistem Yükleniyor...</div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="container hidden" id="mainContainer">
+        <div class="top-bar">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="retro-btn" id="todayBtn" onclick="goToToday()">BUGÜN</button>
+                <button class="retro-btn" onclick="openSettings()">AYARLAR</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>👤</span>
+                <span class="user-name" id="userName">Kullanıcı</span>
+                <button class="retro-btn" onclick="logout()">ÇIKIŞ</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Ana Butonlar -->
+            <div class="main-buttons">
+                <button class="main-btn calendar-btn" onclick="toggleCalendar()">📅 TAKVİM</button>
+                <button class="main-btn projects-btn" onclick="toggleProjects()">🚀 PROJELER</button>
+            </div>
+            
+            <!-- Takvim -->
+            <div class="calendar-container" id="calendarContainer">
+                <div class="calendar-header">
+                    <button class="calendar-nav" onclick="changeMonth(-1)">‹</button>
+                    <h3 class="calendar-title" id="calendarTitle">ARALIK 2024</h3>
+                    <button class="calendar-nav" onclick="changeMonth(1)">›</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+            
+            <!-- Günlük Bölüm -->
+            <div class="daily-section" id="dailySection">
+                <h3 class="section-title" id="dailyTitle">BUGÜN - 28 ARALIK 2024</h3>
+                <textarea class="notes-area" id="dailyNotes" placeholder="Bugün ne yaptın? Notlarını yaz... (örn: işte çalıştım, spora gittim, ahmetle konuştum...)"></textarea>
+                <div class="action-buttons">
+                    <button class="action-btn save-btn" onclick="saveDailyNotes()">💾 KAYDET</button>
+                    <button class="action-btn add-action-btn" onclick="openAddAction()">⚡ EYLEM EKLE</button>
+                </div>
+            </div>
+            
+            <!-- Projeler -->
+            <div class="projects-container" id="projectsContainer">
+                <div class="projects-header">
+                    <h3 class="section-title">🚀 PROJELERİM</h3>
+                    <button class="new-project-btn" onclick="openNewProject()">+ YENİ PROJE</button>
+                </div>
+                <div id="projectsList"></div>
+            </div>
+            
+            <!-- Proje Detayı -->
+            <div class="project-detail" id="projectDetail">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 class="section-title" id="projectDetailTitle">PROJE DETAYI</h3>
+                    <button class="retro-btn" onclick="closeProjectDetail()">GERİ</button>
+                </div>
+                <div class="project-entries" id="projectEntries"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Popup -->
+    <div class="overlay" id="loginOverlay">
+        <div class="popup">
+            <h3 class="popup-title">🔐 GİRİŞ YAP</h3>
+            <input type="email" id="emailInput" placeholder="E-posta adresin" value="@gmail.com">
+            <input type="password" id="passwordInput" placeholder="Şifren">
+            <div class="popup-buttons">
+                <button class="popup-btn popup-save" onclick="login()">GİRİŞ</button>
+            </div>
+            <div id="errorMessage" style="color: #ff6b6b; margin-top: 10px; display: none; text-align: center; font-weight: bold;"></div>
+        </div>
+    </div>
+    
+    <!-- Settings Popup -->
+    <div class="overlay" id="settingsOverlay">
+        <div class="popup">
+            <button class="close-btn" onclick="closeSettings()">✕</button>
+            <h3 class="popup-title">⚙️ AYARLAR</h3>
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Kullanıcı Adı:</label>
+            <input type="text" id="usernameInput" placeholder="Adın ne?">
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Kategori Yönetimi:</label>
+            <div id="categoriesList"></div>
+            <input type="text" id="newCategoryInput" placeholder="Yeni kategori adı (örn: Spor, Elektronik)">
+            <div class="popup-buttons">
+                <button class="popup-btn popup-save" onclick="addCategory()">+ EKLE</button>
+                <button class="popup-btn popup-cancel" onclick="saveSettings()">KAYDET</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- New Project Popup -->
+    <div class="overlay" id="newProjectOverlay">
+        <div class="popup">
+            <button class="close-btn" onclick="closeNewProject()">✕</button>
+            <h3 class="popup-title">🚀 YENİ PROJE</h3>
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Proje Adı:</label>
+            <input type="text" id="projectNameInput" placeholder="Proje adını yaz">
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Kategori:</label>
+            <select id="projectCategorySelect">
+                <option value="">Kategori seç...</option>
+            </select>
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Açıklama:</label>
+            <textarea id="projectDescInput" placeholder="Bu proje hakkında kısa bilgi..." rows="3"></textarea>
+            <div class="popup-buttons">
+                <button class="popup-btn popup-save" onclick="createProject()">OLUŞTUR</button>
+                <button class="popup-btn popup-cancel" onclick="closeNewProject()">İPTAL</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Action Popup -->
+    <div class="overlay" id="addActionOverlay">
+        <div class="popup">
+            <button class="close-btn" onclick="closeAddAction()">✕</button>
+            <h3 class="popup-title">⚡ PROJE EYLEMİ EKLE</h3>
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Proje Seç:</label>
+            <select id="actionProjectSelect">
+                <option value="">Proje seç...</option>
+            </select>
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Başlık:</label>
+            <input type="text" id="actionTitleInput" placeholder="Ne yaptın? (örn: Ana Gövde, Devre Tasarımı)">
+            <label style="display: block; margin: 10px 0 5px; font-weight: bold;">Detay:</label>
+            <textarea id="actionDetailInput" placeholder="Detaylı açıklama yaz..." rows="4"></textarea>
+            <div class="popup-buttons">
+                <button class="popup-btn popup-save" onclick="addProjectAction()">EKLE</button>
+                <button class="popup-btn popup-cancel" onclick="closeAddAction()">İPTAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let currentUser = null;
+        let selectedDate = null;
+        let calendarCurrentMonth = new Date();
+        let currentProject = null;
+        let categories = ['Genel', 'Elektronik', 'Yazılım', 'Spor', 'Hobi'];
+        
+        // Başlangıç
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => checkAutoLogin(), 1500);
+        });
+        
+        // Otomatik giriş kontrolü
+        async function checkAutoLogin() {
+            const savedLogin = localStorage.getItem('project_tracker_login');
+            if (savedLogin) {
+                try {
+                    const loginData = JSON.parse(savedLogin);
+                    const userDoc = await db.collection('project_tracker').doc(loginData.userId).get();
+                    if (userDoc.exists()) {
+                        currentUser = { uid: loginData.userId, ...userDoc.data() };
+                        showMainApp();
+                        return;
+                    }
+                } catch (error) {
+                    localStorage.removeItem('project_tracker_login');
+                }
+            }
+            showLoginPopup();
+        }
+        
+        // Login işlemi
+        async function login() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                showError('E-posta ve şifre gerekli!');
+                return;
+            }
+            
+            try {
+                const usersSnapshot = await db.collection('project_tracker')
+                    .where('email', '==', email)
+                    .where('password', '==', password)
+                    .get();
+                
+                if (usersSnapshot.empty) {
+                    // Yeni kullanıcı oluştur
+                    const newUserRef = await db.collection('project_tracker').add({
+                        email: email,
+                        password: password,
+                        username: email.split('@')[0],
+                        categories: categories,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    currentUser = { uid: newUserRef.id, email: email, username: email.split('@')[0], categories: categories };
+                } else {
+                    const userDoc = usersSnapshot.docs[0];
+                    currentUser = { uid: userDoc.id, ...userDoc.data() };
+                }
+                
+                localStorage.setItem('project_tracker_login', JSON.stringify({
+                    userId: currentUser.uid,
+                    email: email
+                }));
+                
+                showMainApp();
+            } catch (error) {
+                showError('Bağlantı hatası!');
+                console.error(error);
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 3000);
+        }
+        
+        function logout() {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                localStorage.removeItem('project_tracker_login');
+                currentUser = null;
+                showLoginPopup();
+            }
+        }
+        
+        function showLoginPopup() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainContainer').classList.add('hidden');
+        }
+        
+        async function showMainApp() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainContainer').classList.remove('hidden');
+            document.getElementById('userName').textContent = currentUser.username || currentUser.email;
+            
+            categories = currentUser.categories || categories;
+            await goToToday();
+            renderCalendar();
+            loadProjects();
+        }
+        
+        // Takvim işlevleri
+        function toggleCalendar() {
+            const calendar = document.getElementById('calendarContainer');
+            const projects = document.getElementById('projectsContainer');
+            const daily = document.getElementById('dailySection');
+            const detail = document.getElementById('projectDetail');
+            
+            if (calendar.style.display === 'block') {
+                calendar.style.display = 'none';
+                daily.style.display = 'none';
+            } else {
+                calendar.style.display = 'block';
+                daily.style.display = 'block';
+                projects.style.display = 'none';
+                detail.style.display = 'none';
+                renderCalendar();
+            }
+        }
+        
+        function toggleProjects() {
+            const calendar = document.getElementById('calendarContainer');
+            const projects = document.getElementById('projectsContainer');
+            const daily = document.getElementById('dailySection');
+            const detail = document.getElementById('projectDetail');
+            
+            if (projects.style.display === 'block') {
+                projects.style.display = 'none';
+            } else {
+                projects.style.display = 'block';
+                calendar.style.display = 'none';
+                daily.style.display = 'none';
+                detail.style.display = 'none';
+                loadProjects();
+            }
+        }
+        
+        function changeMonth(direction) {
+            calendarCurrentMonth.setMonth(calendarCurrentMonth.getMonth() + direction);
+            renderCalendar();
+        }
+        
+        async function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const title = document.getElementById('calendarTitle');
+            
+            const months = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN',
+                           'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
+            
+            title.textContent = `${months[calendarCurrentMonth.getMonth()]} ${calendarCurrentMonth.getFullYear()}`;
+            
+            grid.innerHTML = '';
+            
+            // Haftanın günleri
+            ['PT', 'SA', 'ÇA', 'PE', 'CU', 'CT', 'PA'].forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-weekday';
+                dayEl.textContent = day;
+                grid.appendChild(dayEl);
+            });
+            
+            const firstDay = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), 1);
+            const lastDay = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth() + 1, 0);
+            const today = new Date();
+            
+            // Ayın başından önceki boş günler
+            const startingDay = (firstDay.getDay() + 6) % 7; // Pazartesi = 0
+            for (let i = 0; i < startingDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                emptyDay.style.border = 'none';
+                emptyDay.style.background = 'transparent';
+                grid.appendChild(emptyDay);
+            }
+            
+            // Notlu günleri yükle
+            const noteDays = await getNoteDays();
+            
+            // Ayın günleri
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.textContent = day;
+                
+                const currentDate = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), day);
+                const dateStr = currentDate.getFullYear() + '-' + 
+                    String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(currentDate.getDate()).padStart(2, '0');
+                
+                // Bugün mü?
+                const todayStr = today.getFullYear() + '-' + 
+                    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(today.getDate()).padStart(2, '0');
+                
+                if (dateStr === todayStr) {
+                    dayEl.classList.add('today');
+                }
+                
+                // Seçili gün mü?
+                if (selectedDate === dateStr) {
+                    dayEl.classList.add('selected');
+                }
+                
+                // Notlu gün mü?
+                if (noteDays.includes(dateStr)) {
+                    dayEl.classList.add('has-notes');
+                }
+                
+                dayEl.onclick = () => selectCalendarDate(dateStr);
+                grid.appendChild(dayEl);
+            }
+        }
+        
+        async function getNoteDays() {
+            if (!currentUser) return [];
+            
+            try {
+                const startOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), 1);
+                const endOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth() + 1, 0);
+                
+                const startStr = startOfMonth.getFullYear() + '-' + 
+                    String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(startOfMonth.getDate()).padStart(2, '0');
+                const endStr = endOfMonth.getFullYear() + '-' + 
+                    String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(endOfMonth.getDate()).padStart(2, '0');
+                
+                const dailyDocs = await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('daily')
+                    .where('__name__', '>=', startStr)
+                    .where('__name__', '<=', endStr)
+                    .get();
+                
+                const noteDays = [];
+                dailyDocs.forEach(doc => {
+                    const data = doc.data();
+                    if (data.notes && data.notes.trim()) {
+                        noteDays.push(doc.id);
+                    }
+                });
+                
+                return noteDays;
+            } catch (error) {
+                console.error('Not günleri yüklenemedi:', error);
+                return [];
+            }
+        }
+        
+        async function selectCalendarDate(dateStr) {
+            selectedDate = dateStr;
+            const dateObj = new Date(dateStr + 'T12:00:00');
+            document.getElementById('dailyTitle').textContent = 
+                'GÜNLÜK - ' + dateObj.toLocaleDateString('tr-TR', {
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric'
+                }).toUpperCase();
+            
+            document.getElementById('dailySection').style.display = 'block';
+            await loadDailyNotes();
+            renderCalendar();
+        }
+        
+        async function goToToday() {
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + 
+                String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                String(today.getDate()).padStart(2, '0');
+            
+            selectedDate = todayStr;
+            calendarCurrentMonth = new Date();
+            document.getElementById('dailyTitle').textContent = 'BUGÜN - ' + 
+                today.toLocaleDateString('tr-TR', {
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric'
+                }).toUpperCase();
+            
+            document.getElementById('dailySection').style.display = 'block';
+            document.getElementById('calendarContainer').style.display = 'block';
+            document.getElementById('projectsContainer').style.display = 'none';
+            document.getElementById('projectDetail').style.display = 'none';
+            
+            await loadDailyNotes();
+        }
+        
+        // Günlük notlar işlemleri
+        async function loadDailyNotes() {
+            if (!selectedDate || !currentUser) return;
+            
+            try {
+                const dayDoc = await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('daily').doc(selectedDate).get();
+                
+                if (dayDoc.exists) {
+                    const data = dayDoc.data();
+                    document.getElementById('dailyNotes').value = data.notes || '';
+                } else {
+                    document.getElementById('dailyNotes').value = '';
+                }
+            } catch (error) {
+                console.error('Günlük notlar yüklenemedi:', error);
+            }
+        }
+        
+        async function saveDailyNotes() {
+            if (!selectedDate || !currentUser) return;
+            
+            const notes = document.getElementById('dailyNotes').value.trim();
+            
+            try {
+                await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('daily').doc(selectedDate).set({
+                        notes: notes,
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                
+                // Başarı bildirimi
+                showNotification('📝 Notlar kaydedildi!', 'success');
+                renderCalendar(); // Takvimi güncelle
+            } catch (error) {
+                console.error('Not kaydetme hatası:', error);
+                showNotification('❌ Kaydetme hatası!', 'error');
+            }
+        }
+        
+        // Projeler işlemleri
+        async function loadProjects() {
+            if (!currentUser) return;
+            
+            try {
+                const projectsSnapshot = await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('projects').orderBy('updatedAt', 'desc').get();
+                
+                const projectsByCategory = {};
+                categories.forEach(cat => projectsByCategory[cat] = []);
+                
+                projectsSnapshot.forEach(doc => {
+                    const project = { id: doc.id, ...doc.data() };
+                    const category = project.category || 'Genel';
+                    if (!projectsByCategory[category]) {
+                        projectsByCategory[category] = [];
+                    }
+                    projectsByCategory[category].push(project);
+                });
+                
+                const listDiv = document.getElementById('projectsList');
+                listDiv.innerHTML = '';
+                
+                Object.keys(projectsByCategory).forEach(category => {
+                    if (projectsByCategory[category].length > 0) {
+                        const categoryDiv = document.createElement('div');
+                        categoryDiv.className = 'category-section';
+                        categoryDiv.innerHTML = `
+                            <div class="category-header">
+                                <h4 class="category-title">${category}</h4>
+                                <span style="font-size: 12px; color: #666;">${projectsByCategory[category].length} proje</span>
+                            </div>
+                        `;
+                        
+                        projectsByCategory[category].forEach(project => {
+                            const projectDiv = document.createElement('div');
+                            projectDiv.className = 'project-item';
+                            projectDiv.onclick = () => openProjectDetail(project);
+                            projectDiv.innerHTML = `
+                                <div class="project-name">${project.name}</div>
+                                <div class="project-last-update">Son güncelleme: ${new Date(project.updatedAt).toLocaleDateString('tr-TR')}</div>
+                            `;
+                            categoryDiv.appendChild(projectDiv);
+                        });
+                        
+                        listDiv.appendChild(categoryDiv);
+                    }
+                });
+                
+                if (listDiv.innerHTML === '') {
+                    listDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 40px; font-style: italic;">Henüz proje oluşturulmamış.<br>Hemen bir proje başlat!</div>';
+                }
+            } catch (error) {
+                console.error('Projeler yüklenemedi:', error);
+            }
+        }
+        
+        async function openProjectDetail(project) {
+            currentProject = project;
+            document.getElementById('projectDetailTitle').textContent = project.name.toUpperCase();
+            document.getElementById('projectDetail').style.display = 'block';
+            document.getElementById('projectsContainer').style.display = 'none';
+            
+            // Proje eylemlerini yükle
+            try {
+                const actionsSnapshot = await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('projects').doc(project.id)
+                    .collection('actions').orderBy('date', 'desc').get();
+                
+                const entriesDiv = document.getElementById('projectEntries');
+                entriesDiv.innerHTML = '';
+                
+                if (actionsSnapshot.empty) {
+                    entriesDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 30px; font-style: italic;">Bu projede henüz eylem kaydı yok.<br>İlk eylemi ekle!</div>';
+                } else {
+                    actionsSnapshot.forEach(doc => {
+                        const action = doc.data();
+                        const entryDiv = document.createElement('div');
+                        entryDiv.className = 'project-entry';
+                        entryDiv.innerHTML = `
+                            <div class="entry-date">${new Date(action.date).toLocaleDateString('tr-TR', {
+                                day: '2-digit',
+                                month: 'long', 
+                                year: 'numeric'
+                            })}</div>
+                            <div class="entry-title">${action.title}</div>
+                            <div class="entry-content">${action.detail}</div>
+                        `;
+                        entriesDiv.appendChild(entryDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('Proje eylemleri yüklenemedi:', error);
+            }
+        }
+        
+        function closeProjectDetail() {
+            document.getElementById('projectDetail').style.display = 'none';
+            document.getElementById('projectsContainer').style.display = 'block';
+            currentProject = null;
+        }
+        
+        // Popup işlemleri
+        function openSettings() {
+            document.getElementById('settingsOverlay').style.display = 'flex';
+            document.getElementById('usernameInput').value = currentUser.username || '';
+            loadCategoriesInSettings();
+        }
+        
+        function closeSettings() {
+            document.getElementById('settingsOverlay').style.display = 'none';
+        }
+        
+        function loadCategoriesInSettings() {
+            const listDiv = document.getElementById('categoriesList');
+            listDiv.innerHTML = '';
+            
+            categories.forEach((cat, index) => {
+                const catDiv = document.createElement('div');
+                catDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f0f0f0; margin: 5px 0; border-radius: 5px; border: 2px solid #333;';
+                catDiv.innerHTML = `
+                    <span style="font-weight: bold;">${cat}</span>
+                    ${cat !== 'Genel' ? `<button onclick="removeCategory(${index})" style="background: #ff6b6b; color: white; border: 2px solid #333; border-radius: 5px; padding: 4px 8px; cursor: pointer;">SİL</button>` : ''}
+                `;
+                listDiv.appendChild(catDiv);
+            });
+        }
+        
+        async function addCategory() {
+            const newCat = document.getElementById('newCategoryInput').value.trim();
+            if (!newCat) {
+                showNotification('❌ Kategori adı gerekli!', 'error');
+                return;
+            }
+            
+            if (categories.includes(newCat)) {
+                showNotification('❌ Bu kategori zaten mevcut!', 'error');
+                return;
+            }
+            
+            categories.push(newCat);
+            document.getElementById('newCategoryInput').value = '';
+            loadCategoriesInSettings();
+            showNotification('✅ Kategori eklendi!', 'success');
+        }
+        
+        function removeCategory(index) {
+            if (confirm(`"${categories[index]}" kategorisini silmek istediğinizden emin misiniz?`)) {
+                categories.splice(index, 1);
+                loadCategoriesInSettings();
+                showNotification('🗑️ Kategori silindi!', 'success');
+            }
+        }
+        
+        async function saveSettings() {
+            const username = document.getElementById('usernameInput').value.trim();
+            
+            try {
+                await db.collection('project_tracker').doc(currentUser.uid).update({
+                    username: username || currentUser.username,
+                    categories: categories,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                currentUser.username = username || currentUser.username;
+                currentUser.categories = categories;
+                document.getElementById('userName').textContent = currentUser.username;
+                
+                showNotification('✅ Ayarlar kaydedildi!', 'success');
+                closeSettings();
+            } catch (error) {
+                console.error('Ayar kaydetme hatası:', error);
+                showNotification('❌ Kaydetme hatası!', 'error');
+            }
+        }
+        
+        function openNewProject() {
+            document.getElementById('newProjectOverlay').style.display = 'flex';
+            const select = document.getElementById('projectCategorySelect');
+            select.innerHTML = '<option value="">Kategori seç...</option>';
+            categories.forEach(cat => {
+                select.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+        
+        function closeNewProject() {
+            document.getElementById('newProjectOverlay').style.display = 'none';
+            document.getElementById('projectNameInput').value = '';
+            document.getElementById('projectCategorySelect').value = '';
+            document.getElementById('projectDescInput').value = '';
+        }
+        
+        async function createProject() {
+            const name = document.getElementById('projectNameInput').value.trim();
+            const category = document.getElementById('projectCategorySelect').value;
+            const description = document.getElementById('projectDescInput').value.trim();
+            
+            if (!name) {
+                showNotification('❌ Proje adı gerekli!', 'error');
+                return;
+            }
+            
+            if (!category) {
+                showNotification('❌ Kategori seçmelisiniz!', 'error');
+                return;
+            }
+            
+            try {
+                await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('projects').add({
+                        name: name,
+                        category: category,
+                        description: description,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    });
+                
+                showNotification('🚀 Proje oluşturuldu!', 'success');
+                closeNewProject();
+                loadProjects();
+            } catch (error) {
+                console.error('Proje oluşturma hatası:', error);
+                showNotification('❌ Oluşturma hatası!', 'error');
+            }
+        }
+        
+        async function openAddAction() {
+            document.getElementById('addActionOverlay').style.display = 'flex';
+            
+            // Projeleri yükle
+            try {
+                const projectsSnapshot = await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('projects').orderBy('name').get();
+                
+                const select = document.getElementById('actionProjectSelect');
+                select.innerHTML = '<option value="">Proje seç...</option>';
+                
+                projectsSnapshot.forEach(doc => {
+                    const project = doc.data();
+                    select.innerHTML += `<option value="${doc.id}">${project.category} → ${project.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Projeler yüklenemedi:', error);
+            }
+        }
+        
+        function closeAddAction() {
+            document.getElementById('addActionOverlay').style.display = 'none';
+            document.getElementById('actionProjectSelect').value = '';
+            document.getElementById('actionTitleInput').value = '';
+            document.getElementById('actionDetailInput').value = '';
+        }
+        
+        async function addProjectAction() {
+            const projectId = document.getElementById('actionProjectSelect').value;
+            const title = document.getElementById('actionTitleInput').value.trim();
+            const detail = document.getElementById('actionDetailInput').value.trim();
+            
+            if (!projectId) {
+                showNotification('❌ Proje seçmelisiniz!', 'error');
+                return;
+            }
+            
+            if (!title) {
+                showNotification('❌ Başlık gerekli!', 'error');
+                return;
+            }
+            
+            try {
+                // Eylem ekle
+                await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('projects').doc(projectId)
+                    .collection('actions').add({
+                        title: title,
+                        detail: detail || '',
+                        date: selectedDate || new Date().toISOString().split('T')[0],
+                        createdAt: new Date().toISOString()
+                    });
+                
+                // Projeyi güncelle
+                await db.collection('project_tracker').doc(currentUser.uid)
+                    .collection('projects').doc(projectId).update({
+                        updatedAt: new Date().toISOString()
+                    });
+                
+                showNotification('⚡ Eylem eklendi!', 'success');
+                closeAddAction();
+                
+                // Eğer proje detayındaysak güncelle
+                if (currentProject && currentProject.id === projectId) {
+                    const project = await db.collection('project_tracker').doc(currentUser.uid)
+                        .collection('projects').doc(projectId).get();
+                    openProjectDetail({ id: projectId, ...project.data() });
+                }
+            } catch (error) {
+                console.error('Eylem ekleme hatası:', error);
+                showNotification('❌ Ekleme hatası!', 'error');
+            }
+        }
+        
+        // Bildirim sistemi
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? '#96ceb4' : '#ff6b6b';
+            notification.style.cssText = `
+                position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+                background: ${bgColor}; color: white; padding: 12px 20px; border-radius: 10px;
+                font-size: 14px; font-weight: bold; z-index: 2001; 
+                border: 3px solid #333; box-shadow: 4px 4px 0px #333;
+                font-family: 'Courier New', monospace; text-transform: uppercase;
+                animation: slideInOut 3s ease-in-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        // CSS animasyonu ekle
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                15%, 85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Enter tuşu desteği
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeOverlay = document.querySelector('.overlay[style*="flex"]');
+                if (!activeOverlay) return;
+                
+                if (activeOverlay.id === 'loginOverlay') {
+                    login();
+                } else if (activeOverlay.id === 'newProjectOverlay') {
+                    createProject();
+                } else if (activeOverlay.id === 'addActionOverlay') {
+                    addProjectAction();
+                }
+            }
+        });
+        
+        // ESC tuşu desteği
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlays = ['settingsOverlay', 'newProjectOverlay', 'addActionOverlay'];
+                overlays.forEach(id => {
+                    const overlay = document.getElementById(id);
+                    if (overlay.style.display === 'flex') {
+                        overlay.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
