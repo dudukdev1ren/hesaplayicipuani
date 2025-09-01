@@ -1,0 +1,1639 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finansal Analiz v5.7</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;} 
+        body {font-family: 'Courier New', monospace; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #333; padding: 10px; min-height: 100vh;} 
+        .header {background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); color: #333; padding: 20px; text-align: center; border: 2px solid #fff; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);} 
+        .header h1 {font-size: 20px; margin-bottom: 8px; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;} 
+        .header p {font-size: 13px; opacity: 0.8; cursor: pointer; transition: all 0.3s; padding: 8px; border-radius: 8px;} 
+        .header p:hover {background: rgba(102, 126, 234, 0.1); transform: scale(1.05);} 
+        .main-nav {display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;} 
+        .sub-nav {display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;} 
+        .nav-btn {padding: 15px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); cursor: pointer; font-weight: bold; text-align: center; font-size: 14px; border-radius: 12px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1);} 
+        .nav-btn:hover {transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.2);} 
+        .nav-btn:active {transform: scale(0.95);} 
+        .nav-btn.active {background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);} 
+        .content-area {background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3); padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);} 
+        .stats-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 20px;} 
+        .stat-card {background: linear-gradient(135deg, #f8f9ff, #e8f0fe); border: 2px solid rgba(102, 126, 234, 0.2); padding: 15px; text-align: center; border-radius: 12px; transition: all 0.3s; position: relative; overflow: hidden;} 
+        .stat-card:hover {transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);} 
+        .stat-card::before {content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #667eea, #764ba2);} 
+        .stat-value {font-size: 20px; font-weight: bold; color: #667eea; margin-bottom: 5px;} 
+        .stat-label {font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;} 
+        .popup {display: none; position: fixed; top: 15px; left: 15px; right: 15px; bottom: 15px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); border: 3px solid rgba(102, 126, 234, 0.3); z-index: 1000; overflow-y: auto; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);} 
+        .popup-header {background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); z-index: 1001;} 
+        .popup-content {padding: 20px;} 
+        .close-btn {background: linear-gradient(135deg, #ff4757, #ff3838); color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: all 0.3s;} 
+        .close-btn:hover {transform: scale(1.05); box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);} 
+        .date-selector {margin-bottom: 25px; padding: 20px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 12px; background: linear-gradient(135deg, #f8f9ff, #e8f0fe);} 
+        .date-input {width: 100%; padding: 12px; border: 2px solid rgba(102, 126, 234, 0.3); margin: 8px 0; border-radius: 8px; font-family: inherit; transition: all 0.3s; background: white;} 
+        .date-input:focus {outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);} 
+        .btn {width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; cursor: pointer; margin: 8px 0; border-radius: 10px; font-weight: bold; transition: all 0.3s; font-size: 14px;} 
+        .btn:hover {transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);} 
+        .btn:active {transform: scale(0.98);} 
+        .btn.secondary {background: linear-gradient(135deg, #f1f2f6, #ddd); color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.1);} 
+        .btn.danger {background: linear-gradient(135deg, #ff4757, #ff3838);} 
+        .calendar-container {margin: 20px 0;} 
+        .calendar-grid {display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 15px 0;} 
+        .calendar-day {padding: 10px; text-align: center; border: 2px solid rgba(102, 126, 234, 0.2); cursor: pointer; min-height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; transition: all 0.3s; background: white;} 
+        .calendar-day:hover {transform: scale(1.05); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);} 
+        .calendar-day.selected {background: linear-gradient(135deg, #667eea, #764ba2); color: white; transform: scale(1.1); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);} 
+        .calendar-day.has-data {background: linear-gradient(135deg, #2ed573, #1e90ff); color: white;} 
+        .week-container {display: flex; gap: 5px; padding: 15px; margin: 10px 0; border-radius: 15px; cursor: pointer; align-items: center; transition: all 0.3s; background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 255, 0.9)); border: 2px solid rgba(102, 126, 234, 0.1);} 
+        .week-container:hover {transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.1);} 
+        .week-container:nth-child(odd) {background: linear-gradient(135deg, #ffe4b5, #ffd700);} 
+        .week-container:nth-child(even) {background: linear-gradient(135deg, #e0f6ff, #87ceeb);} 
+        .week-container:nth-child(3n) {background: linear-gradient(135deg, #f0e6ff, #dda0dd);} 
+        .week-label {font-weight: bold; margin-right: 15px; min-width: 80px; color: #333;} 
+        .week-day {flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-size: 11px; border: 1px solid rgba(0,0,0,0.1); background: rgba(255, 255, 255, 0.7); transition: all 0.3s;} 
+        .week-day:hover {background: rgba(255, 255, 255, 0.9);} 
+        .chart-item {margin: 25px 0; padding: 20px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 15px; background: linear-gradient(135deg, #f8f9ff, #e8f0fe);} 
+        .chart-container {position: relative; height: 300px; width: 100%;} 
+        .chart-canvas {width: 100% !important; height: 300px !important; max-height: 300px !important;} 
+        .month-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;} 
+        .month-card {padding: 20px; text-align: center; border: 2px solid rgba(102, 126, 234, 0.3); cursor: pointer; border-radius: 12px; background: linear-gradient(135deg, #f8f9ff, #e8f0fe); transition: all 0.3s;} 
+        .month-card:hover {transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);} 
+        .month-card:active {transform: scale(0.95);} 
+        .switch-container {display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 12px; border-bottom: 2px solid rgba(102, 126, 234, 0.1); border-radius: 8px; transition: all 0.3s;} 
+        .switch-container:hover {background: rgba(102, 126, 234, 0.05);} 
+        .switch {position: relative; width: 60px; height: 30px;} 
+        .switch input {opacity: 0; width: 0; height: 0;} 
+        .slider {position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; transition: .4s; border-radius: 30px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);} 
+        .slider:before {position: absolute; content: ""; height: 24px; width: 24px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);} 
+        input:checked + .slider {background: linear-gradient(135deg, #667eea, #764ba2);} 
+        input:checked + .slider:before {transform: translateX(30px);} 
+        .view-mode {margin-bottom: 20px; padding: 15px; background: rgba(102, 126, 234, 0.1); border-radius: 10px;} 
+        .loading {text-align: center; padding: 30px; color: #666; background: linear-gradient(135deg, #f8f9ff, #e8f0fe); border-radius: 10px;} 
+        .report-section {margin: 20px 0; padding: 15px; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 12px; background: linear-gradient(135deg, #f8f9ff, #e8f0fe);} 
+        .report-section h4 {color: #667eea; margin-bottom: 10px; border-bottom: 2px solid rgba(102, 126, 234, 0.2); padding-bottom: 5px;} 
+        .no-data {text-align: center; padding: 50px; color: #999; font-style: italic; background: linear-gradient(135deg, #f8f9ff, #e8f0fe); border-radius: 15px;} 
+        .status-indicator {display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.3);} 
+        .status-connected {background: linear-gradient(135deg, #2ed573, #1e90ff); animation: pulse-success 2s infinite;} 
+        .status-disconnected {background: linear-gradient(135deg, #ff4757, #ff3838);} 
+        .status-loading {background: linear-gradient(135deg, #ffa726, #ff9800); animation: pulse 1s infinite;} 
+        @keyframes pulse {0%, 100% {opacity: 1; transform: scale(1);} 50% {opacity: 0.7; transform: scale(1.1);}} 
+        @keyframes pulse-success {0%, 100% {opacity: 1; box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);} 50% {opacity: 0.8; box-shadow: 0 0 20px rgba(46, 213, 115, 0.8);}} 
+        .real-time-indicator {position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: #2ed573; border-radius: 50%; animation: pulse-success 1.5s infinite;} 
+        .enhanced-stats {display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;} 
+        .trend-indicator {font-size: 12px; margin-top: 5px;} 
+        .trend-up {color: #2ed573;} 
+        .trend-down {color: #ff4757;} 
+        .trend-neutral {color: #ffa726;} 
+        .login-overlay {position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 2000;} 
+        .login-box {background: white; padding: 30px; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 400px; width: 90%;} 
+        .login-input {width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;} 
+        .login-input:focus {outline: none; border-color: #667eea;} 
+        .error-message {color: #e74c3c; font-size: 12px; margin: 10px 0; display: none;} 
+        @media (max-width: 768px) {
+            .stats-grid {grid-template-columns: repeat(2, 1fr);} 
+            .enhanced-stats {grid-template-columns: 1fr;} 
+            .stat-card {padding: 12px;} 
+            .stat-value {font-size: 18px;} 
+            .calendar-day {min-height: 35px; padding: 6px;} 
+            .popup {top: 5px; left: 5px; right: 5px; bottom: 5px;}
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #667eea;">Giriş Yap</h2>
+            <input type="email" id="emailInput" class="login-input" placeholder="E-posta adresiniz" autocomplete="email">
+            <input type="password" id="passwordInput" class="login-input" placeholder="Şifreniz" autocomplete="current-password">
+            <div class="error-message" id="errorMessage"></div>
+            <button class="btn" onclick="login()">Giriş Yap</button>
+            <p style="text-align: center; margin-top: 15px; font-size: 12px; color: #666;">
+                Firebase veritabanınızdan verileriniz yüklenecek
+            </p>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>📊 Finansal Analiz Takip v5.7</h1>
+        <p id="connectionStatus">
+            <span class="status-indicator status-loading"></span>
+            🔄 Firebase'e bağlanıyor...
+        </p>
+        <div class="real-time-indicator" id="realTimeIndicator" style="display: none;"></div>
+        <p style="font-size: 11px; margin-top: 10px;">
+            Kullanıcı: <span id="userName">-</span> | 
+            <span onclick="logout()" style="cursor: pointer; color: #e74c3c;">Çıkış</span>
+        </p>
+    </div>
+
+    <div class="main-nav">
+        <button class="nav-btn" onclick="openDatePopup()">📅 Tarih Seç</button>
+        <button class="nav-btn" onclick="openChartsPopup()">📈 Grafikler</button>
+    </div>
+
+    <div class="sub-nav">
+        <button class="nav-btn active" onclick="switchView('daily')" id="dailyBtn">Günlük</button>
+        <button class="nav-btn" onclick="switchView('weekly')" id="weeklyBtn">Haftalık</button>
+        <button class="nav-btn" onclick="switchView('monthly')" id="monthlyBtn">Aylık</button>
+    </div>
+
+    <div class="main-nav">
+        <button class="nav-btn" onclick="openSettingsPopup()">⚙️ Ayarlar</button>
+        <button class="nav-btn" onclick="generateReport()">📋 Rapor</button>
+    </div>
+
+    <div class="content-area">
+        <div id="statsContainer">
+            <div class="no-data">🔐 Giriş yaparak verilerinizi görüntüleyin</div>
+        </div>
+    </div>
+
+    <!-- Date Selection Popup -->
+    <div class="popup" id="datePopup">
+        <div class="popup-header">
+            <h3>📅 Tarih Seçimi</h3>
+            <button class="close-btn" onclick="closeDatePopup()">✕</button>
+        </div>
+        <div class="popup-content">
+            <div class="view-mode">
+                <h4>Görünüm Modu: <span id="currentViewMode">Günlük</span></h4>
+            </div>
+            
+            <div class="date-selector">
+                <h4>⚡ Hızlı Seçim</h4>
+                <button class="btn secondary" onclick="selectToday()">Bugün</button>
+                <button class="btn secondary" onclick="selectThisWeek()">Bu Hafta</button>
+                <button class="btn secondary" onclick="selectLastWeek()">Son Hafta</button>
+                <button class="btn secondary" onclick="selectThisMonth()">Bu Ay</button>
+                <button class="btn secondary" onclick="selectLastMonth()">Son Ay</button>
+            </div>
+
+            <div class="date-selector">
+                <h4>📅 Manuel Aralık</h4>
+                <input type="date" id="startDate" class="date-input" placeholder="Başlangıç">
+                <input type="date" id="endDate" class="date-input" placeholder="Bitiş">
+                <button class="btn" onclick="applyManualRange()">Aralık Uygula</button>
+            </div>
+
+            <div class="date-selector">
+                <h4>🗓️ Takvim Navigasyon</h4>
+                <select id="monthSelect" class="date-input"></select>
+                <select id="yearSelect" class="date-input"></select>
+                <button class="btn secondary" onclick="updateCalendarView()">Takvimi Güncelle</button>
+            </div>
+
+            <div id="calendarContainer"></div>
+        </div>
+    </div>
+
+    <!-- Charts Popup -->
+    <div class="popup" id="chartsPopup">
+        <div class="popup-header">
+            <h3>📈 Grafik Analizi</h3>
+            <button class="close-btn" onclick="closeChartsPopup()">✕</button>
+        </div>
+        <div class="popup-content">
+            <div id="chartsContainer">
+                <div class="no-data">📊 Tarih seçimi yaparak grafikleri görüntüleyin</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Popup -->
+    <div class="popup" id="settingsPopup">
+        <div class="popup-header">
+            <h3>⚙️ Grafik Ayarları</h3>
+            <button class="close-btn" onclick="closeSettingsPopup()">✕</button>
+        </div>
+        <div class="popup-content">
+            <h4>📊 A Tipi Grafikler (Aylık Perspektif)</h4>
+            <div class="switch-container">
+                <span>A1: Günlük Harcama %</span>
+                <label class="switch"><input type="checkbox" id="a1_chart" checked><span class="slider"></span></label>
+            </div>
+            <div class="switch-container">
+                <span>A2: Aylık Kazanç Analizi</span>
+                <label class="switch"><input type="checkbox" id="a2_chart" checked><span class="slider"></span></label>
+            </div>
+            <div class="switch-container">
+                <span>A3: Kategori Dağılımı</span>
+                <label class="switch"><input type="checkbox" id="a3_chart" checked><span class="slider"></span></label>
+            </div>
+
+            <h4>📊 B Tipi Grafikler (Günlük Perspektif)</h4>
+            <div class="switch-container">
+                <span>B1: Günlük Verimlilik</span>
+                <label class="switch"><input type="checkbox" id="b1_chart" checked><span class="slider"></span></label>
+            </div>
+            <div class="switch-container">
+                <span>B2: Saat Bazlı Kazanç</span>
+                <label class="switch"><input type="checkbox" id="b2_chart" checked><span class="slider"></span></label>
+            </div>
+            <div class="switch-container">
+                <span>B3: Harcama-Kazanç Analizi</span>
+                <label class="switch"><input type="checkbox" id="b3_chart" checked><span class="slider"></span></label>
+            </div>
+
+            <h4>📊 Gelişmiş Grafikler</h4>
+            <div class="switch-container">
+                <span>C1: Haftalık Trend</span>
+                <label class="switch"><input type="checkbox" id="c1_chart" checked><span class="slider"></span></label>
+            </div>
+            <div class="switch-container">
+                <span>D1: Detaylı Analiz</span>
+                <label class="switch"><input type="checkbox" id="d1_chart" checked><span class="slider"></span></label>
+            </div>
+            <div class="switch-container">
+                <span>E1: Verimlilik Haritası</span>
+                <label class="switch"><input type="checkbox" id="e1_chart" checked><span class="slider"></span></label>
+            </div>
+
+            <button class="btn" onclick="updateChartSettings()">💾 Ayarları Kaydet</button>
+        </div>
+    </div>
+
+    <!-- Report Popup -->
+    <div class="popup" id="reportPopup">
+        <div class="popup-header">
+            <h3>📋 Detaylı Rapor</h3>
+            <button class="close-btn" onclick="closeReportPopup()">✕</button>
+        </div>
+        <div class="popup-content">
+            <div id="reportContent"></div>
+            <button class="btn" onclick="exportToPDF()" style="margin-top: 20px;">🖨️ PDF İndir</button>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration - BURAYA CONFIG BİLGİLERİNİZİ YAPIŞTIRINIZ
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+
+        // Firebase initialization
+        let db;
+        let currentUser = null;
+        
+        function initializeFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log('✅ Firebase başarıyla bağlandı');
+                updateConnectionStatus(true);
+                checkAutoLogin();
+            } catch (error) {
+                console.error('❌ Firebase bağlantı hatası:', error);
+                updateConnectionStatus(false);
+                showError('Firebase bağlantısı kurulamadı. Config bilgilerini kontrol edin.');
+            }
+        }
+
+        // Login Functions
+        async function checkAutoLogin() {
+            const savedLogin = localStorage.getItem('finans_analiz_login');
+            if (savedLogin) {
+                try {
+                    const loginData = JSON.parse(savedLogin);
+                    const userDoc = await db.collection('users').doc(loginData.userId).get();
+                    if (userDoc.exists()) {
+                        currentUser = { uid: loginData.userId, ...userDoc.data() };
+                        showMainApp();
+                        return;
+                    }
+                } catch (error) {
+                    localStorage.removeItem('finans_analiz_login');
+                }
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                showError('E-posta ve şifre gerekli!');
+                return;
+            }
+            
+            try {
+                const usersSnapshot = await db.collection('users')
+                    .where('email', '==', email)
+                    .where('password', '==', password)
+                    .get();
+                
+                if (usersSnapshot.empty) {
+                    showError('E-posta veya şifre hatalı!');
+                    return;
+                }
+                
+                const userDoc = usersSnapshot.docs[0];
+                currentUser = { uid: userDoc.id, ...userDoc.data() };
+                
+                localStorage.setItem('finans_analiz_login', JSON.stringify({
+                    userId: userDoc.id,
+                    email: email
+                }));
+                
+                showMainApp();
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Bağlantı hatası!');
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function logout() {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                localStorage.removeItem('finans_analiz_login');
+                currentUser = null;
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('statsContainer').innerHTML = '<div class="no-data">🔐 Giriş yaparak verilerinizi görüntüleyin</div>';
+            }
+        }
+
+        function showMainApp() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('userName').textContent = currentUser.username || currentUser.email;
+            updateConnectionStatus(true);
+        }
+
+        // Global variables
+        let currentView = 'daily';
+        let selectedDates = [];
+        let userData = {};
+        let chartSettings = {
+            a1_chart: true, a2_chart: true, a3_chart: true, 
+            b1_chart: true, b2_chart: true, b3_chart: true, 
+            c1_chart: true, d1_chart: true, e1_chart: true
+        };
+        let activeCharts = {};
+
+        // Firebase Data Loading
+        async function loadUserData() {
+            if (!currentUser || !db) return {};
+            
+            try {
+                updateConnectionStatus('loading');
+                
+                const dailySnapshot = await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('daily')
+                    .get({ source: 'server' });
+                
+                const data = {};
+                dailySnapshot.forEach(doc => {
+                    data[doc.id] = doc.data();
+                });
+                
+                console.log(`✅ ${Object.keys(data).length} günlük veri yüklendi`);
+                updateConnectionStatus(true);
+                return data;
+                
+            } catch (error) {
+                console.error('❌ Veri yükleme hatası:', error);
+                updateConnectionStatus(false);
+                return {};
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            const indicator = document.querySelector('.status-indicator');
+            const realTimeIndicator = document.getElementById('realTimeIndicator');
+            
+            if (status === true) {
+                statusElement.innerHTML = '<span class="status-indicator status-connected"></span>✅ Firebase Bağlı - Canlı Veri';
+                realTimeIndicator.style.display = 'block';
+            } else if (status === false) {
+                statusElement.innerHTML = '<span class="status-indicator status-disconnected"></span>❌ Firebase Bağlantı Hatası';
+                realTimeIndicator.style.display = 'none';
+            } else if (status === 'loading') {
+                statusElement.innerHTML = '<span class="status-indicator status-loading"></span>🔄 Veriler yükleniyor...';
+                realTimeIndicator.style.display = 'none';
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.sub-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(view + 'Btn').classList.add('active');
+            document.getElementById('currentViewMode').textContent = 
+                view === 'daily' ? 'Günlük' : view === 'weekly' ? 'Haftalık' : 'Aylık';
+        }
+
+        function openDatePopup() {
+            document.getElementById('datePopup').style.display = 'block';
+            initializeSelectors();
+            updateCalendarView();
+        }
+
+        function closeDatePopup() {
+            document.getElementById('datePopup').style.display = 'none';
+        }
+
+        function openChartsPopup() {
+            if (selectedDates.length === 0) {
+                alert('⚠️ Önce tarih aralığı seçiniz!');
+                return;
+            }
+            document.getElementById('chartsPopup').style.display = 'block';
+            updateChartsInPopup();
+        }
+
+        function closeChartsPopup() {
+            document.getElementById('chartsPopup').style.display = 'none';
+        }
+
+        function openSettingsPopup() {
+            document.getElementById('settingsPopup').style.display = 'block';
+        }
+
+        function closeSettingsPopup() {
+            document.getElementById('settingsPopup').style.display = 'none';
+        }
+
+        function closeReportPopup() {
+            document.getElementById('reportPopup').style.display = 'none';
+        }
+
+        function initializeSelectors() {
+            const monthSelect = document.getElementById('monthSelect');
+            const yearSelect = document.getElementById('yearSelect');
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            
+            if (monthSelect.children.length === 0) {
+                monthNames.forEach((month, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = month;
+                    monthSelect.appendChild(option);
+                });
+                
+                for (let year = 2020; year <= 2030; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                }
+                
+                const today = new Date();
+                monthSelect.value = today.getMonth();
+                yearSelect.value = today.getFullYear();
+            }
+        }
+
+        function updateCalendarView() {
+            const container = document.getElementById('calendarContainer');
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const year = parseInt(document.getElementById('yearSelect').value);
+            
+            if (currentView === 'daily') {
+                container.innerHTML = createDailyCalendar(month, year);
+            } else if (currentView === 'weekly') {
+                container.innerHTML = createWeeklyCalendar(month, year);
+            } else if (currentView === 'monthly') {
+                container.innerHTML = createMonthlySelector();
+            }
+        }
+
+        function createDailyCalendar(month, year) {
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            const dayNames = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+            
+            let html = `<div class="calendar-container"><h4>${monthNames[month]} ${year}</h4><div class="calendar-grid">`;
+            dayNames.forEach(day => html += `<div style="font-weight: bold; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 6px; padding: 8px;">${day}</div>`);
+            
+            for (let i = 0; i < firstDay; i++) {html += '<div class="calendar-day"></div>';}
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
+                const hasData = userData[dateStr] && !userData[dateStr].isHoliday;
+                const isSelected = selectedDates.includes(dateStr);
+                const totalExpenses = userData[dateStr]?.expenses?.reduce((sum, exp) => sum + exp.amount, 0) || 0;
+                
+                html += `<div class="calendar-day ${hasData ? 'has-data' : ''} ${isSelected ? 'selected' : ''}" onclick="toggleDate('${dateStr}')" title="Harcama: ${totalExpenses.toFixed(0)}₺">${day}</div>`;
+            }
+            
+            return html + '</div></div>';
+        }
+
+        function createWeeklyCalendar(month, year) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            
+            let html = `<div class="calendar-container"><h4>${monthNames[month]} ${year} - Haftalık</h4>`;
+            let currentWeek = [];
+            let weekIndex = 1;
+            
+            for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                currentWeek.push(new Date(d));
+                if (d.getDay() === 6 || d.getTime() === lastDay.getTime()) {
+                    html += createWeekContainer(currentWeek, weekIndex++);
+                    currentWeek = [];
+                }
+            }
+            
+            return html + '</div>';
+        }
+
+        function createWeekContainer(week, index) {
+            const weekDates = week.map(date => date.toISOString().split('T')[0]);
+            const weekStats = calculateWeekStats(weekDates);
+            let html = `<div class="week-container" onclick="selectWeek(['${weekDates.join("','")}'])" title="${weekStats.summary}">`;
+            html += `<div class="week-label">Hafta ${index}<br><small>${weekStats.hours}h</small></div>`;
+            
+            week.forEach(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const hasData = userData[dateStr] && !userData[dateStr].isHoliday;
+                const workHours = calculateWorkHours(userData[dateStr]?.workData || {});
+                const statusIcon = hasData ? (workHours > 7 ? '🟢' : workHours > 4 ? '🟡' : '🔴') : '';
+                html += `<div class="week-day ${hasData ? 'has-data' : ''}">${date.getDate()} ${statusIcon}</div>`;
+            });
+            
+            return html + '</div>';
+        }
+
+        function calculateWeekStats(weekDates) {
+            let totalHours = 0;
+            let workDays = 0;
+            let totalExpenses = 0;
+            
+            weekDates.forEach(dateStr => {
+                const data = userData[dateStr];
+                if (data && !data.isHoliday) {
+                    totalHours += calculateWorkHours(data.workData || {});
+                    workDays++;
+                    totalExpenses += (data.expenses || []).reduce((sum, exp) => sum + exp.amount, 0);
+                }
+            });
+            
+            return {
+                hours: totalHours.toFixed(1),
+                workDays,
+                expenses: totalExpenses.toFixed(0),
+                summary: `${workDays} çalışma günü, ${totalHours.toFixed(1)} saat, ${totalExpenses.toFixed(0)}₺`
+            };
+        }
+
+        function createMonthlySelector() {
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            
+            let html = `<div class="calendar-container"><h4>${year} - Aylık Seçim</h4><div class="month-grid">`;
+            
+            for (let m = 0; m < 12; m++) {
+                const stats = getMonthStats(m, year);
+                html += `<div class="month-card" onclick="selectMonth(${m}, ${year})">
+                    <h5>${monthNames[m]}</h5>
+                    <div style="color: #667eea; font-weight: bold; font-size: 18px;">${stats.workDays}</div>
+                    <small>Çalışma Günü</small>
+                    <div style="font-size: 12px; margin-top: 5px; color: #666;">
+                        ${stats.totalHours.toFixed(0)}h • ${stats.totalExpenses.toFixed(0)}₺
+                    </div>
+                </div>`;
+            }
+            
+            return html + '</div></div>';
+        }
+
+        function getMonthStats(month, year) {
+            let workDays = 0;
+            let totalHours = 0;
+            let totalExpenses = 0;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                const data = userData[dateStr];
+                if (data && !data.isHoliday) {
+                    workDays++;
+                    totalHours += calculateWorkHours(data.workData || {});
+                    totalExpenses += (data.expenses || []).reduce((sum, exp) => sum + exp.amount, 0);
+                }
+            }
+            
+            return {workDays, totalHours, totalExpenses};
+        }
+
+        // Date Selection Functions
+        function toggleDate(dateStr) {
+            const index = selectedDates.indexOf(dateStr);
+            if (index > -1) {
+                selectedDates.splice(index, 1);
+            } else {
+                selectedDates.push(dateStr);
+            }
+            updateCalendarView();
+            updateStats();
+        }
+
+        function selectWeek(dates) {
+            selectedDates = dates;
+            updateCalendarView();
+            updateStats();
+            closeDatePopup();
+        }
+
+        function selectMonth(month, year) {
+            selectedDates = [];
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                selectedDates.push(d.toISOString().split('T')[0]);
+            }
+            updateCalendarView();
+            updateStats();
+            closeDatePopup();
+        }
+
+        function selectToday() {
+            const today = new Date().toISOString().split('T')[0];
+            selectedDates = [today];
+            updateStats();
+            closeDatePopup();
+        }
+
+        function selectThisWeek() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - dayOfWeek);
+            
+            selectedDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                selectedDates.push(date.toISOString().split('T')[0]);
+            }
+            updateStats();
+            closeDatePopup();
+        }
+
+        function selectLastWeek() {
+            const today = new Date();
+            selectedDates = [];
+            for (let i = 13; i >= 7; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                selectedDates.push(date.toISOString().split('T')[0]);
+            }
+            updateStats();
+            closeDatePopup();
+        }
+
+        function selectThisMonth() {
+            const today = new Date();
+            selectMonth(today.getMonth(), today.getFullYear());
+        }
+
+        function selectLastMonth() {
+            const today = new Date();
+            const lastMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+            const year = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+            selectMonth(lastMonth, year);
+        }
+
+        function applyManualRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Başlangıç ve bitiş tarihlerini seçiniz!');
+                return;
+            }
+            
+            selectedDates = [];
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                selectedDates.push(d.toISOString().split('T')[0]);
+            }
+            
+            updateStats();
+            closeDatePopup();
+        }
+
+        // Statistics and Analysis Functions
+        function updateStats() {
+            const container = document.getElementById('statsContainer');
+            
+            if (selectedDates.length === 0) {
+                container.innerHTML = '<div class="no-data">📅 Tarih aralığı seçerek başlayın</div>';
+                return;
+            }
+            
+            const stats = calculateStats(selectedDates);
+            container.innerHTML = renderStats(stats);
+        }
+
+        function calculateStats(dates) {
+            let totalWorkHours = 0;
+            let totalExpenses = 0;
+            let workDays = 0;
+            let categoryTotals = { essential: 0, need: 0, want: 0, loss: 0 };
+            let dailyData = [];
+            let bestDay = { date: '', workHours: 0, expenses: 0 };
+            let worstDay = { date: '', workHours: 24, expenses: 999999 };
+
+            dates.forEach(dateStr => {
+                const data = userData[dateStr];
+                if (!data) {
+                    dailyData.push({
+                        date: dateStr,
+                        workHours: 0,
+                        expenses: 0,
+                        isHoliday: false
+                    });
+                    return;
+                }
+
+                const workHours = calculateWorkHours(data.workData || {});
+                const expenses = (data.expenses || []).reduce((sum, exp) => sum + exp.amount, 0);
+
+                if (!data.isHoliday && workHours > 0) {
+                    totalWorkHours += workHours;
+                    workDays++;
+                    
+                    if (workHours > bestDay.workHours) {
+                        bestDay = { date: dateStr, workHours, expenses };
+                    }
+                    if (workHours < worstDay.workHours && workHours > 0) {
+                        worstDay = { date: dateStr, workHours, expenses };
+                    }
+                }
+
+                totalExpenses += expenses;
+                (data.expenses || []).forEach(exp => {
+                    const category = exp.category || 'need';
+                    categoryTotals[category] += exp.amount;
+                });
+
+                dailyData.push({
+                    date: dateStr,
+                    workHours,
+                    expenses,
+                    isHoliday: data.isHoliday || false
+                });
+            });
+
+            return {
+                totalWorkHours,
+                totalExpenses,
+                workDays,
+                categoryTotals,
+                dailyData,
+                bestDay,
+                worstDay,
+                avgDailyExpenses: dates.length > 0 ? totalExpenses / dates.length : 0,
+                avgWorkHours: workDays > 0 ? totalWorkHours / workDays : 0
+            };
+        }
+
+        function calculateWorkHours(workData) {
+            if (!workData.startTime || !workData.endTime) return 0;
+            
+            const start = new Date(`2000-01-01T${workData.startTime}`);
+            const end = new Date(`2000-01-01T${workData.endTime}`);
+            const breakTime = workData.breakTime || 0;
+            
+            return Math.max(0, (end - start) / (1000 * 60 * 60) - breakTime / 60);
+        }
+
+        function renderStats(stats) {
+            const period = selectedDates.length;
+            const periodText = period === 1 ? 'Günlük' : period === 7 ? 'Haftalık' : period <= 31 ? 'Aylık' : 'Dönemsel';
+            
+            return `
+                <div class="enhanced-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.totalWorkHours.toFixed(1)}</div>
+                        <div class="stat-label">Toplam Çalışma Saati</div>
+                        <div class="trend-indicator trend-${stats.avgWorkHours > 7 ? 'up' : stats.avgWorkHours > 5 ? 'neutral' : 'down'}">
+                            Günlük Ort: ${stats.avgWorkHours.toFixed(1)}h
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.totalExpenses.toFixed(0)}₺</div>
+                        <div class="stat-label">Toplam Harcama</div>
+                        <div class="trend-indicator trend-${stats.avgDailyExpenses < 100 ? 'up' : stats.avgDailyExpenses < 200 ? 'neutral' : 'down'}">
+                            Günlük Ort: ${stats.avgDailyExpenses.toFixed(0)}₺
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.workDays}</div>
+                        <div class="stat-label">Çalışma Günü</div>
+                        <div class="trend-indicator trend-neutral">
+                            ${period} günlük dönem
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.avgWorkHours > 0 ? (stats.avgDailyExpenses / stats.avgWorkHours).toFixed(0) : 0}₺</div>
+                        <div class="stat-label">Saat Başı Harcama</div>
+                        <div class="trend-indicator trend-neutral">
+                            Verimlilik metriği
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>💰 Harcama Kategorileri</h4>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.categoryTotals.essential.toFixed(0)}₺</div>
+                            <div class="stat-label">Zorunlu</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.categoryTotals.need.toFixed(0)}₺</div>
+                            <div class="stat-label">İhtiyaç</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.categoryTotals.want.toFixed(0)}₺</div>
+                            <div class="stat-label">İstek</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stats.categoryTotals.loss.toFixed(0)}₺</div>
+                            <div class="stat-label">Kayıp</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>🎯 Performans Özeti</h4>
+                    <p><strong>En Verimli Gün:</strong> ${formatDate(stats.bestDay.date)} (${stats.bestDay.workHours.toFixed(1)}h)</p>
+                    <p><strong>Gelişim Alanı:</strong> ${formatDate(stats.worstDay.date)} (${stats.worstDay.workHours.toFixed(1)}h)</p>
+                    <p><strong>Çalışma Durumu:</strong> ${getWorkStatus(stats.avgWorkHours)}</p>
+                    <p><strong>Harcama Dengesi:</strong> ${getSpendingBalance(stats.categoryTotals)}</p>
+                </div>
+            `;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'Veri yok';
+            return new Date(dateStr).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+        }
+
+        function getWorkStatus(avgHours) {
+            if (avgHours > 9) return '🔥 Çok Yoğun';
+            if (avgHours > 7) return '⚡ Yoğun';
+            if (avgHours > 5) return '📊 Normal';
+            if (avgHours > 0) return '😴 Hafif';
+            return '❌ Çalışma verisi yok';
+        }
+
+        function getSpendingBalance(categories) {
+            const total = Object.values(categories).reduce((sum, val) => sum + val, 0);
+            if (total === 0) return 'Harcama kaydı yok';
+            
+            const wantRatio = categories.want / total;
+            const lossRatio = categories.loss / total;
+            
+            if (wantRatio > 0.4) return '⚠️ İstek harcamaları yüksek';
+            if (lossRatio > 0.2) return '🔴 Kayıp harcamaları fazla';
+            return '✅ Dengeli harcama dağılımı';
+        }
+
+        // Chart Functions
+        function updateChartsInPopup() {
+            const container = document.getElementById('chartsContainer');
+            if (selectedDates.length === 0) {
+                container.innerHTML = '<div class="no-data">📊 Tarih seçimi yaparak grafikleri görüntüleyin</div>';
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">📊 Grafikler Firebase\'den yükleniyor...</div>';
+            
+            setTimeout(() => {
+                container.innerHTML = generateChartsHTML();
+                renderAllCharts();
+            }, 500);
+        }
+
+        function generateChartsHTML() {
+            let html = '';
+            
+            if (chartSettings.a1_chart) {
+                html += '<div class="chart-item"><h4>📊 A1: Günlük Harcama Trendi</h4><div class="chart-container"><canvas id="a1Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.a2_chart) {
+                html += '<div class="chart-item"><h4>💰 A2: Çalışma & Harcama Karşılaştırması</h4><div class="chart-container"><canvas id="a2Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.a3_chart) {
+                html += '<div class="chart-item"><h4>🎯 A3: Kategori Dağılımı</h4><div class="chart-container"><canvas id="a3Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.b1_chart) {
+                html += '<div class="chart-item"><h4>⚡ B1: Günlük Çalışma Saatleri</h4><div class="chart-container"><canvas id="b1Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.b2_chart) {
+                html += '<div class="chart-item"><h4>⏰ B2: Saat-Harcama İlişkisi</h4><div class="chart-container"><canvas id="b2Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.b3_chart) {
+                html += '<div class="chart-item"><h4>💹 B3: Verimlilik Analizi</h4><div class="chart-container"><canvas id="b3Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.c1_chart) {
+                html += '<div class="chart-item"><h4>📈 C1: Haftalık Toplam Trend</h4><div class="chart-container"><canvas id="c1Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.d1_chart) {
+                html += '<div class="chart-item"><h4>🔍 D1: Detaylı Kategori Analizi</h4><div class="chart-container"><canvas id="d1Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            if (chartSettings.e1_chart) {
+                html += '<div class="chart-item"><h4>🗺️ E1: Aylık Performans Haritası</h4><div class="chart-container"><canvas id="e1Chart" class="chart-canvas"></canvas></div></div>';
+            }
+            
+            return html;
+        }
+
+        function renderAllCharts() {
+            const stats = calculateStats(selectedDates);
+            
+            // Destroy existing charts
+            Object.values(activeCharts).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            activeCharts = {};
+            
+            if (chartSettings.a1_chart) renderA1Chart(stats);
+            if (chartSettings.a2_chart) renderA2Chart(stats);
+            if (chartSettings.a3_chart) renderA3Chart(stats);
+            if (chartSettings.b1_chart) renderB1Chart(stats);
+            if (chartSettings.b2_chart) renderB2Chart(stats);
+            if (chartSettings.b3_chart) renderB3Chart(stats);
+            if (chartSettings.c1_chart) renderC1Chart(stats);
+            if (chartSettings.d1_chart) renderD1Chart(stats);
+            if (chartSettings.e1_chart) renderE1Chart(stats);
+        }
+
+        function renderA1Chart(stats) {
+            const ctx = document.getElementById('a1Chart');
+            if (!ctx) return;
+            
+            const dailyExpenses = stats.dailyData.map(d => d.expenses);
+            
+            activeCharts.a1 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: stats.dailyData.map(d => formatDate(d.date)),
+                    datasets: [{
+                        label: 'Günlük Harcama',
+                        data: dailyExpenses,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderA2Chart(stats) {
+            const ctx = document.getElementById('a2Chart');
+            if (!ctx) return;
+            
+            activeCharts.a2 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.dailyData.map(d => formatDate(d.date)),
+                    datasets: [
+                        {
+                            label: 'Çalışma Saati',
+                            data: stats.dailyData.map(d => d.workHours),
+                            backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Harcama (₺)',
+                            data: stats.dailyData.map(d => d.expenses),
+                            type: 'line',
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Saat' } },
+                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Harcama (₺)' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
+        function renderA3Chart(stats) {
+            const ctx = document.getElementById('a3Chart');
+            if (!ctx) return;
+            
+            const categories = stats.categoryTotals;
+            const data = [categories.essential, categories.need, categories.want, categories.loss];
+            
+            activeCharts.a3 = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Zorunlu', 'İhtiyaç', 'İstek', 'Kayıp'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#4ecdc4', '#45b7d1', '#f39c12', '#e74c3c'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function renderB1Chart(stats) {
+            const ctx = document.getElementById('b1Chart');
+            if (!ctx) return;
+            
+            activeCharts.b1 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.dailyData.map(d => formatDate(d.date)),
+                    datasets: [{
+                        label: 'Çalışma Saati',
+                        data: stats.dailyData.map(d => d.workHours),
+                        backgroundColor: stats.dailyData.map(d => {
+                            if (d.workHours > 8) return 'rgba(231, 76, 60, 0.7)';
+                            if (d.workHours > 6) return 'rgba(46, 213, 115, 0.7)';
+                            if (d.workHours > 0) return 'rgba(255, 167, 38, 0.7)';
+                            return 'rgba(149, 165, 166, 0.7)';
+                        }),
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Saat' } }
+                    }
+                }
+            });
+        }
+
+        function renderB2Chart(stats) {
+            const ctx = document.getElementById('b2Chart');
+            if (!ctx) return;
+            
+            activeCharts.b2 = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Saat vs Harcama',
+                        data: stats.dailyData.map(d => ({ x: d.workHours, y: d.expenses })),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Çalışma Saati' } },
+                        y: { title: { display: true, text: 'Harcama (₺)' } }
+                    }
+                }
+            });
+        }
+
+        function renderB3Chart(stats) {
+            const ctx = document.getElementById('b3Chart');
+            if (!ctx) return;
+            
+            activeCharts.b3 = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Verimlilik Analizi',
+                        data: stats.dailyData.map(d => ({
+                            x: d.workHours,
+                            y: d.expenses,
+                            r: Math.max(5, d.workHours > 0 ? (d.expenses / d.workHours) : 0)
+                        })),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Çalışma Saati' } },
+                        y: { title: { display: true, text: 'Harcama (₺)' } }
+                    }
+                }
+            });
+        }
+
+        function renderC1Chart(stats) {
+            const ctx = document.getElementById('c1Chart');
+            if (!ctx) return;
+            
+            // Group data by weeks
+            const weeklyData = groupDataByWeeks(stats.dailyData);
+            
+            activeCharts.c1 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: weeklyData.map(w => `Hafta ${w.week}`),
+                    datasets: [
+                        {
+                            label: 'Haftalık Toplam Harcama',
+                            data: weeklyData.map(w => w.totalExpenses),
+                            borderColor: '#667eea',
+                            fill: false
+                        },
+                        {
+                            label: 'Haftalık Çalışma Saati',
+                            data: weeklyData.map(w => w.totalHours),
+                            borderColor: '#e74c3c',
+                            fill: false,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Harcama (₺)' } },
+                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Saat' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
+        function renderD1Chart(stats) {
+            const ctx = document.getElementById('d1Chart');
+            if (!ctx) return;
+            
+            activeCharts.d1 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.dailyData.map(d => formatDate(d.date)),
+                    datasets: [
+                        {
+                            label: 'Zorunlu',
+                            data: stats.dailyData.map(d => getCategorySum(d.date, 'essential')),
+                            backgroundColor: '#4ecdc4',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'İhtiyaç',
+                            data: stats.dailyData.map(d => getCategorySum(d.date, 'need')),
+                            backgroundColor: '#45b7d1',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'İstek',
+                            data: stats.dailyData.map(d => getCategorySum(d.date, 'want')),
+                            backgroundColor: '#f39c12',
+                            stack: 'Stack 0'
+                        },
+                        {
+                            label: 'Kayıp',
+                            data: stats.dailyData.map(d => getCategorySum(d.date, 'loss')),
+                            backgroundColor: '#e74c3c',
+                            stack: 'Stack 0'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, title: { display: true, text: 'Harcama (₺)' } }
+                    }
+                }
+            });
+        }
+
+        function renderE1Chart(stats) {
+            const ctx = document.getElementById('e1Chart');
+            if (!ctx) return;
+            
+            activeCharts.e1 = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Performans Haritası',
+                        data: stats.dailyData.map((d, i) => ({
+                            x: i + 1,
+                            y: d.workHours,
+                            r: Math.max(5, d.expenses / 10)
+                        })),
+                        backgroundColor: stats.dailyData.map(d => {
+                            if (d.workHours > 8) return 'rgba(231, 76, 60, 0.7)';
+                            if (d.workHours > 6) return 'rgba(46, 213, 115, 0.7)';
+                            if (d.workHours > 0) return 'rgba(255, 167, 38, 0.7)';
+                            return 'rgba(149, 165, 166, 0.7)';
+                        })
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Gün Sırası' } },
+                        y: { title: { display: true, text: 'Çalışma Saati' }, min: 0 }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const date = stats.dailyData[dataIndex].date;
+                                    const hours = context.parsed.y;
+                                    const expenses = stats.dailyData[dataIndex].expenses;
+                                    return `${formatDate(date)}: ${hours.toFixed(1)}h, ${expenses.toFixed(0)}₺`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper Functions
+        function groupDataByWeeks(dailyData) {
+            const weeks = [];
+            let currentWeek = [];
+            
+            dailyData.forEach((day, index) => {
+                currentWeek.push(day);
+                
+                if (currentWeek.length === 7 || index === dailyData.length - 1) {
+                    const totalHours = currentWeek.reduce((sum, d) => sum + d.workHours, 0);
+                    const totalExpenses = currentWeek.reduce((sum, d) => sum + d.expenses, 0);
+                    
+                    weeks.push({
+                        week: weeks.length + 1,
+                        totalHours: totalHours.toFixed(1),
+                        totalExpenses: totalExpenses.toFixed(0)
+                    });
+                    
+                    currentWeek = [];
+                }
+            });
+            
+            return weeks;
+        }
+
+        function getCategorySum(dateStr, category) {
+            const data = userData[dateStr];
+            if (!data || !data.expenses) return 0;
+            
+            return data.expenses
+                .filter(exp => exp.category === category)
+                .reduce((sum, exp) => sum + exp.amount, 0);
+        }
+
+        function updateChartSettings() {
+            const checkboxes = document.querySelectorAll('#settingsPopup input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                chartSettings[cb.id] = cb.checked;
+            });
+            
+            alert('✅ Grafik ayarları güncellendi!');
+            closeSettingsPopup();
+            
+            // Re-render charts if popup is open
+            if (document.getElementById('chartsPopup').style.display === 'block') {
+                updateChartsInPopup();
+            }
+        }
+
+        // Report Generation
+        function generateReport() {
+            if (selectedDates.length === 0) {
+                alert('⚠️ Önce tarih aralığı seçiniz!');
+                return;
+            }
+            
+            const stats = calculateStats(selectedDates);
+            const reportContent = generateReportContent(stats);
+            
+            document.getElementById('reportContent').innerHTML = reportContent;
+            document.getElementById('reportPopup').style.display = 'block';
+        }
+
+        function generateReportContent(stats) {
+            const period = selectedDates.length;
+            const startDate = formatDate(selectedDates[0]);
+            const endDate = formatDate(selectedDates[selectedDates.length - 1]);
+            
+            return `
+                <div class="report-section">
+                    <h4>📊 Dönem Özeti</h4>
+                    <p><strong>Analiz Dönemi:</strong> ${startDate} - ${endDate} (${period} gün)</p>
+                    <p><strong>Çalışma Günü:</strong> ${stats.workDays} gün</p>
+                    <p><strong>Tatil/İzin:</strong> ${period - stats.workDays} gün</p>
+                </div>
+                
+                <div class="report-section">
+                    <h4>⚡ Çalışma Raporu</h4>
+                    <p><strong>Toplam Çalışma:</strong> ${stats.totalWorkHours.toFixed(1)} saat</p>
+                    <p><strong>Günlük Ortalama:</strong> ${stats.avgWorkHours.toFixed(1)} saat</p>
+                    <p><strong>En Verimli Gün:</strong> ${formatDate(stats.bestDay.date)} (${stats.bestDay.workHours.toFixed(1)}h)</p>
+                    <p><strong>Çalışma Yoğunluğu:</strong> ${getWorkIntensity(stats.avgWorkHours)}</p>
+                </div>
+                
+                <div class="report-section">
+                    <h4>💰 Finansal Analiz</h4>
+                    <p><strong>Toplam Harcama:</strong> ${stats.totalExpenses.toFixed(0)} ₺</p>
+                    <p><strong>Günlük Ortalama:</strong> ${stats.avgDailyExpenses.toFixed(0)} ₺</p>
+                    <div style="margin: 10px 0;">
+                        <p>• Zorunlu: ${stats.categoryTotals.essential.toFixed(0)} ₺ (${(stats.categoryTotals.essential/stats.totalExpenses*100).toFixed(1)}%)</p>
+                        <p>• İhtiyaç: ${stats.categoryTotals.need.toFixed(0)} ₺ (${(stats.categoryTotals.need/stats.totalExpenses*100).toFixed(1)}%)</p>
+                        <p>• İstek: ${stats.categoryTotals.want.toFixed(0)} ₺ (${(stats.categoryTotals.want/stats.totalExpenses*100).toFixed(1)}%)</p>
+                        <p>• Kayıp: ${stats.categoryTotals.loss.toFixed(0)} ₺ (${(stats.categoryTotals.loss/stats.totalExpenses*100).toFixed(1)}%)</p>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>🎯 Öneriler ve Değerlendirme</h4>
+                    <div>${generateRecommendations(stats)}</div>
+                </div>
+                
+                <div class="report-section">
+                    <h4>📈 Trend Analizi</h4>
+                    <p><strong>Çalışma Trendi:</strong> ${getWorkTrend(stats.dailyData)}</p>
+                    <p><strong>Harcama Trendi:</strong> ${getSpendingTrend(stats.dailyData)}</p>
+                    <p><strong>Çalışma Düzeni:</strong> ${getWorkPattern(stats.dailyData)}</p>
+                </div>
+            `;
+        }
+
+        function getWorkIntensity(avgHours) {
+            if (avgHours > 9) return '🔥 Çok Yoğun';
+            if (avgHours > 7) return '⚡ Yoğun';
+            if (avgHours > 5) return '📊 Normal';
+            return '😴 Hafif';
+        }
+
+        function generateRecommendations(stats) {
+            const recommendations = [];
+            
+            // Çalışma saati önerileri
+            if (stats.avgWorkHours > 9) {
+                recommendations.push('⚠️ Günlük 9+ saat çalışma sürdürülemez olabilir. İş-yaşam dengesini gözden geçirin');
+            } else if (stats.avgWorkHours < 4) {
+                recommendations.push('📈 Çalışma saatlerinizi artırmayı değerlendirin');
+            }
+            
+            // Harcama önerileri
+            const wantRatio = stats.totalExpenses > 0 ? stats.categoryTotals.want / stats.totalExpenses : 0;
+            const lossRatio = stats.totalExpenses > 0 ? stats.categoryTotals.loss / stats.totalExpenses : 0;
+            
+            if (wantRatio > 0.3) {
+                recommendations.push('💰 İstek harcamalarınız yüksek (%' + (wantRatio*100).toFixed(1) + '). Bütçe kontrolü yapın');
+            }
+            
+            if (lossRatio > 0.15) {
+                recommendations.push('🚨 Kayıp harcamalar fazla (%' + (lossRatio*100).toFixed(1) + '). Harcama alışkanlıklarınızı gözden geçirin');
+            }
+            
+            // Verimlilik önerileri
+            const avgDailyRatio = stats.avgWorkHours > 0 ? stats.avgDailyExpenses / stats.avgWorkHours : 0;
+            if (avgDailyRatio > 50) {
+                recommendations.push('📊 Saat başı harcamanız yüksek (' + avgDailyRatio.toFixed(0) + '₺/saat). Ekonomi yapın');
+            } else if (avgDailyRatio < 20) {
+                recommendations.push('✅ Saat başı harcamanız ideal seviyede (' + avgDailyRatio.toFixed(0) + '₺/saat)');
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push('✅ Genel performansınız dengeli görünüyor. Bu şekilde devam edin!');
+            }
+            
+            return recommendations.map(rec => `<p>${rec}</p>`).join('');
+        }
+
+        function getWorkTrend(dailyData) {
+            if (dailyData.length < 3) return 'Yeterli veri yok';
+            
+            const recent = dailyData.slice(-3).map(d => d.workHours);
+            const earlier = dailyData.slice(-6, -3).map(d => d.workHours);
+            
+            const recentAvg = recent.reduce((sum, val) => sum + val, 0) / recent.length;
+            const earlierAvg = earlier.length > 0 ? earlier.reduce((sum, val) => sum + val, 0) / earlier.length : recentAvg;
+            
+            if (recentAvg > earlierAvg + 1) return '📈 Artışta';
+            if (recentAvg < earlierAvg - 1) return '📉 Düşüşte';
+            return '➡️ Stabil';
+        }
+
+        function getSpendingTrend(dailyData) {
+            if (dailyData.length < 3) return 'Yeterli veri yok';
+            
+            const recent = dailyData.slice(-3).map(d => d.expenses);
+            const earlier = dailyData.slice(-6, -3).map(d => d.expenses);
+            
+            const recentAvg = recent.reduce((sum, val) => sum + val, 0) / recent.length;
+            const earlierAvg = earlier.length > 0 ? earlier.reduce((sum, val) => sum + val, 0) / earlier.length : recentAvg;
+            
+            if (recentAvg > earlierAvg * 1.1) return '📈 Artışta';
+            if (recentAvg < earlierAvg * 0.9) return '📉 Azalışta';
+            return '➡️ Stabil';
+        }
+
+        function getWorkPattern(dailyData) {
+            const workingDays = dailyData.filter(d => !d.isHoliday && d.workHours > 0);
+            if (workingDays.length === 0) return 'Çalışma verisi yok';
+            
+            const avgHours = workingDays.reduce((sum, d) => sum + d.workHours, 0) / workingDays.length;
+            const consistency = calculateConsistency(workingDays.map(d => d.workHours));
+            
+            let pattern = '';
+            if (avgHours > 8) pattern += 'Yoğun ';
+            else if (avgHours > 6) pattern += 'Normal ';
+            else pattern += 'Hafif ';
+            
+            if (consistency > 0.8) pattern += '& Düzenli';
+            else if (consistency > 0.6) pattern += '& Orta Düzen';
+            else pattern += '& Değişken';
+            
+            return pattern;
+        }
+
+        function calculateConsistency(values) {
+            if (values.length === 0) return 0;
+            
+            const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+            const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+            const stdDev = Math.sqrt(variance);
+            
+            // Normalize to 0-1 range (lower std dev = higher consistency)
+            return Math.max(0, 1 - (stdDev / mean));
+        }
+
+        function exportToPDF() {
+            // Simple PDF export simulation
+            const reportContent = document.getElementById('reportContent').innerHTML;
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Finansal Analiz Raporu</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                        .report-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+                        h4 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 5px; }
+                        p { margin: 8px 0; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>📊 Finansal Analiz Raporu</h1>
+                    <p><strong>Kullanıcı:</strong> ${currentUser.username || currentUser.email}</p>
+                    <p><strong>Oluşturma Tarihi:</strong> ${new Date().toLocaleDateString('tr-TR')}</p>
+                    <hr>
+                    ${reportContent}
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Initialize application
+        async function initializeApp() {
+            console.log('🚀 Finansal Analiz v5.7 başlatılıyor...');
+            
+            // Initialize Firebase
+            initializeFirebase();
+            
+            // Initialize default view
+            switchView('daily');
+            
+            // Set up automatic chart cleanup
+            window.addEventListener('beforeunload', () => {
+                Object.values(activeCharts).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+            });
+        }
+
+        // Load user data when logged in
+        async function loadDataAndUpdate() {
+            if (!currentUser) return;
+            
+            userData = await loadUserData();
+            updateStats();
+            
+            // Auto-select today if no dates selected
+            if (selectedDates.length === 0) {
+                selectToday();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Auto-load data when user logs in
+        function showMainApp() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('userName').textContent = currentUser.username || currentUser.email;
+            updateConnectionStatus(true);
+            loadDataAndUpdate();
+        }
+
+        // Popup close on outside click
+        document.addEventListener('click', function(e) {
+            const popups = document.querySelectorAll('.popup');
+            popups.forEach(popup => {
+                if (e.target === popup) {
+                    popup.style.display = 'none';
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // ESC to close popups
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.popup').forEach(popup => {
+                    popup.style.display = 'none';
+                });
+            }
+            
+            // Enter to login
+            if (e.key === 'Enter' && document.getElementById('loginOverlay').style.display === 'flex') {
+                login();
+            }
+            
+            // Ctrl/Cmd + shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'd': // Date selection
+                        e.preventDefault();
+                        openDatePopup();
+                        break;
+                    case 'g': // Charts
+                        e.preventDefault();
+                        openChartsPopup();
+                        break;
+                    case 'r': // Report
+                        e.preventDefault();
+                        generateReport();
+                        break;
+                    case 's': // Settings
+                        e.preventDefault();
+                        openSettingsPopup();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
