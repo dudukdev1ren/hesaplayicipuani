@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Günlük Finansal Rapor Paneli v2.3</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f0f2f5;color:#333;padding:10px;min-height:100vh}.header{background:#fff;padding:20px;border-radius:10px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,0.1);text-align:center}.header h1{color:#1976d2;margin-bottom:10px}.status{padding:5px 10px;border-radius:5px;font-size:12px;margin-top:10px}.status.connected{background:#4caf50;color:white}.status.error{background:#f44336;color:white}.status.loading{background:#ff9800;color:white}.login-panel{background:#fff;padding:30px;border-radius:10px;margin:20px auto;max-width:400px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}.login-panel input{width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px;font-size:14px}.login-panel button{width:100%;padding:12px;background:#1976d2;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px}.login-panel button:hover{background:#1565c0}.control-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}.control-btn{background:#fff;border:1px solid #ddd;padding:15px;border-radius:8px;cursor:pointer;text-align:center;transition:all 0.3s;box-shadow:0 2px 5px rgba(0,0,0,0.1)}.control-btn:hover{background:#f5f5f5;transform:translateY(-2px)}.control-btn.active{background:#1976d2;color:white}.report-container{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:20px}.report-header{border-bottom:2px solid #1976d2;padding-bottom:10px;margin-bottom:20px}.report-header h2{color:#1976d2}.day-report{border:1px solid #e0e0e0;margin:10px 0;padding:15px;border-radius:8px;background:#fafafa}.day-report.holiday{background:#fff3e0;border-color:#ffb74d}.day-report.work{background:#e8f5e8;border-color:#4caf50}.day-header{font-weight:bold;color:#333;margin-bottom:10px;font-size:16px}.day-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:10px 0}.stat-item{text-align:center;padding:10px;background:#fff;border-radius:5px;border:1px solid #e0e0e0}.stat-value{font-size:18px;font-weight:bold;color:#1976d2}.stat-label{font-size:12px;color:#666}.category-list{margin:10px 0}.category-item{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0}.category-item:last-child{border-bottom:none}.no-data{text-align:center;padding:50px;color:#999;font-style:italic}.loading{text-align:center;padding:30px;color:#666}.error{background:#ffebee;color:#c62828;padding:15px;border-radius:5px;margin:10px 0}.summary-panel{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-bottom:20px}.summary-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}.summary-card{background:#f8f9fa;padding:15px;border-radius:8px;text-align:center;border-left:4px solid #1976d2}.summary-card.expense{border-left-color:#f44336}.summary-card.work{border-left-color:#4caf50}.logout-btn{position:absolute;top:10px;right:10px;background:#f44336;color:white;border:none;padding:8px 12px;border-radius:5px;cursor:pointer;font-size:12px}@media(max-width:768px){.control-panel{grid-template-columns:1fr}.day-stats{grid-template-columns:repeat(2,1fr)}.summary-stats{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <!-- Login Panel -->
+    <div id="loginPanel" class="login-panel">
+        <h2 style="text-align:center;margin-bottom:20px">Giriş Yap</h2>
+        <input type="email" id="emailInput" placeholder="E-posta adresiniz">
+        <input type="password" id="passwordInput" placeholder="Şifreniz">
+        <div id="loginError" class="error" style="display:none"></div>
+        <button onclick="login()">Giriş Yap</button>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" style="display:none">
+        <button class="logout-btn" onclick="logout()">Çıkış</button>
+        
+        <div class="header">
+            <h1>📊 Günlük Finansal Rapor Paneli v2.3</h1>
+            <div id="connectionStatus" class="status loading">Firebase'e bağlanıyor...</div>
+            <div style="margin-top:10px;font-size:14px">
+                Kullanıcı: <span id="userName">-</span>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="control-btn active" onclick="switchView('daily')" id="dailyBtn">
+                📅 Günlük Görünüm
+            </div>
+            <div class="control-btn" onclick="switchView('summary')" id="summaryBtn">
+                📈 Özet Rapor
+            </div>
+            <div class="control-btn" onclick="generateFullReport()" id="reportBtn">
+                📋 Detaylı Rapor
+            </div>
+            <div class="control-btn" onclick="refreshData()" id="refreshBtn">
+                🔄 Verileri Yenile
+            </div>
+        </div>
+
+        <div id="contentArea">
+            <div class="no-data">Veriler yükleniyor...</div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+
+        // Global variables
+        let db;
+        let currentUser = null;
+        let userData = {};
+        let currentView = 'daily';
+
+        // Firebase initialization
+        function initializeFirebase() {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log('✅ Firebase başarıyla bağlandı');
+                updateConnectionStatus('connected');
+            } catch (error) {
+                console.error('❌ Firebase bağlantı hatası:', error);
+                updateConnectionStatus('error');
+            }
+        }
+
+        // Login functions
+        async function login() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                showLoginError('E-posta ve şifre gerekli!');
+                return;
+            }
+            
+            try {
+                updateConnectionStatus('loading');
+                
+                const usersSnapshot = await db.collection('users')
+                    .where('email', '==', email)
+                    .where('password', '==', password)
+                    .get();
+                
+                if (usersSnapshot.empty) {
+                    showLoginError('E-posta veya şifre hatalı!');
+                    return;
+                }
+                
+                const userDoc = usersSnapshot.docs[0];
+                currentUser = { uid: userDoc.id, ...userDoc.data() };
+                
+                showMainApp();
+                await loadUserData();
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showLoginError('Bağlantı hatası!');
+            }
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function logout() {
+            if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+                currentUser = null;
+                userData = {};
+                document.getElementById('loginPanel').style.display = 'block';
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('emailInput').value = '';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('loginError').style.display = 'none';
+            }
+        }
+
+        function showMainApp() {
+            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userName').textContent = currentUser.username || currentUser.email;
+            updateConnectionStatus('connected');
+        }
+
+        // Data loading functions
+        async function loadUserData() {
+            if (!currentUser || !db) return;
+            
+            try {
+                updateConnectionStatus('loading');
+                
+                const dailySnapshot = await db.collection('users')
+                    .doc(currentUser.uid)
+                    .collection('daily')
+                    .get();
+                
+                userData = {};
+                dailySnapshot.forEach(doc => {
+                    userData[doc.id] = doc.data();
+                });
+                
+                console.log(`✅ ${Object.keys(userData).length} günlük veri yüklendi`);
+                updateConnectionStatus('connected');
+                updateView();
+                
+            } catch (error) {
+                console.error('❌ Veri yükleme hatası:', error);
+                updateConnectionStatus('error');
+            }
+        }
+
+        async function refreshData() {
+            await loadUserData();
+        }
+
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            
+            switch(status) {
+                case 'connected':
+                    statusElement.className = 'status connected';
+                    statusElement.textContent = '✅ Firebase Bağlı - Canlı Veri';
+                    break;
+                case 'error':
+                    statusElement.className = 'status error';
+                    statusElement.textContent = '❌ Firebase Bağlantı Hatası';
+                    break;
+                case 'loading':
+                    statusElement.className = 'status loading';
+                    statusElement.textContent = '🔄 Veriler yükleniyor...';
+                    break;
+            }
+        }
+
+        // View switching
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(view + 'Btn').classList.add('active');
+            updateView();
+        }
+
+        function updateView() {
+            const contentArea = document.getElementById('contentArea');
+            
+            if (Object.keys(userData).length === 0) {
+                contentArea.innerHTML = '<div class="no-data">📊 Analiz edilecek günlük veri bulunamadı.</div>';
+                return;
+            }
+            
+            switch(currentView) {
+                case 'daily':
+                    contentArea.innerHTML = generateDailyReport();
+                    break;
+                case 'summary':
+                    contentArea.innerHTML = generateSummaryReport();
+                    break;
+            }
+        }
+
+        // Report generation functions
+        function generateDailyReport() {
+            const sortedDates = Object.keys(userData).sort();
+            
+            let html = `
+                <div class="report-container">
+                    <div class="report-header">
+                        <h2>📊 GÜNLÜK FİNANSAL VE ÇALIŞMA ÖZETİ</h2>
+                        <p>Toplam ${sortedDates.length} gün analiz edildi</p>
+                    </div>
+                    <div class="reports-content">
+            `;
+            
+            sortedDates.forEach(date => {
+                const dayData = userData[date];
+                html += generateDayReport(date, dayData);
+            });
+            
+            html += '</div></div>';
+            return html;
+        }
+
+        function generateDayReport(date, dayData) {
+            const workData = dayData.workData || {};
+            const expenses = dayData.expenses || [];
+            const isHoliday = dayData.isHoliday || false;
+            
+            const workHours = getDailyWorkHours(workData);
+            const totalExpenses = getDailyExpenses(expenses);
+            
+            const dayClass = isHoliday ? 'holiday' : (workHours > 0 ? 'work' : '');
+            
+            let html = `
+                <div class="day-report ${dayClass}">
+                    <div class="day-header">${formatDate(date)}</div>
+            `;
+            
+            // Work statistics
+            if (isHoliday) {
+                html += '<p style="color:#ff9800;font-weight:bold">🏖️ Tatil Günü: Çalışma verisi mevcut değil.</p>';
+            } else if (workHours > 0) {
+                html += `
+                    <div class="day-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${workHours.toFixed(1)}</div>
+                            <div class="stat-label">Çalışma Saati</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${workData.startTime || '-'}</div>
+                            <div class="stat-label">Başlangıç</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${workData.endTime || '-'}</div>
+                            <div class="stat-label">Bitiş</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${workData.breakTime || 0}</div>
+                            <div class="stat-label">Mola (dk)</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += '<p style="color:#999">📋 Çalışma verisi yok veya eksik.</p>';
+            }
+            
+            // Expense statistics
+            if (totalExpenses > 0) {
+                html += `
+                    <div style="margin-top:15px">
+                        <div class="stat-item" style="display:inline-block;margin-right:15px">
+                            <div class="stat-value" style="color:#f44336">${totalExpenses.toFixed(2)} ₺</div>
+                            <div class="stat-label">Toplam Harcama</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Category breakdown
+                if (expenses.length > 0) {
+                    const categoryTotals = getCategoryTotals(expenses);
+                    html += '<div style="margin-top:10px"><strong>Harcama Kategorileri:</strong><div class="category-list">';
+                    
+                    const categoryNames = {
+                        'essential': 'Zaruri',
+                        'need': 'İhtiyaç',
+                        'want': 'İstek',
+                        'loss': 'Kayıp'
+                    };
+                    
+                    Object.entries(categoryTotals).forEach(([category, amount]) => {
+                        if (amount > 0) {
+                            html += `
+                                <div class="category-item">
+                                    <span>${categoryNames[category] || category}</span>
+                                    <span style="font-weight:bold;color:#f44336">${amount.toFixed(2)} ₺</span>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    html += '</div></div>';
+                }
+            } else {
+                html += '<p style="color:#4caf50;margin-top:10px">💰 Harcama yapılmamış.</p>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        function generateSummaryReport() {
+            const stats = calculateOverallStats();
+            
+            return `
+                <div class="summary-panel">
+                    <div class="report-header">
+                        <h2>📈 GENEL ÖZET RAPOR</h2>
+                        <p>Toplam ${stats.totalDays} günlük veri analizi</p>
+                    </div>
+                    
+                    <div class="summary-stats">
+                        <div class="summary-card work">
+                            <div class="stat-value">${stats.totalWorkHours.toFixed(1)}</div>
+                            <div class="stat-label">Toplam Çalışma Saati</div>
+                        </div>
+                        <div class="summary-card expense">
+                            <div class="stat-value">${stats.totalExpenses.toFixed(2)} ₺</div>
+                            <div class="stat-label">Toplam Harcama</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="stat-value">${stats.workDays}</div>
+                            <div class="stat-label">Çalışma Günü</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="stat-value">${stats.holidayDays}</div>
+                            <div class="stat-label">Tatil Günü</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="stat-value">${stats.avgWorkHours.toFixed(1)}</div>
+                            <div class="stat-label">Günlük Ort. Çalışma</div>
+                        </div>
+                        <div class="summary-card expense">
+                            <div class="stat-value">${stats.avgDailyExpense.toFixed(2)} ₺</div>
+                            <div class="stat-label">Günlük Ort. Harcama</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px">
+                        <h3>💰 Kategori Dağılımı</h3>
+                        <div class="category-list">
+                            <div class="category-item">
+                                <span>Zaruri Harcamalar</span>
+                                <span style="font-weight:bold;color:#4caf50">${stats.categoryTotals.essential.toFixed(2)} ₺</span>
+                            </div>
+                            <div class="category-item">
+                                <span>İhtiyaç Harcamaları</span>
+                                <span style="font-weight:bold;color:#2196f3">${stats.categoryTotals.need.toFixed(2)} ₺</span>
+                            </div>
+                            <div class="category-item">
+                                <span>İstek Harcamaları</span>
+                                <span style="font-weight:bold;color:#ff9800">${stats.categoryTotals.want.toFixed(2)} ₺</span>
+                            </div>
+                            <div class="category-item">
+                                <span>Kayıp Harcamaları</span>
+                                <span style="font-weight:bold;color:#f44336">${stats.categoryTotals.loss.toFixed(2)} ₺</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px">
+                        <h3>📊 Performans Metrikleri</h3>
+                        <div class="category-list">
+                            <div class="category-item">
+                                <span>Saat Başı Ortalama Harcama</span>
+                                <span style="font-weight:bold">${stats.hourlyExpenseRate.toFixed(2)} ₺/saat</span>
+                            </div>
+                            <div class="category-item">
+                                <span>Çalışma Verimliliği</span>
+                                <span style="font-weight:bold;color:${getEfficiencyColor(stats.workEfficiency)}">${getEfficiencyText(stats.workEfficiency)}</span>
+                            </div>
+                            <div class="category-item">
+                                <span>Harcama Dengesi</span>
+                                <span style="font-weight:bold;color:${getBalanceColor(stats.spendingBalance)}">${getBalanceText(stats.spendingBalance)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateFullReport() {
+            const stats = calculateOverallStats();
+            const reportWindow = window.open('', '_blank');
+            
+            const reportHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Detaylı Finansal Rapor</title>
+                    <style>
+                        body{font-family:Arial,sans-serif;margin:20px;line-height:1.6}
+                        .header{text-align:center;border-bottom:2px solid #1976d2;padding-bottom:10px}
+                        .section{margin:20px 0;padding:15px;border:1px solid #ddd;border-radius:5px}
+                        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:15px 0}
+                        .stat-card{padding:15px;background:#f8f9fa;border-radius:5px;text-align:center}
+                        .stat-value{font-size:24px;font-weight:bold;color:#1976d2}
+                        @media print{body{margin:0}}
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 Detaylı Finansal Analiz Raporu</h1>
+                        <p>Kullanıcı: ${currentUser.username || currentUser.email}</p>
+                        <p>Oluşturma Tarihi: ${new Date().toLocaleDateString('tr-TR')}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>📈 Genel İstatistikler</h2>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.totalDays}</div>
+                                <div>Toplam Gün</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.workDays}</div>
+                                <div>Çalışma Günü</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.totalWorkHours.toFixed(1)}</div>
+                                <div>Toplam Çalışma Saati</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.totalExpenses.toFixed(2)} ₺</div>
+                                <div>Toplam Harcama</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>💰 Kategori Analizi</h2>
+                        <p><strong>Zaruri:</strong> ${stats.categoryTotals.essential.toFixed(2)} ₺ (${((stats.categoryTotals.essential/stats.totalExpenses)*100).toFixed(1)}%)</p>
+                        <p><strong>İhtiyaç:</strong> ${stats.categoryTotals.need.toFixed(2)} ₺ (${((stats.categoryTotals.need/stats.totalExpenses)*100).toFixed(1)}%)</p>
+                        <p><strong>İstek:</strong> ${stats.categoryTotals.want.toFixed(2)} ₺ (${((stats.categoryTotals.want/stats.totalExpenses)*100).toFixed(1)}%)</p>
+                        <p><strong>Kayıp:</strong> ${stats.categoryTotals.loss.toFixed(2)} ₺ (${((stats.categoryTotals.loss/stats.totalExpenses)*100).toFixed(1)}%)</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>🎯 Öneriler</h2>
+                        ${generateRecommendations(stats)}
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            reportWindow.document.write(reportHTML);
+            reportWindow.document.close();
+            reportWindow.print();
+        }
+
+        // Utility functions
+        function getDailyWorkHours(workData) {
+            if (!workData.startTime || !workData.endTime) return 0;
+            
+            try {
+                const start = new Date(`2000-01-01T${workData.startTime}`);
+                const end = new Date(`2000-01-01T${workData.endTime}`);
+                const breakMinutes = workData.breakTime || 0;
+                const workMinutes = (end - start) / (1000 * 60) - breakMinutes;
+                return Math.max(0, workMinutes / 60);
+            } catch {
+                return 0;
+            }
+        }
+
+        function getDailyExpenses(expenses) {
+            return expenses.reduce((total, expense) => total + (expense.amount || 0), 0);
+        }
+
+        function getCategoryTotals(expenses) {
+            const totals = { essential: 0, need: 0, want: 0, loss: 0 };
+            expenses.forEach(expense => {
+                const category = expense.category || 'need';
+                totals[category] += expense.amount || 0;
+            });
+            return totals;
+        }
+
+        function calculateOverallStats() {
+            let totalWorkHours = 0;
+            let totalExpenses = 0;
+            let workDays = 0;
+            let holidayDays = 0;
+            const categoryTotals = { essential: 0, need: 0, want: 0, loss: 0 };
+            
+            Object.entries(userData).forEach(([date, dayData]) => {
+                const isHoliday = dayData.isHoliday || false;
+                const workHours = getDailyWorkHours(dayData.workData || {});
+                const expenses = getDailyExpenses(dayData.expenses || []);
+                
+                if (isHoliday) {
+                    holidayDays++;
+                } else if (workHours > 0) {
+                    workDays++;
+                    totalWorkHours += workHours;
+                }
+                
+                totalExpenses += expenses;
+                
+                const dayCategoryTotals = getCategoryTotals(dayData.expenses || []);
+                Object.entries(dayCategoryTotals).forEach(([category, amount]) => {
+                    categoryTotals[category] += amount;
+                });
+            });
+            
+            const totalDays = Object.keys(userData).length;
+            const avgWorkHours = workDays > 0 ? totalWorkHours / workDays : 0;
+            const avgDailyExpense = totalDays > 0 ? totalExpenses / totalDays : 0;
+            const hourlyExpenseRate = totalWorkHours > 0 ? totalExpenses / totalWorkHours : 0;
+            
+            const workEfficiency = avgWorkHours > 8 ? 'high' : avgWorkHours > 6 ? 'medium' : 'low';
+            const unnecessarySpending = categoryTotals.want + categoryTotals.loss;
+            const spendingBalance = totalExpenses > 0 ? (unnecessarySpending / totalExpenses < 0.3 ? 'good' : unnecessarySpending / totalExpenses < 0.5 ? 'medium' : 'poor') : 'good';
+            
+            return {
+                totalDays,
+                workDays,
+                holidayDays,
+                totalWorkHours,
+                totalExpenses,
+                avgWorkHours,
+                avgDailyExpense,
+                hourlyExpenseRate,
+                categoryTotals,
+                workEfficiency,
+                spendingBalance
+            };
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('tr-TR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        function getEfficiencyColor(efficiency) {
+            switch(efficiency) {
+                case 'high': return '#4caf50';
+                case 'medium': return '#ff9800';
+                case 'low': return '#f44336';
+                default: return '#666';
+            }
+        }
+
+        function getEfficiencyText(efficiency) {
+            switch(efficiency) {
+                case 'high': return 'Yüksek Verimlilik';
+                case 'medium': return 'Orta Verimlilik';
+                case 'low': return 'Düşük Verimlilik';
+                default: return 'Veri Yok';
+            }
+        }
+
+        function getBalanceColor(balance) {
+            switch(balance) {
+                case 'good': return '#4caf50';
+                case 'medium': return '#ff9800';
+                case 'poor': return '#f44336';
+                default: return '#666';
+            }
+        }
+
+        function getBalanceText(balance) {
+            switch(balance) {
+                case 'good': return 'Dengeli Harcama';
+                case 'medium': return 'Orta Seviye';
+                case 'poor': return 'Dikkat Gerekli';
+                default: return 'Veri Yok';
+            }
+        }
+
+        function generateRecommendations(stats) {
+            let recommendations = [];
+            
+            // Çalışma saati önerileri
+            if (stats.avgWorkHours > 9) {
+                recommendations.push('<p>⚠️ Günlük 9+ saat çalışma sürdürülemez olabilir. İş-yaşam dengesini gözden geçirin.</p>');
+            } else if (stats.avgWorkHours < 4) {
+                recommendations.push('<p>📈 Çalışma saatlerinizi artırmayı değerlendirin.</p>');
+            }
+            
+            // Harcama önerileri
+            const unnecessaryRatio = (stats.categoryTotals.want + stats.categoryTotals.loss) / stats.totalExpenses;
+            if (unnecessaryRatio > 0.4) {
+                recommendations.push('<p>💰 Gereksiz harcamalarınız yüksek. Bütçe kontrolü yapın.</p>');
+            }
+            
+            if (stats.categoryTotals.loss / stats.totalExpenses > 0.15) {
+                recommendations.push('<p>🚨 Kayıp harcamalar fazla. Harcama alışkanlıklarınızı gözden geçirin.</p>');
+            }
+            
+            // Verimlilik önerileri
+            if (stats.hourlyExpenseRate > 50) {
+                recommendations.push('<p>📊 Saat başı harcamanız yüksek. Ekonomi yapın.</p>');
+            } else if (stats.hourlyExpenseRate < 20) {
+                recommendations.push('<p>✅ Saat başı harcamanız ideal seviyede.</p>');
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push('<p>✅ Genel performansınız dengeli görünüyor. Bu şekilde devam edin!</p>');
+            }
+            
+            return recommendations.join('');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('loginPanel').style.display !== 'none') {
+                if (e.key === 'Enter') {
+                    login();
+                }
+                return;
+            }
+            
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        switchView('daily');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchView('summary');
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        refreshData();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        generateFullReport();
+                        break;
+                }
+            }
+        });
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Günlük Rapor Paneli v2.3 başlatılıyor...');
+            initializeFirebase();
+        });
+
+        // Enter key support for login inputs
+        document.getElementById('emailInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('passwordInput').focus();
+            }
+        });
+
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+                });
+
+        // Enter key support for login inputs
+        document.getElementById('emailInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('passwordInput').focus();
+            }
+        });
+
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
