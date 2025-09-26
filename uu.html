@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kar Takip Paneli</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-database-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.0/firebase-firestore-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -330,7 +330,6 @@
         const firebaseConfig = {
             apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
             authDomain: "paralayici.firebaseapp.com",
-            databaseURL: "https://paralayici-default-rtdb.firebaseio.com/",
             projectId: "paralayici",
             storageBucket: "paralayici.firebasestorage.app",
             messagingSenderId: "980843550614",
@@ -339,7 +338,7 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const db = firebase.firestore();
 
         // Global variables
         let currentUser = 1;
@@ -385,15 +384,16 @@
 
         async function loadData() {
             try {
-                const snapshot = await database.ref('karTakip').once('value');
-                const dbData = snapshot.val();
+                const docRef = db.collection('karTakip').doc('appData');
+                const doc = await docRef.get();
                 
-                if (dbData) {
+                if (doc.exists) {
+                    const dbData = doc.data();
                     data = dbData.data || {};
                     settings = dbData.settings || { dailyTarget: 50 };
                 } else {
                     // Initialize database structure
-                    await database.ref('karTakip').set({
+                    await docRef.set({
                         settings: { dailyTarget: 50, created: new Date().toISOString() },
                         data: {}
                     });
@@ -457,7 +457,9 @@
 
             try {
                 settings.dailyTarget = target;
-                await database.ref('karTakip/settings').update({ dailyTarget: target });
+                await db.collection('karTakip').doc('appData').update({
+                    'settings.dailyTarget': target
+                });
                 showStatus('Hedef başarıyla kaydedildi!', 'success', 'homeStatus');
                 updateAllTabs();
             } catch (error) {
@@ -491,7 +493,9 @@
 
             try {
                 data[key] = profit;
-                await database.ref('karTakip/data').update({ [key]: profit });
+                await db.collection('karTakip').doc('appData').update({
+                    [`data.${key}`]: profit
+                });
                 
                 profitInput.value = '';
                 const message = profit >= settings.dailyTarget ? 
