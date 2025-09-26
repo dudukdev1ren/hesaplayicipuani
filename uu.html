@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kar Takip Paneli</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.0.0/firebase-database-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .user-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .user-btn {
+            padding: 8px 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .user-btn.active {
+            background: white;
+            color: #007bff;
+        }
+
+        .user-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #007bff;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .forecast-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .forecast-label {
+            font-weight: 500;
+        }
+
+        .forecast-value {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 5px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Kar Takip Paneli</h1>
+            <p>Günlük karlarınızı takip edin ve analiz edin</p>
+            <div class="user-selector">
+                <button class="user-btn active" data-user="1">K1</button>
+                <button class="user-btn" data-user="2">K2</button>
+                <button class="user-btn" data-user="3">K3</button>
+                <button class="user-btn" data-user="4">K4</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" data-tab="home">Ana Sayfa</button>
+                <button class="tab" data-tab="stats">İstatistikler</button>
+                <button class="tab" data-tab="chart">Grafik</button>
+                <button class="tab" data-tab="forecast">Tahmin</button>
+            </div>
+
+            <div class="tab-content active" id="home">
+                <div class="input-group">
+                    <label for="dailyTarget">Günlük Kar Hedefi (TL)</label>
+                    <input type="number" id="dailyTarget" placeholder="Örn: 50" min="0">
+                </div>
+                <button class="btn" onclick="saveTarget()">Hedef Kaydet</button>
+                
+                <div class="input-group" style="margin-top: 25px;">
+                    <label for="dailyProfit">Bugünkü Kar (TL)</label>
+                    <input type="number" id="dailyProfit" placeholder="Bugün kazandığınız miktar" min="0">
+                </div>
+                <button class="btn" onclick="saveProfit()">Kar Kaydet</button>
+                
+                <div class="status" id="homeStatus"></div>
+            </div>
+
+            <div class="tab-content" id="stats">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalProfit">0₺</div>
+                        <div class="stat-label">Toplam Kar</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="dailyAvg">0₺</div>
+                        <div class="stat-label">Günlük Ortalama</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="weeklyAvg">0₺</div>
+                        <div class="stat-label">Haftalık Ortalama</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="monthlyAvg">0₺</div>
+                        <div class="stat-label">Aylık Ortalama</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="targetSuccess">0%</div>
+                        <div class="stat-label">Hedef Başarısı</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalDays">0</div>
+                        <div class="stat-label">Aktif Gün</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="chart">
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+
+            <div class="tab-content" id="forecast">
+                <div id="forecastContent">
+                    <div class="loading">Tahminler hesaplanıyor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            databaseURL: "https://paralayici-default-rtdb.firebaseio.com/",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Global variables
+        let currentUser = 1;
+        let data = {};
+        let settings = {};
+        let chart = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            setupEventListeners();
+        });
+
+        function init() {
+            loadData().then(() => {
+                updateAllTabs();
+            }).catch(error => {
+                console.error('Initialization error:', error);
+                showStatus('Başlatma hatası: ' + error.message, 'error', 'homeStatus');
+            });
+        }
+
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // User switching
+            document.querySelectorAll('.user-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectUser(parseInt(btn.dataset.user)));
+            });
+
+            // Enter key support
+            document.getElementById('dailyTarget').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveTarget();
+            });
+
+            document.getElementById('dailyProfit').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveProfit();
+            });
+        }
+
+        async function loadData() {
+            try {
+                const snapshot = await database.ref('karTakip').once('value');
+                const dbData = snapshot.val();
+                
+                if (dbData) {
+                    data = dbData.data || {};
+                    settings = dbData.settings || { dailyTarget: 50 };
+                } else {
+                    // Initialize database structure
+                    await database.ref('karTakip').set({
+                        settings: { dailyTarget: 50, created: new Date().toISOString() },
+                        data: {}
+                    });
+                    data = {};
+                    settings = { dailyTarget: 50 };
+                }
+
+                // Update UI
+                document.getElementById('dailyTarget').value = settings.dailyTarget || 50;
+            } catch (error) {
+                console.error('Data loading error:', error);
+                throw error;
+            }
+        }
+
+        function selectUser(userNum) {
+            currentUser = userNum;
+            
+            // Update UI
+            document.querySelectorAll('.user-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.user) === userNum) {
+                    btn.classList.add('active');
+                }
+            });
+
+            updateAllTabs();
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.tab === tabName) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+
+            // Update specific tab content
+            if (tabName === 'chart') {
+                updateChart();
+            } else if (tabName === 'forecast') {
+                updateForecast();
+            }
+        }
+
+        async function saveTarget() {
+            const targetInput = document.getElementById('dailyTarget');
+            const target = parseFloat(targetInput.value);
+
+            if (isNaN(target) || target < 0) {
+                showStatus('Lütfen geçerli bir hedef giriniz!', 'error', 'homeStatus');
+                return;
+            }
+
+            try {
+                settings.dailyTarget = target;
+                await database.ref('karTakip/settings').update({ dailyTarget: target });
+                showStatus('Hedef başarıyla kaydedildi!', 'success', 'homeStatus');
+                updateAllTabs();
+            } catch (error) {
+                console.error('Target save error:', error);
+                showStatus('Hedef kaydedilirken hata oluştu!', 'error', 'homeStatus');
+            }
+        }
+
+        async function saveProfit() {
+            const profitInput = document.getElementById('dailyProfit');
+            const profit = parseFloat(profitInput.value);
+
+            if (isNaN(profit) || profit < 0) {
+                showStatus('Lütfen geçerli bir kar miktarı giriniz!', 'error', 'homeStatus');
+                return;
+            }
+
+            const today = formatDate(new Date());
+            const key = `${today},${profit},${currentUser}`;
+
+            // Check if entry exists for today
+            const existingEntry = Object.keys(data).find(k => {
+                const parts = k.split(',');
+                return parts[0] === today && parts[2] == currentUser;
+            });
+
+            if (existingEntry) {
+                showStatus('Bugün için zaten kar girişi yapılmış!', 'error', 'homeStatus');
+                return;
+            }
+
+            try {
+                data[key] = profit;
+                await database.ref('karTakip/data').update({ [key]: profit });
+                
+                profitInput.value = '';
+                const message = profit >= settings.dailyTarget ? 
+                    `Tebrikler! Hedefi geçtiniz: ${profit}₺` : 
+                    `Kar kaydedildi: ${profit}₺`;
+                showStatus(message, 'success', 'homeStatus');
+                updateAllTabs();
+            } catch (error) {
+                console.error('Profit save error:', error);
+                showStatus('Kar kaydedilirken hata oluştu!', 'error', 'homeStatus');
+            }
+        }
+
+        function updateAllTabs() {
+            updateStats();
+            updateChart();
+            updateForecast();
+        }
+
+        function updateStats() {
+            const userData = getUserData(currentUser);
+            const profits = Object.values(userData);
+            const dates = Object.keys(userData);
+
+            if (profits.length === 0) {
+                document.getElementById('totalProfit').textContent = '0₺';
+                document.getElementById('dailyAvg').textContent = '0₺';
+                document.getElementById('weeklyAvg').textContent = '0₺';
+                document.getElementById('monthlyAvg').textContent = '0₺';
+                document.getElementById('targetSuccess').textContent = '0%';
+                document.getElementById('totalDays').textContent = '0';
+                return;
+            }
+
+            const total = profits.reduce((sum, profit) => sum + profit, 0);
+            const dailyAvg = total / profits.length;
+            const weeklyAvg = dailyAvg * 7;
+            const monthlyAvg = dailyAvg * 30;
+
+            const targetHits = profits.filter(p => p >= settings.dailyTarget).length;
+            const targetSuccess = (targetHits / profits.length) * 100;
+
+            document.getElementById('totalProfit').textContent = total.toFixed(0) + '₺';
+            document.getElementById('dailyAvg').textContent = dailyAvg.toFixed(0) + '₺';
+            document.getElementById('weeklyAvg').textContent = weeklyAvg.toFixed(0) + '₺';
+            document.getElementById('monthlyAvg').textContent = monthlyAvg.toFixed(0) + '₺';
+            document.getElementById('targetSuccess').textContent = targetSuccess.toFixed(0) + '%';
+            document.getElementById('totalDays').textContent = profits.length.toString();
+        }
+
+        function updateChart() {
+            const userData = getUserData(currentUser);
+            const sortedEntries = Object.entries(userData)
+                .sort(([a], [b]) => parseDate(a) - parseDate(b))
+                .slice(-20); // Son 20 gün
+
+            const labels = sortedEntries.map(([date]) => date);
+            const profits = sortedEntries.map(([, profit]) => profit);
+            const target = new Array(profits.length).fill(settings.dailyTarget);
+
+            const ctx = document.getElementById('profitChart').getContext('2d');
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Günlük Kar',
+                        data: profits,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Hedef',
+                        data: target,
+                        borderColor: '#28a745',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '₺';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + '₺';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateForecast() {
+            const userData = getUserData(currentUser);
+            const profits = Object.values(userData);
+            
+            const forecastContainer = document.getElementById('forecastContent');
+            
+            if (profits.length < 3) {
+                forecastContainer.innerHTML = '<div class="loading">En az 3 gün veri gerekli</div>';
+                return;
+            }
+
+            const dailyAvg = profits.reduce((sum, profit) => sum + profit, 0) / profits.length;
+            const weeklyAvg = dailyAvg * 7;
+            const monthlyAvg = dailyAvg * 30;
+            const yearlyAvg = dailyAvg * 365;
+
+            // Trend calculation
+            const recentAvg = profits.slice(-7).reduce((sum, profit) => sum + profit, 0) / Math.min(7, profits.length);
+            const trendPercentage = ((recentAvg - dailyAvg) / dailyAvg * 100);
+            let trendText = 'Sabit';
+            if (trendPercentage > 5) trendText = 'Artış';
+            else if (trendPercentage < -5) trendText = 'Azalış';
+
+            // Days to reach 1000
+            const daysTo1000 = dailyAvg > 0 ? Math.ceil(1000 / dailyAvg) : 'Hesaplanamaz';
+
+            forecastContainer.innerHTML = `
+                <div class="forecast-item">
+                    <span class="forecast-label">Haftalık Tahmini</span>
+                    <span class="forecast-value">${weeklyAvg.toFixed(0)}₺</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="forecast-label">Aylık Tahmini</span>
+                    <span class="forecast-value">${monthlyAvg.toFixed(0)}₺</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="forecast-label">Yıllık Tahmini</span>
+                    <span class="forecast-value">${yearlyAvg.toFixed(0)}₺</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="forecast-label">1000₺'ye Ulaşma</span>
+                    <span class="forecast-value">${daysTo1000} gün</span>
+                </div>
+                <div class="forecast-item">
+                    <span class="forecast-label">Trend Durumu</span>
+                    <span class="forecast-value">${trendText}</span>
+                </div>
+            `;
+        }
+
+        function showStatus(message, type, elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<span class="${type}">${message}</span>`;
+            element.className = `status ${type}`;
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    if (element.innerHTML.includes(message)) {
+                        element.innerHTML = '';
+                        element.className = 'status';
+                    }
+                }, 3000);
+            }
+        }
+
+        function getUserData(userNum) {
+            const result = {};
+            Object.keys(data).forEach(key => {
+                const parts = key.split(',');
+                if (parts[2] == userNum) {
+                    result[parts[0]] = data[key];
+                }
+            });
+            return result;
+        }
+
+        function formatDate(date) {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+
+        function parseDate(dateStr) {
+            const parts = dateStr.split('.');
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+    </script>
+</body>
+</html>
