@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün Değerlendirme Paneli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+        
+        .date-display {
+            flex: 1;
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .calendar-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .calendar-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .today-btn {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .today-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .calendar {
+            display: none;
+            position: absolute;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 1000;
+            margin-top: 10px;
+        }
+        
+        .calendar.active {
+            display: block;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-header button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .calendar-header button:hover {
+            background: #5568d3;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            color: #666;
+        }
+        
+        .calendar-day {
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .calendar-day:hover {
+            transform: scale(1.1);
+        }
+        
+        .calendar-day.empty {
+            cursor: default;
+        }
+        
+        .calendar-day.red {
+            background: #fc8181;
+            color: white;
+        }
+        
+        .calendar-day.yellow {
+            background: #f6e05e;
+            color: #333;
+        }
+        
+        .calendar-day.green {
+            background: #68d391;
+            color: white;
+        }
+        
+        .calendar-day.today {
+            border: 3px solid #667eea;
+        }
+        
+        .products {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .product {
+            text-align: center;
+        }
+        
+        .product-label {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .slider-container {
+            position: relative;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .slider-wrapper {
+            position: relative;
+            height: 200px;
+            width: 60px;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 200px;
+            height: 10px;
+            background: linear-gradient(to right, #fc8181 0%, #f6e05e 50%, #68d391 100%);
+            outline: none;
+            border-radius: 5px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: center center;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            cursor: pointer;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        
+        .value-display {
+            margin-top: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .star-marks {
+            position: absolute;
+            left: -30px;
+            top: 20px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .save-btn:active {
+            transform: translateY(0);
+        }
+        
+        .message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            display: block;
+        }
+        
+        .message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="date-display" id="dateDisplay"></div>
+            <button class="btn calendar-btn" id="calendarBtn">📅 Takvim</button>
+            <button class="btn today-btn" id="todayBtn">📍 Bugün</button>
+        </div>
+        
+        <div class="calendar" id="calendar">
+            <div class="calendar-header">
+                <button id="prevMonth">◀</button>
+                <span id="monthYear"></span>
+                <button id="nextMonth">▶</button>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+        
+        <div class="products">
+            <div class="product">
+                <div class="product-label">A</div>
+                <div class="slider-container">
+                    <div class="star-marks">
+                        <span>5⭐</span>
+                        <span>4⭐</span>
+                        <span>3⭐</span>
+                        <span>2⭐</span>
+                        <span>1⭐</span>
+                        <span>0⭐</span>
+                    </div>
+                    <div class="slider-wrapper">
+                        <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderA">
+                    </div>
+                    <div class="value-display" id="valueA">0 ⭐</div>
+                </div>
+            </div>
+            <div class="product">
+                <div class="product-label">B</div>
+                <div class="slider-container">
+                    <div class="star-marks">
+                        <span>5⭐</span>
+                        <span>4⭐</span>
+                        <span>3⭐</span>
+                        <span>2⭐</span>
+                        <span>1⭐</span>
+                        <span>0⭐</span>
+                    </div>
+                    <div class="slider-wrapper">
+                        <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderB">
+                    </div>
+                    <div class="value-display" id="valueB">0 ⭐</div>
+                </div>
+            </div>
+            <div class="product">
+                <div class="product-label">C</div>
+                <div class="slider-container">
+                    <div class="star-marks">
+                        <span>5⭐</span>
+                        <span>4⭐</span>
+                        <span>3⭐</span>
+                        <span>2⭐</span>
+                        <span>1⭐</span>
+                        <span>0⭐</span>
+                    </div>
+                    <div class="slider-wrapper">
+                        <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderC">
+                    </div>
+                    <div class="value-display" id="valueC">0 ⭐</div>
+                </div>
+            </div>
+            <div class="product">
+                <div class="product-label">D</div>
+                <div class="slider-container">
+                    <div class="star-marks">
+                        <span>5⭐</span>
+                        <span>4⭐</span>
+                        <span>3⭐</span>
+                        <span>2⭐</span>
+                        <span>1⭐</span>
+                        <span>0⭐</span>
+                    </div>
+                    <div class="slider-wrapper">
+                        <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderD">
+                    </div>
+                    <div class="value-display" id="valueD">0 ⭐</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="save-btn" id="saveBtn">💾 Kaydet</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase yapılandırması - KENDİ BİLGİLERİNİZLE DEĞİŞTİRİN
+        const firebaseConfig = {
+        apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+        authDomain: "paralayici.firebaseapp.com",
+        projectId: "paralayici",
+        storageBucket: "paralayici.firebasestorage.app",
+        messagingSenderId: "980843550614",
+        appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentDate = new Date();
+        let calendarDate = new Date();
+        let allRatings = {};
+
+        const products = ['A', 'B', 'C', 'D'];
+        
+        // Slider event listeners
+        products.forEach(product => {
+            const slider = document.getElementById(`slider${product}`);
+            const display = document.getElementById(`value${product}`);
+            
+            slider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                display.textContent = `${value} ⭐`;
+            });
+        });
+
+        // Tarih formatla
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+
+        // Firestore için tarih key
+        function getDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Tarih göster
+        function updateDateDisplay() {
+            document.getElementById('dateDisplay').textContent = formatDate(currentDate);
+            loadRatingsForDate(currentDate);
+        }
+
+        // Verileri yükle
+        async function loadRatingsForDate(date) {
+            const dateKey = getDateKey(date);
+            try {
+                const docRef = doc(db, 'ratings', dateKey);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    products.forEach(product => {
+                        const value = data[product.toLowerCase()];
+                        if (value !== undefined) {
+                            const slider = document.getElementById(`slider${product}`);
+                            const display = document.getElementById(`value${product}`);
+                            slider.value = value;
+                            display.textContent = `${value} ⭐`;
+                        }
+                    });
+                } else {
+                    // Veri yoksa tüm slider'ları sıfırla
+                    products.forEach(product => {
+                        const slider = document.getElementById(`slider${product}`);
+                        const display = document.getElementById(`value${product}`);
+                        slider.value = 0;
+                        display.textContent = '0 ⭐';
+                    });
+                }
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+            }
+        }
+
+        // Tüm verileri yükle (takvim için)
+        async function loadAllRatings() {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'ratings'));
+                allRatings = {};
+                querySnapshot.forEach((doc) => {
+                    allRatings[doc.id] = doc.data();
+                });
+                updateCalendar();
+            } catch (error) {
+                console.error('Takvim verileri yükleme hatası:', error);
+            }
+        }
+
+        // Kaydet
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const dateKey = getDateKey(currentDate);
+            const data = { date: formatDate(currentDate) };
+            let hasValue = false;
+
+            products.forEach(product => {
+                const slider = document.getElementById(`slider${product}`);
+                const value = parseFloat(slider.value);
+                if (value > 0) {
+                    data[product.toLowerCase()] = value;
+                    hasValue = true;
+                }
+            });
+
+            if (!hasValue) {
+                showMessage('Lütfen en az bir ürün için değerlendirme yapın!', 'error');
+                return;
+            }
+
+            try {
+                await setDoc(doc(db, 'ratings', dateKey), data);
+                showMessage('✅ Başarıyla kaydedildi!', 'success');
+                await loadAllRatings();
+            } catch (error) {
+                showMessage('❌ Kayıt hatası: ' + error.message, 'error');
+            }
+        });
+
+        // Mesaj göster
+        function showMessage(text, type) {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = `message ${type}`;
+            setTimeout(() => {
+                msgEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // Takvim
+        document.getElementById('calendarBtn').addEventListener('click', () => {
+            document.getElementById('calendar').classList.toggle('active');
+            loadAllRatings();
+        });
+
+        // Bugün
+        document.getElementById('todayBtn').addEventListener('click', () => {
+            currentDate = new Date();
+            calendarDate = new Date();
+            updateDateDisplay();
+            updateCalendar();
+        });
+
+        // Takvim güncelle
+        function updateCalendar() {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            
+            document.getElementById('monthYear').textContent = 
+                `${calendarDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Gün başlıkları
+            ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Boş günler
+            const startDay = firstDay === 0 ? 6 : firstDay - 1;
+            for (let i = 0; i < startDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day empty';
+                grid.appendChild(empty);
+            }
+            
+            // Günler
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.textContent = day;
+                
+                const date = new Date(year, month, day);
+                const dateKey = getDateKey(date);
+                
+                // Renk belirleme
+                if (allRatings[dateKey]) {
+                    const data = allRatings[dateKey];
+                    const hasAll = products.every(p => data[p.toLowerCase()] !== undefined && data[p.toLowerCase()] > 0);
+                    dayEl.classList.add(hasAll ? 'green' : 'yellow');
+                } else {
+                    dayEl.classList.add('red');
+                }
+                
+                // Bugün işareti
+                if (date.toDateString() === today.toDateString()) {
+                    dayEl.classList.add('today');
+                }
+                
+                dayEl.addEventListener('click', () => {
+                    currentDate = date;
+                    updateDateDisplay();
+                    document.getElementById('calendar').classList.remove('active');
+                });
+                
+                grid.appendChild(dayEl);
+            }
+        }
+
+        // Ay değiştir
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            calendarDate.setMonth(calendarDate.getMonth() - 1);
+            updateCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            calendarDate.setMonth(calendarDate.getMonth() + 1);
+            updateCalendar();
+        });
+
+        // Başlangıç
+        updateDateDisplay();
+        loadAllRatings();
+    </script>
+</body>
+</html>
