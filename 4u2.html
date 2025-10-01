@@ -331,7 +331,7 @@
                     <div class="slider-wrapper">
                         <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderA">
                     </div>
-                    <div class="value-display" id="valueA">0 ⭐</div>
+                    <div class="value-display" id="valueA">0</div>
                 </div>
             </div>
             <div class="product">
@@ -348,7 +348,7 @@
                     <div class="slider-wrapper">
                         <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderB">
                     </div>
-                    <div class="value-display" id="valueB">0 ⭐</div>
+                    <div class="value-display" id="valueB">0</div>
                 </div>
             </div>
             <div class="product">
@@ -365,7 +365,7 @@
                     <div class="slider-wrapper">
                         <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderC">
                     </div>
-                    <div class="value-display" id="valueC">0 ⭐</div>
+                    <div class="value-display" id="valueC">0</div>
                 </div>
             </div>
             <div class="product">
@@ -382,7 +382,7 @@
                     <div class="slider-wrapper">
                         <input type="range" min="0" max="5" step="0.5" value="0" class="slider" id="sliderD">
                     </div>
-                    <div class="value-display" id="valueD">0 ⭐</div>
+                    <div class="value-display" id="valueD">0</div>
                 </div>
             </div>
         </div>
@@ -421,7 +421,7 @@
             
             slider.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
-                display.textContent = `${value} ⭐`;
+                display.textContent = `${value}`;
             });
         });
 
@@ -462,7 +462,7 @@
                             const slider = document.getElementById(`slider${product}`);
                             const display = document.getElementById(`value${product}`);
                             slider.value = value;
-                            display.textContent = `${value} ⭐`;
+                            display.textContent = `${value}`;
                         }
                     });
                 } else {
@@ -471,7 +471,7 @@
                         const slider = document.getElementById(`slider${product}`);
                         const display = document.getElementById(`value${product}`);
                         slider.value = 0;
-                        display.textContent = '0 ⭐';
+                        display.textContent = '0';
                     });
                 }
             } catch (error) {
