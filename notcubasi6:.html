@@ -505,17 +505,19 @@
             try {
                 const startOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), 1);
                 const endOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth() + 1, 0);
-                const startStr = startOfMonth.getFullYear() + '-' + String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + String(startOfMonth.getDate()).padStart(2, '0');
+                const startStr = startOfMonth.getFullYear() + '-' + String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-01';
                 const endStr = endOfMonth.getFullYear() + '-' + String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + String(endOfMonth.getDate()).padStart(2, '0');
+                console.log('İzinli günler sorgulanıyor:', startStr, 'to', endStr);
                 const dailyDocs = await db.collection('users').doc(currentUser.uid).collection('daily').where('__name__', '>=', startStr).where('__name__', '<=', endStr).get();
                 const holidays = [];
                 dailyDocs.forEach(doc => {
                     const data = doc.data();
                     if (data.isHoliday) holidays.push(doc.id);
                 });
+                console.log('İzinli günler:', holidays);
                 return holidays;
             } catch (error) {
-                console.error('İzinli günler yüklenemedi:', error);
+                console.error('İzinli günler yükleme hatası:', error);
                 return [];
             }
         }
@@ -525,17 +527,19 @@
             try {
                 const startOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth(), 1);
                 const endOfMonth = new Date(calendarCurrentMonth.getFullYear(), calendarCurrentMonth.getMonth() + 1, 0);
-                const startStr = startOfMonth.getFullYear() + '-' + String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + String(startOfMonth.getDate()).padStart(2, '0');
+                const startStr = startOfMonth.getFullYear() + '-' + String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-01';
                 const endStr = endOfMonth.getFullYear() + '-' + String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + String(endOfMonth.getDate()).padStart(2, '0');
+                console.log('Verim verileri sorgulanıyor:', startStr, 'to', endStr);
                 const dailyDocs = await db.collection('users').doc(currentUser.uid).collection('daily').where('__name__', '>=', startStr).where('__name__', '<=', endStr).get();
                 const perfData = {};
                 dailyDocs.forEach(doc => {
                     const data = doc.data();
                     if (data.perf) perfData[doc.id] = data.perf;
                 });
+                console.log('Verim verileri:', perfData);
                 return perfData;
             } catch (error) {
-                console.error('Verim verileri yüklenemedi:', error);
+                console.error('Verim verileri yükleme hatası:', error);
                 return {};
             }
         }
@@ -578,19 +582,25 @@
         }
         
         async function forceLoadDayData() {
-            if (!selectedDate || !currentUser || !currentUser.uid) return;
+            if (!selectedDate || !currentUser || !currentUser.uid) {
+                console.error('Eksik bilgi:', { selectedDate, currentUser });
+                return;
+            }
+            console.log('Veri yükleniyor:', selectedDate, currentUser.uid);
             try {
-                const dayDoc = await db.collection('users').doc(currentUser.uid).collection('daily').doc(selectedDate).get({ source: 'server' });
+                const dayDoc = await db.collection('users').doc(currentUser.uid).collection('daily').doc(selectedDate).get();
+                console.log('Doküman alındı:', dayDoc.exists, dayDoc.data());
                 if (dayDoc.exists()) {
                     const data = dayDoc.data();
                     currentDayData = {
-                        expenses: data.expenses || [],
-                        workData: data.workData || {},
+                        expenses: Array.isArray(data.expenses) ? data.expenses : [],
+                        workData: typeof data.workData === 'object' ? data.workData : {},
                         isHoliday: data.isHoliday || false,
                         perf: data.perf || null,
                         isRest: data.isRest || false
                     };
                 } else {
+                    console.log('Doküman bulunamadı, yeni oluşturuluyor');
                     currentDayData = { expenses: [], workData: {}, isHoliday: false, perf: null, isRest: false };
                 }
                 selectedExpenseIndex = -1;
@@ -601,9 +611,10 @@
                 updatePerfUI();
                 updateExpenseList();
                 await updatePerfIndicator();
+                console.log('Veri yükleme başarılı');
             } catch (error) {
-                console.error('Veri yükleme hatası:', error);
-                alert('Veriler yüklenemedi: ' + error.message);
+                console.error('Veri yükleme hatası detayı:', error);
+                alert('Veriler yüklenemedi! Detay: ' + error.message + '\n\nFirebase kurallarını kontrol edin.');
             }
         }
         
@@ -920,12 +931,17 @@
         }
         
         async function saveDayData() {
-            if (!selectedDate) return;
+            if (!selectedDate || !currentUser || !currentUser.uid) {
+                console.error('Kayıt için gerekli bilgi eksik');
+                return;
+            }
+            console.log('Veri kaydediliyor:', selectedDate, currentDayData);
             try {
                 await db.collection('users').doc(currentUser.uid).collection('daily').doc(selectedDate).set(currentDayData);
+                console.log('Veri başarıyla kaydedildi');
             } catch (error) {
-                console.error('Veri kaydetme hatası:', error);
-                alert('Veriler kaydedilemedi!');
+                console.error('Veri kaydetme hatası detayı:', error);
+                alert('Veriler kaydedilemedi! Detay: ' + error.message + '\n\nFirebase kurallarını kontrol edin.');
             }
         }
         
@@ -1044,12 +1060,14 @@
             document.getElementById('calculationResults').innerHTML = '<p>Hesaplama yapılıyor...</p>';
             document.getElementById('perfResults').innerHTML = 'Hesaplanıyor...';
             try {
+                console.log('Hesaplama başlatılıyor...');
                 const [settingsDoc, goalsDoc] = await Promise.all([
-                    db.collection('users').doc(currentUser.uid).collection('general').doc('settings').get({ source: 'server' }),
-                    db.collection('users').doc(currentUser.uid).collection('general').doc('goals').get({ source: 'server' })
+                    db.collection('users').doc(currentUser.uid).collection('general').doc('settings').get(),
+                    db.collection('users').doc(currentUser.uid).collection('general').doc('goals').get()
                 ]);
                 const settings = settingsDoc.exists ? settingsDoc.data() : {};
                 const goals = goalsDoc.exists ? goalsDoc.data() : {};
+                console.log('Ayarlar ve hedefler yüklendi:', settings, goals);
                 
                 const today = new Date().toISOString().split('T')[0];
                 const isToday = selectedDate === today;
@@ -1059,12 +1077,14 @@
                     const currentMonth = new Date().toISOString().slice(0, 7);
                     startDate = currentMonth + '-01';
                 }
+                console.log('Başlangıç tarihi:', startDate, 'Seçili tarih:', selectedDate);
                 
                 const dailyDocs = await db.collection('users').doc(currentUser.uid).collection('daily')
                     .where('__name__', '>=', startDate)
                     .where('__name__', '<=', selectedDate)
-                    .orderBy('__name__', 'asc')
-                    .get({ source: 'server' });
+                    .get();
+                
+                console.log('Günlük veriler alındı:', dailyDocs.size, 'doküman');
                 
                 const analysisData = analyzeExpenseData(dailyDocs, settings, goals, startDate);
                 displayCalculationResults(analysisData, settings, goals);
@@ -1073,9 +1093,10 @@
                 displayPerfResults(perfAnalysis);
                 
                 await drawCharts(analysisData, goals, perfAnalysis);
+                console.log('Hesaplama tamamlandı');
             } catch (error) {
-                console.error('Hesaplama hatası:', error);
-                document.getElementById('calculationResults').innerHTML = '<p style="color: red;">Hesaplama hatası: ' + error.message + '</p>';
+                console.error('Hesaplama hatası detayı:', error);
+                document.getElementById('calculationResults').innerHTML = '<p style="color: red;">Hesaplama hatası: ' + error.message + '<br><br>Lütfen Firebase Console\'dan:<br>1. Firestore Rules kontrol edin<br>2. Index hatası varsa linke tıklayın</p>';
             }
         }
         
@@ -1148,11 +1169,10 @@
         async function analyzePerfData(startDate, endDate, isToday) {
             if (!currentUser) return { cumulative: 0, data: [] };
             try {
+                console.log('Verim analizi başlatılıyor...');
                 let queryStartDate = startDate;
                 if (isToday) {
-                    const allDocs = await db.collection('users').doc(currentUser.uid).collection('daily')
-                        .orderBy('__name__', 'asc')
-                        .get();
+                    const allDocs = await db.collection('users').doc(currentUser.uid).collection('daily').get();
                     let firstPerfDate = null;
                     allDocs.forEach(doc => {
                         const data = doc.data();
@@ -1161,12 +1181,13 @@
                         }
                     });
                     queryStartDate = firstPerfDate || startDate;
+                    console.log('İlk verim tarihi:', queryStartDate);
                 }
                 const dailyDocs = await db.collection('users').doc(currentUser.uid).collection('daily')
                     .where('__name__', '>=', queryStartDate)
                     .where('__name__', '<=', endDate)
-                    .orderBy('__name__', 'asc')
                     .get();
+                console.log('Verim dökümanları alındı:', dailyDocs.size);
                 let cumulative = 0;
                 const perfData = [];
                 dailyDocs.forEach(doc => {
@@ -1181,6 +1202,8 @@
                         });
                     }
                 });
+                perfData.sort((a, b) => a.date.localeCompare(b.date));
+                console.log('Verim analizi tamamlandı:', { cumulative, dataCount: perfData.length });
                 return { cumulative, data: perfData };
             } catch (error) {
                 console.error('Verim analizi hatası:', error);
