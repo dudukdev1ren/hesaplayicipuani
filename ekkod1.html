@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kümülatif Veri Takip Uygulaması</title>
+    
+    <!-- Firebase SDK Yükleme (Firestore ve Core) -->
+    <!-- Firestore işlemlerini destekleyen 8.x sürümü kullanılıyor -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    
+    <!-- Chart.js Yükleme (Grafik Oluşturmak İçin) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <style>
+        /* Modern ve estetik bir tasarım için CSS */
+        body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            background-color: #f4f7f9;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .data-section { 
+            background-color: white;
+            border: 1px solid #ddd; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            max-width: 400px;
+        }
+        h1 { color: #2c3e50; margin-bottom: 20px; }
+        h3 { color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; }
+        
+        .button-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-top: 15px;
+        }
+        .button-grid button { 
+            padding: 15px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            border: none;
+            border-radius: 8px; 
+            transition: all 0.2s;
+            font-weight: bold;
+            background-color: #ecf0f1;
+        }
+        .button-grid button:hover { 
+            background-color: #bdc3c7; 
+            transform: translateY(-2px);
+        }
+        
+        /* Kaydet Butonu */
+        #save-button {
+            margin-top: 20px; 
+            padding: 12px 25px; 
+            background-color: #2ecc71; 
+            color: white; 
+            border: none; 
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 17px;
+            transition: background-color 0.2s;
+            box-shadow: 0 4px #27ae60;
+        }
+        #save-button:active {
+            box-shadow: 0 1px #27ae60;
+            transform: translateY(3px);
+        }
+
+        /* Grafik Butonu (isteğe bağlı, auto-load olduğu için) */
+        #chart-button {
+            padding: 12px 25px; 
+            background-color: #3498db; 
+            color: white; 
+            border: none; 
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 17px;
+            transition: background-color 0.2s;
+            box-shadow: 0 4px #2980b9;
+        }
+        #chart-button:active {
+            box-shadow: 0 1px #2980b9;
+            transform: translateY(3px);
+        }
+
+        .chart-container { 
+            width: 95%;
+            max-width: 1000px; 
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        #current-cumulative-value { 
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-top: 15px; 
+            text-align: center;
+            color: #e74c3c; 
+            padding: 10px;
+            border: 2px dashed #e74c3c;
+            border-radius: 8px;
+        }
+        input[type="date"] { 
+            padding: 10px; 
+            font-size: 16px; 
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        #selected-value {
+            font-size: 20px;
+            color: #2980b9;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        /* Mobil Uyumlu Tasarım */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .data-section {
+                width: 100%;
+                max-width: none;
+            }
+            .chart-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📅 Kümülatif Veri Kaydedici</h1>
+
+    <div class="container">
+        <!-- Veri Girişi Bölümü -->
+        <div class="data-section">
+            <h3>Veri Girişi</h3>
+            <label for="date-picker" style="font-weight: bold;">Tarih Seçin:</label>
+            <input type="date" id="date-picker" required>
+
+            <span style="display: block; font-weight: bold;">Seçilen Değer:</span> 
+            <strong id="selected-value">0.00</strong>
+
+            <div class="button-grid" id="button-container">
+                <!-- Butonlar JavaScript ile doldurulacak -->
+            </div>
+            
+            <button id="save-button" onclick="saveData()">
+                💾 Seçilen Değeri Kaydet
+            </button>
+            <p id="save-status" style="color: #27ae60; font-weight: bold; text-align: center; margin-top: 10px;"></p>
+        </div>
+        
+        <!-- Grafik İşlemleri Bölümü -->
+        <div class="data-section">
+            <h3>Grafik & Analiz</h3>
+            <button id="chart-button" onclick="generateChart()">
+                📈 Grafiği Şimdi Güncelle
+            </button>
+            <div id="current-cumulative-value"></div>
+            <p style="margin-top: 20px; color: #7f8c8d; font-size: 14px;">
+                Sayfayı her açtığınızda veriler Firebase'den otomatik çekilir.
+            </p>
+        </div>
+    </div>
+
+    <!-- Grafik Gösterim Alanı -->
+    <div class="chart-container">
+        <canvas id="cumulativeChart"></canvas>
+    </div>
+
+    <script>
+        // --- 1. YAPILANDIRMA VE BAŞLANGIÇ ---
+
+        // !!! LÜTFEN BURAYI KENDİ FIREBASE BİLGİLERİNİZLE DEĞİŞTİRİNİZ !!!
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
+            authDomain: "paralayici.firebaseapp.com",
+            projectId: "paralayici",
+            storageBucket: "paralayici.firebasestorage.app",
+            messagingSenderId: "980843550614",
+            appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+        };
+        
+        let db;
+        let chartInstance = null; // Grafik örneğini tutar
+
+        // Butonlara atanacak değerler (3 satır x 3 sütun)
+        const buttonValues = [
+            -1.25, -0.25, 0.75,
+            -1, 0, 1,
+            -0.75, 0.25, 1.25
+        ];
+
+        let selectedValue = 0; // Güncel seçilen değeri tutar
+        const collectionName = "cumulative_daily_data"; // Firestore Koleksiyon Adı
+
+        // Firebase uygulamasını başlat
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase başarıyla başlatıldı.");
+
+            // Tarih seçiciyi bugünün tarihine ayarla
+            document.getElementById('date-picker').valueAsDate = new Date();
+
+        } catch (e) {
+            console.error("Firebase başlatılırken kritik hata:", e);
+            document.body.innerHTML = "<h1>Hata</h1><p>Firebase yapılandırma bilgileri yanlış veya eksik. Lütfen `index.html` dosyasındaki `firebaseConfig` bölümünü kontrol edin.</p>";
+        }
+
+
+        // --- 2. BUTON VE DEĞER YÖNETİMİ ---
+
+        function setupButtons() {
+            const container = document.getElementById('button-container');
+            container.innerHTML = ''; // Temizle
+            buttonValues.forEach(value => {
+                const button = document.createElement('button');
+                button.textContent = value.toFixed(2); // Değerleri iki ondalık basamakla göster
+                button.onclick = () => selectValue(value);
+                container.appendChild(button);
+            });
+        }
+
+        function selectValue(value) {
+            selectedValue = value;
+            document.getElementById('selected-value').textContent = value.toFixed(2);
+        }
+
+        // Basit uyarı mesajı gösterici (alert() yerine)
+        function alertMessage(message, color) {
+            const statusElement = document.getElementById('save-status');
+            statusElement.textContent = message;
+            statusElement.style.color = color;
+            statusElement.style.borderColor = color;
+            setTimeout(() => statusElement.textContent = '', 4000);
+        }
+
+        // --- 3. VERİ KAYDETME (FIRESTORE) ---
+
+        async function saveData() {
+            if (!db) return alertMessage("Firebase başlatılamadı.", 'red');
+
+            const dateInput = document.getElementById('date-picker');
+            const date = dateInput.value; // YYYY-MM-DD formatında tarih (Belge ID'si olarak kullanılır)
+            
+            if (!date) {
+                alertMessage("Lütfen bir tarih seçin.", 'red');
+                return;
+            }
+
+            try {
+                // Tarihi belge kimliği (Document ID) olarak kullanıyoruz
+                await db.collection(collectionName).doc(date).set({
+                    date: date,
+                    value: selectedValue,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alertMessage(`✅ ${date} için ${selectedValue.toFixed(2)} kaydedildi!`, 'green');
+                
+                // Kayıt başarılı olduktan sonra grafiği hemen güncelle (Persistance için önemli)
+                generateChart();
+
+            } catch (error) {
+                console.error("Veri kaydederken hata oluştu: ", error);
+                alertMessage(`❌ Kayıt hatası: Bağlantı veya yetkilendirme sorunu.`, 'red');
+            }
+        }
+
+
+        // --- 4. GRAFİK OLUŞTURMA (KÜMÜLATİF) ---
+
+        async function generateChart() {
+            if (!db) return;
+
+            // Firestore'dan tüm verileri tarih sırasına göre çek
+            const snapshot = await db.collection(collectionName)
+                                     .orderBy("date", "asc")
+                                     .get();
+            
+            if (snapshot.empty) {
+                // Veri yoksa grafiği temizle ve uyarı göster
+                if (chartInstance) chartInstance.destroy();
+                document.getElementById('current-cumulative-value').innerHTML = 
+                    '**Bugünkü Kümülatif Değer:** 0.00 (Veri Yok)';
+                return;
+            }
+
+            const allData = [];
+            snapshot.forEach(doc => {
+                // Veri nesnelerini diziye ekle
+                allData.push(doc.data());
+            });
+
+            // Kümülatif toplamı hesapla
+            let cumulativeSum = 0;
+            const labels = []; // Tarihler
+            const cumulativeData = []; // Kümülatif değerler
+
+            allData.forEach(item => {
+                cumulativeSum += item.value;
+                labels.push(item.date);
+                cumulativeData.push(cumulativeSum);
+            });
+
+            // Son kümülatif değeri göster
+            const finalCumulativeValue = cumulativeSum.toFixed(2);
+            document.getElementById('current-cumulative-value').innerHTML = 
+                `**Bugünkü Kümülatif Değer:** ${finalCumulativeValue}`;
+
+
+            // Chart.js ile grafik oluştur veya güncelle
+            const ctx = document.getElementById('cumulativeChart').getContext('2d');
+            
+            // Eğer daha önce bir grafik varsa, onu yok et
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Kümülatif Değer',
+                        data: cumulativeData,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        tension: 0.3,
+                        fill: true, // Alanı doldursun
+                        pointRadius: 5,
+                        pointBackgroundColor: '#2ecc71',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Zamana Göre Kümülatif Veri Gelişimi',
+                            font: { size: 18, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tarih',
+                                font: { size: 14 }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Kümülatif Toplam',
+                                font: { size: 14 }
+                            },
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 5. SAYFA YÜKLENİNCE OTOMATİK İŞLEMLER (PERSISTENCE) ---
+        
+        window.onload = () => {
+            setupButtons();
+            // Sayfa açıldığında otomatik olarak verileri çek ve grafiği oluştur
+            generateChart(); 
+        };
+    </script>
+
+</body>
+</html>
