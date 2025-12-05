@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Bitkisel Veri Terminali (BIOS) 🌲</title>
+    <style>
+        /*
+         * Temel Stiller (Toprak Tonları & Yeşil Spektrum)
+         */
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Tahoma', sans-serif;
+            background-color: #f0f4c3; /* Açık Limon Sarısı */
+            min-height: 100vh;
+            color: #212121; /* Koyu Gri/Siyah yazı */
+            /* Hafif toprak tonlu arka plan deseni */
+            background-image: repeating-linear-gradient(45deg, #f0f4c3 0px, #f0f4c3 10px, #e6ee9c 10px, #e6ee9c 20px);
+        }
+
+        /*
+         * Başlık Stilleri
+         */
+        .header-container {
+            background-color: #aed581; /* Zeytin Yeşili Pastel */
+            border: 5px solid #33691e; /* Koyu Çam Yeşili Çizgi */
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-container h1 {
+            margin: 0;
+            color: #1b5e20; /* Ekstra Koyu Yeşil */
+            font-size: 34px;
+            font-weight: 900;
+        }
+
+        /*
+         * Açıklama Kutusu Stilleri
+         */
+        .explanation-box {
+            background-color: #fff9c4; /* Hafif Sarı Krem */
+            border: 3px solid #f9a825; /* Parlak Hardal Çizgi */
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .explanation-box h2 {
+            margin: 0 0 10px 0;
+            color: #f57f17; /* Koyu Hardal */
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 2px solid #ffeb3b;
+            padding-bottom: 5px;
+        }
+
+        .explanation-box p strong {
+            color: #d84315;
+        }
+
+        /*
+         * Tablo Stilleri
+         */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+            border: 5px solid #4e342e; /* Koyu Kahverengi Çizgi */
+            background-color: #ffffff;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        #plant-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            font-family: 'Verdana', sans-serif;
+        }
+
+        #plant-table thead tr {
+            background-color: #dcedc8; /* Açık Zeytin Yeşili */
+        }
+
+        #plant-table th {
+            border: 2px solid #689f38; /* Koyu Yeşil Çizgi */
+            padding: 14px 8px;
+            color: #2e7d32;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        #plant-table td {
+            border: 1px solid #c5e1a5; /* Orta Yeşil Çizgi */
+            padding: 10px 8px;
+            text-align: center;
+            color: #1a1a1a;
+        }
+        
+        /* Seçili Satır (Klasik Kırmızı/Kahve Vurgu) */
+        #plant-table tr.selected {
+            border: 5px ridge #a1887f !important; /* Klasik, Toprak Tonlu ridge deseni */
+            background-color: #efebe9; /* Çok Açık Kahve arka plan */
+        }
+
+        #plant-table tr.selected td {
+            background-color: #efebe9 !important; 
+            border: 1px solid #a1887f;
+            font-weight: bold;
+        }
+
+        #plant-table .plant-name-cell {
+            cursor: pointer;
+            font-weight: 900;
+            color: #d84315; /* Koyu Kırmızı/Turuncu Vurgu */
+            transition: background-color 0.2s;
+        }
+
+        /* Skor Renklendirmesi */
+        .score-green { background-color: #c8e6c9 !important; } /* Yeşil Vurgu */
+        .score-yellow { background-color: #fff9c4 !important; } /* Sarı Vurgu */
+        .score-red { background-color: #ffcdd2 !important; } /* Kırmızı Vurgu */
+
+        /*
+         * Detay Konsolu Stilleri (Tam Siyah / Tam Yeşil)
+         */
+        .detail-console {
+            background-color: #000000; /* Tam Siyah */
+            border: 4px solid #00ff00; /* Tam Yeşil Çerçeve */
+            padding: 20px;
+            margin-bottom: 25px;
+            min-height: 250px;
+        }
+
+        #detail-content {
+            border: 2px solid #00ff00; /* Tam Yeşil Çizgi */
+            padding: 15px;
+            color: #00ff00; /* Tam Yeşil Yazı */
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        #detail-content strong {
+            color: #00ff00; /* Tam Yeşil Vurgu */
+        }
+        
+        /* Butonlar Tam Yeşil Tema */
+        #detail-content button {
+            background-color: #000000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        #detail-content button:hover {
+            background-color: #00ff00;
+            color: #000000;
+        }
+
+        #detail-content button.in-comparison {
+            background-color: #00ff00;
+            color: #000000;
+            border: 2px solid #00ff00;
+        }
+
+        /*
+         * Karşılaştırma Analizörü Stilleri (Toprak Tonları)
+         */
+        .comparison-analyzer {
+            background-color: #fbe9e7; /* Açık Kırmızımsı Pastel */
+            border: 4px solid #bf360c; /* Koyu Kahve/Kırmızı Çizgi */
+            padding: 20px;
+        }
+
+        .comparison-analyzer h2 {
+            margin: 0 0 15px 0;
+            color: #d84315;
+            font-size: 20px;
+            border-bottom: 2px solid #ff7043;
+            padding-bottom: 5px;
+        }
+
+        #comparison-list {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .comparison-plant-tag {
+            background-color: #ffab91; /* Daha canlı turuncu etiket */
+            border: 2px solid #d84315;
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
+
+        .comparison-plant-tag button {
+            background-color: #d84315;
+            color: #ffffff;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            border-radius: 50%;
+        }
+
+        #analysis-results {
+            background-color: #ffffff;
+            border: 3px solid #ffab91;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #4e342e;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /*
+         * Altbilgi Stilleri
+         */
+        .footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 12px;
+            color: #3e2723;
+            padding: 15px;
+            background-color: #efebe9;
+            border: 2px solid #a1887f;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>🌿 BİTKİSEL VERİ TERMİNALİ (BIOS) 🌲</h1>
+    </div>
+
+    <div class="explanation-box">
+        <h2>🔬 Veri Terminali Açıklamaları</h2>
+        <div>
+            <p><strong>🪣 Doz Belirteçleri (Günlük, Düzenli Tüketime Göre):</strong></p>
+            <ul style="list-style: none; padding-left: 20px;">
+                <li><span style="display: inline-block; width: 80px;">💥‼️</span> = **Kontrollü Kullanım:** Ölçülü ve dikkatli tüketilmelidir.</li>
+                <li><span style="display: inline-block; width: 80px;">⚠️❗️</span> = **Miktar Önemli:** Güçlü yan etkisi olmasa da kullanılan miktara dikkat edilmelidir.</li>
+                <li><span style="display: inline-block; width: 80px;">⚠️🔰</span> = **Limit Belirleyici:** Gün içinde belli miktarı geçmemek gerekir, ancak rahatça tüketilebilir.</li>
+                <li><span style="display: inline-block; width: 80px;">✅☘️</span> = **Güvenli Kullanım:** Genel olarak güvenlidir ancak bireysel yan etkilere dikkat edilmelidir.</li>
+            </ul>
+            
+            <p style="margin-top: 15px;"><strong>🔥 Skor Sistemi (1-5):</strong></p>
+            <p style="margin: 5px 0 2px 20px;">5 = Olağanüstü Etki | 4 = Çok Güçlü Etki | 3 = Orta Etki | 2 = Hafif Etki | 1 = Minimal Etki</p>
+            
+            <p style="margin-top: 15px;"><strong>🎨 Renk Kodları:</strong></p>
+            <span class="score-green" style="padding: 2px 8px;">Yeşil = 4+ puan (Yüksek Potansiyel)</span>
+            <span class="score-yellow" style="padding: 2px 8px; margin-left: 10px;">Sarı = 3 puan (Orta Denge)</span>
+            <span class="score-red" style="padding: 2px 8px; margin-left: 10px;">Kırmızı = 3- puan (Düşük Etki)</span>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table id="plant-table">
+            <thead>
+                <tr>
+                    <th>🌱 Bitki</th>
+                    <th>🪣 Doz</th>
+                    <th>🔥 Anti-inf.</th>
+                    <th>🧠 Beyin</th>
+                    <th>🛡 Bağışıklık</th>
+                    <th>🫀 Damar</th>
+                    <th>🌬 Sindirim</th>
+                    <th>⚖️ Metab.</th>
+                    <th>⭐Genel</th>
+                </tr>
+            </thead>
+            <tbody id="plant-table-body">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="detail-console">
+        <div id="detail-content">
+            <div style="font-size: 16px; margin-bottom: 10px">► SİSTEM BAŞLATILIYOR... [V 2.1]</div>
+            <div style="border-bottom: 1px solid #00ff00; margin-bottom: 15px;"></div>
+            <p>🌿 Bitkisel Veri Terminaline Hoş Geldiniz.</p>
+            <p>💾 Veri Arşivi taranıyor... **45+ Bitki Kaydı Bulundu.**</p>
+            <p>📊 Tabloda bir bitkiye tıklayarak derinlemesine **Biyoaktif Raporlara** ulaşabilirsiniz.</p>
+            <p>⚠️ **UYARI:** Bu terminaldeki tüm veriler bilimsel ve geleneksel özetlerdir. Tıbbi teşhis veya tedavi amaçlı kullanılmamalıdır.</p>
+            <div style="margin-top: 15px; border-top: 1px solid #00ff00; padding-top: 10px;"></div>
+            <div style="margin-top: 10px">► Detaylı Analiz için bir **🌱 Bitkiye** tıklayın...</div>
+        </div>
+    </div>
+
+    <div class="comparison-analyzer">
+        <h2>🔬 BİYOAKTİF KOMBİNASYON LABORATUVARI (Maks. 5 Bitki)</h2>
+        
+        <div style="margin-bottom: 15px; font-size: 14px; color: #4e342e;">
+            <strong>Seçili Bitkiler (<span id="comparison-count">0</span>/5):</strong>
+            <div id="comparison-list">
+                </div>
+        </div>
+
+        <div id="analysis-results" style="display: none;">
+            <h3>📈 Kombinasyon Notları:</h3>
+            <p style="font-size: 13px; color: #4e342e;">
+                ⚠️ Seçilen <span id="analysis-plant-count">0</span> bitkinin kombinasyonu ile ilgili genel gözlemler:
+            </p>
+            <ul style="font-size: 13px; color: #4e342e; line-height: 1.8; padding-left: 20px;">
+                <li>**Etkileşim Uyarısı:** Benzer etki gösteren bitkiler (örn. anti-inflamatuar veya uyarıcı) toplu dozda **beklenenden daha güçlü** etki yaratabilir.</li>
+                <li>**Miktar Yönetimi:** Birkaç bitkiyi aynı anda tüketirken toplam aktif bileşen alımını kontrol altında tutmak önemlidir.</li>
+                <li>**Bireysel Tepkiler:** Çoklu bitki kullanımı, bazı kişilerde beklenmeyen veya artan hassasiyet yaratabilir.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p style="margin: 5px 0">© 2024 Bitkisel Veri Terminali | Tıbbi Amaçlı Kullanılamaz.</p>
+        <p style="margin: 5px 0">Veri kaynağı: Geleneksel ve Açık Bilimsel Kayıtlar.</p>
+    </div>
+
+    <script>
+        // *** VERİLER (Önceki versiyondan korundu) ***
+        const PLANT_DATA = {
+  "🌱 Sarımsak": {
+    "name": "Sarımsak",
+    "latin": "Allium sativum",
+    "origin": "Orta Asya'nın stepleri; Mısır ve Çin kayıtlarında 5000 yıldır yer alır.",
+    "benefits": "Doğal geniş spektrumlu antibiyotik, kan basıncı regülasyonu, damar sertliğini önleme, ağır metal detoksu.",
+    "mechanism": "İçeriğindeki alliin, ezildiğinde allicin'e dönüşür. Bu sülfür bileşiği, bakterilerin enzim sistemlerini bloke eder ve damar duvarlarındaki nitrik oksit üretimini artırarak damar genişlemesi sağlar.",
+    "history": "Antik Mısır'da piramit işçilerine güç ve dayanıklılık vermesi için dağıtılırdı. Hipokrat, akciğer rahatsızlıkları için önermiştir.",
+    "conditionalEffects": "Çiğ tüketildiğinde en güçlü etkiyi gösterir. Pişirildiğinde allicin enzimi ısıyla bozulduğu için antibiyotik etkisi azalır ancak antioksidan etkisi devam eder.",
+    "targetOrgans": "Kalp-damar sistemi, akciğerler, bağışıklık sistemi.",
+    "sideEffects": "Aşırı tüketimde mide mukozasını tahriş edebilir, vücut kokusunu değiştirir. Cerrahi operasyonlardan 2 hafta önce kesilmelidir.",
+    "usage": "Günde 1-2 diş çiğ ezilmiş (10 dk oksijenle temas ettirilmiş) veya fermente (siyah sarımsak) olarak.",
+    "dosage": "💥‼️ Yüksek dozlarda güçlü kan sulandırıcı etki yapar.",
+    "activeCompounds": "Allicin, diallyl disulfide, ajoene, selenyum"
+  },
+  "🌾 Zerdeçal": {
+    "name": "Zerdeçal",
+    "latin": "Curcuma longa",
+    "origin": "Hindistan ve Güneydoğu Asya; Ayurveda tıbbının temel taşıdır.",
+    "benefits": "Sistemik anti-inflamatuar, karaciğer rejenerasyonu, nöroprotektif (beyin koruyucu), eklem romatizması desteği.",
+    "mechanism": "Kurkumin, vücuttaki inflamasyonun ana şalteri olan NF-kB molekülünü baskılar. Bu sayede kronik iltihabı hücresel düzeyde durdurur.",
+    "history": "Hindistan'da 'kutsal toz' olarak bilinir ve düğünlerde arınma ritüellerinde kullanılır. Marco Polo, 'safrana benzeyen ama safran olmayan bitki' olarak tanımlamıştır.",
+    "conditionalEffects": "Tek başına tüketildiğinde bağırsaklardan emilimi çok düşüktür (%1). Ancak karabiber (piperin) ve yağ ile birlikte tüketildiğinde emilimi %2000 oranında artar.",
+    "targetOrgans": "Karaciğer, eklemler, beyin, sindirim sistemi.",
+    "sideEffects": "Safra kesesi kasılmalarını artırabilir, taşı olanlar dikkat etmelidir.",
+    "usage": "Günde 1 tatlı kaşığı toz, yağlı bir yemekle veya 'altın süt' olarak.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Safra kanalı tıkanıklığında riskli olabilir.",
+    "activeCompounds": "Kurkuminoidler (Kurkumin), turmerone"
+  },
+  "🌱 Zencefil": {
+    "name": "Zencefil",
+    "latin": "Zingiber officinale",
+    "origin": "Güneydoğu Asya yağmur ormanları.",
+    "benefits": "Mide motilitesini (hareketliliğini) düzenler, bulantı kesici, termojenik (ısıtıcı) etki, periferik kan dolaşımını artırma.",
+    "mechanism": "Gingeroller, mide boşalmasını hızlandırır ve beyindeki kusma merkezini (CTZ) baskılayan serotonin reseptörlerini bloke eder.",
+    "history": "Konfüçyüs'ün her öğünde tükettiği söylenir. Orta Çağ Avrupa'sında vebadan korunmak için kullanılmıştır.",
+    "conditionalEffects": "Taze zencefil viral enfeksiyonlarda daha etkiliyken, kuru toz zencefil sindirim ve ağrı kesici özelliklerde daha etkilidir (shogaol oranı artar).",
+    "targetOrgans": "Mide, bağırsaklar, üst solunum yolları.",
+    "sideEffects": "Aç karnına yüksek dozda alınırsa mide ekşimesi yapabilir.",
+    "usage": "Taze olarak çayı, yemeklerde baharat veya bal ile macun olarak.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Safra artırıcı etkisi vardır.",
+    "activeCompounds": "Gingerol, shogaol, zingiberene"
+  },
+  "🧅 Kırmızı soğan": {
+    "name": "Kırmızı Soğan",
+    "latin": "Allium cepa var. purpurea",
+    "origin": "Orta Asya; İpek Yolu ile dünyaya yayılmıştır.",
+    "benefits": "Hücre koruyucu, güçlü antioksidan, kemik yoğunluğunu artırma, alerjik reaksiyonları (histamin) hafifletme.",
+    "mechanism": "İçerdiği quercetin, bağışıklık hücrelerinin histamin salgılamasını engelleyerek doğal bir antihistaminik gibi davranır.",
+    "history": "Eski Mısır'da soğan katmanları sonsuz yaşamı simgelerdi ve firavunlarla birlikte gömülürdü.",
+    "conditionalEffects": "Dış kabuğuna en yakın katmanlar en yüksek antioksidanı içerir. Çiğ tüketim kalp sağlığı için en iyisidir, pişirme sülfürlü bileşikleri azaltır.",
+    "targetOrgans": "Kalp, kemikler, solunum yolları.",
+    "sideEffects": "FODMAP içeriği nedeniyle IBS hastalarında gaz ve şişkinlik yapabilir.",
+    "usage": "Salatalarda çiğ veya hafif sotelenmiş.",
+    "dosage": "⚠️🔰 Orta risk: Mide asidini artırabilir.",
+    "activeCompounds": "Quercetin, antosiyaninler, sülfür"
+  },
+  "🌿 Kekik Yağı": {
+    "name": "Kekik Yağı",
+    "latin": "Thymus vulgaris oil",
+    "origin": "Akdeniz havzası.",
+    "benefits": "Çok güçlü antiseptik, antifungal (mantar karşıtı), parazit dökücü, üst solunum yolu dezenfeksiyonu.",
+    "mechanism": "Carvacrol bileşeni, bakteri ve mantarların hücre zarını parçalayarak yok olmalarını sağlar.",
+    "history": "Antik Yunan'da banyo sularına cesaret vermesi için katılırdı. 1. Dünya Savaşı'nda hastane dezenfektanı olarak kullanılmıştır.",
+    "conditionalEffects": "Suyla karışmaz, mutlaka bir taşıyıcı yağ (zeytinyağı) veya şeker/ekmek üzerine damlatılarak alınmalıdır. Saf hali mukozayı yakar.",
+    "targetOrgans": "Akciğerler, boğaz, bağırsak florası.",
+    "sideEffects": "Karaciğeri yorabilir, uzun süreli (10 günden fazla) dahili kullanım önerilmez.",
+    "usage": "Günde 1-2 damla, seyreltilerek. Buhar banyosu olarak.",
+    "dosage": "💥‼️ Yüksek risk: Saf hali ciltte ve ağızda yanık yapar.",
+    "activeCompounds": "Carvacrol (%60-80), thymol"
+  },
+  "🍇 Çekirdekli üzüm": {
+    "name": "Çekirdekli Üzüm",
+    "latin": "Vitis vinifera",
+    "origin": "Anadolu ve Kafkasya.",
+    "benefits": "Kılcal damar onarımı, varis tedavisi desteği, göz sağlığı (retina koruma), serbest radikal avcısı.",
+    "mechanism": "OPC (Oligomerik Proantosiyanidinler), kollajen yapısını güçlendirerek damar duvarlarının esnekliğini korur ve C vitamininin etkisini artırır.",
+    "history": "Fransız Paradoksu'nun (yağlı beslenmeye rağmen düşük kalp hastalığı) anahtarlarından biri olarak görülür.",
+    "conditionalEffects": "Çekirdekleri çiğnenerek kırılmalıdır, aksi takdirde sindirilmeden atılır ve fayda sağlamaz.",
+    "targetOrgans": "Damarlar, gözler, cilt.",
+    "sideEffects": "Kan pıhtılaşmasını yavaşlatabilir.",
+    "usage": "Çekirdekleriyle birlikte çiğneyerek taze veya kuru üzüm.",
+    "dosage": "⚠️🔰 Orta risk: Şeker hastaları meyve şekerine dikkat etmeli.",
+    "activeCompounds": "Resveratrol, OPC, kuersetin"
+  },
+  "🍇 Zeytin yaprağı çayı": {
+    "name": "Zeytin Yaprağı Çayı",
+    "latin": "Olea europaea leaf",
+    "origin": "Mezopotamya ve Akdeniz.",
+    "benefits": "İnsülin duyarlılığını artırma, tansiyon düşürücü, antiviral (uçuk, grip), enerji seviyesini artırma.",
+    "mechanism": "Oleuropein maddesi, virüslerin çoğalması için gereken amino asit üretimini engeller ve damar düz kaslarını gevşeterek tansiyonu düşürür.",
+    "history": "Nuh Tufanı'ndan sonra barışın simgesi olarak gelen ilk bitkidir. Antik çağda ateş düşürücü olarak kullanılmıştır.",
+    "conditionalEffects": "Çay demlenirken çok uzun süre (10 dk+) bekletilirse tadı acılaşır ancak etken madde suya daha çok geçer.",
+    "targetOrgans": "Pankreas, damarlar, bağışıklık sistemi.",
+    "sideEffects": "Herxheimer reaksiyonu (toksinlerin hızlı atılımına bağlı geçici grip benzeri durum) yapabilir.",
+    "usage": "Kurutulmuş yapraklardan çay olarak.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Tansiyon ilacı kullananlar dikkatli olmalı.",
+    "activeCompounds": "Oleuropein, elenol asit"
+  },
+  "🌿 Kekik": {
+    "name": "Kekik",
+    "latin": "Thymus vulgaris",
+    "origin": "Batı Akdeniz.",
+    "benefits": "Bronşları temizler, balgam söktürücü, sindirimi kolaylaştırır, zihinsel yorgunluğu alır.",
+    "mechanism": "Uçucu yağları, akciğerdeki siliaların (tüycüklerin) hareketini artırarak mukusun atılmasını sağlar.",
+    "history": "Romalılar peynir ve likörlerine lezzet katmak için kullanırdı. Orta Çağ'da yastık altına konarak kabusları önlediğine inanılırdı.",
+    "conditionalEffects": "Yemeklere piştikten sonra eklenmelidir; yüksek ısıda uzun süre pişerse uçucu yağları ve aroması kaybolur, acılaşır.",
+    "targetOrgans": "Solunum yolları, mide.",
+    "sideEffects": "Demir emilimini bir miktar azaltabilir.",
+    "usage": "Çay (demleme) veya baharat.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Tiroid bezi aktivitesini artırabilir.",
+    "activeCompounds": "Thymol, rosmarinik asit, luteolin"
+  },
+  "🍋 Limon kabuğu": {
+    "name": "Limon Kabuğu",
+    "latin": "Citrus limon peel",
+    "origin": "Himalaya etekleri.",
+    "benefits": "Karaciğer faz-2 detoksifikasyonu, venöz dolaşım (varis) desteği, cilt parlaklığı.",
+    "mechanism": "D-limonen, karaciğerdeki detoks enzimlerini (GST) aktive ederek kanserojen maddelerin suda çözünür hale gelip atılmasını sağlar.",
+    "history": "Uzun deniz yolculuklarında iskorbüt hastalığını önlemek için kullanılmıştır.",
+    "conditionalEffects": "Sıcak çaya eklendiğinde aromatik yağları suya geçer ve ferahlatır, ancak C vitamini ısıyla bir miktar kaybolur.",
+    "targetOrgans": "Karaciğer, safra kesesi, cilt.",
+    "sideEffects": "Pestisit kalıntısı riski yüksektir, mutlaka iyi yıkanmalı veya organik tercih edilmelidir.",
+    "usage": "Rendelenmiş olarak salata ve yemeklere.",
+    "dosage": "⚠️🔰 Orta risk: Mide asidini artırabilir.",
+    "activeCompounds": "D-limonen, pektin, hesperidin"
+  },
+  "🫘 Ceviz": {
+    "name": "Ceviz",
+    "latin": "Juglans regia",
+    "origin": "Pers İmparatorluğu (İran) ve Anadolu.",
+    "benefits": "Bilişsel fonksiyon desteği, uyku düzenleme, sperm kalitesini artırma, damar esnekliği.",
+    "mechanism": "Bitkisel Omega-3 (ALA) beyin hücre zarlarının akışkanlığını korur. Doğal melatonin içeriği sirkadiyen ritmi düzenler.",
+    "history": "Romalılar tarafından 'Jüpiter'in palamudu' olarak adlandırılmış, beyne benzerliği nedeniyle zeka ile ilişkilendirilmiştir.",
+    "conditionalEffects": "Suda bekletilip (aktive edilip) tüketilirse, fitik asit azalır ve mineral emilimi artar, sindirimi kolaylaşır.",
+    "targetOrgans": "Beyin, kalp, üreme sistemi.",
+    "sideEffects": "Yüksek yağ içeriği nedeniyle aşırı tüketim kilo alımına neden olabilir.",
+    "usage": "Çiğ olarak, tercihen suda bekletilmiş.",
+    "dosage": "⚠️🔰 Orta risk: Kalori yoğunluğu yüksektir.",
+    "activeCompounds": "Alfa-linolenik asit, ellagik asit, melatonin"
+  },
+  "🌿 Moringa": {
+    "name": "Moringa",
+    "latin": "Moringa oleifera",
+    "origin": "Kuzey Hindistan (Himalaya etekleri).",
+    "benefits": "Süt artırıcı (galaktagog), besin eksikliklerini giderme, anemi desteği, anti-diyabetik.",
+    "mechanism": "Zengin besin profiliyle hücresel beslenmeyi destekler. Klorojenik asit ile glikozun kana karışmasını yavaşlatır.",
+    "history": "'Mucize Ağaç' olarak bilinir. Antik Mauryan savaşçıları savaş alanında enerji ve ağrı kesici olarak kullanmıştır.",
+    "conditionalEffects": "Sabah aç karnına alındığında metabolizmayı daha hızlı aktive eder.",
+    "targetOrgans": "Kan, kemikler, metabolizma.",
+    "sideEffects": "Kökü zehirli alkaloitler içerebilir, sadece yaprakları tüketilmelidir.",
+    "usage": "Toz formunda smoothielere veya yoğurda eklenerek.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Rahim kasılmalarını tetikleyebilir (Gebelik).",
+    "activeCompounds": "Zeatin, kuerSetin, beta-sitosterol"
+  },
+  "🌿 Isırgan Otu": {
+    "name": "Isırgan Otu",
+    "latin": "Urtica dioica",
+    "origin": "Avrupa ve Asya.",
+    "benefits": "Kan temizleyici, saman nezlesi (alerji) tedavisi, prostat büyümesini (BPH) yavaşlatma, demir eksikliği desteği.",
+    "mechanism": "Kökleri, testosteronun DHT'ye dönüşümünü engelleyerek prostat sağlığını korur. Yaprakları histamin reseptörlerini bloke eder.",
+    "history": "Romalı askerler soğuk iklimlerde dolaşımı artırmak için vücutlarını ısırganla kamçılarlardı (ürtikasyon).",
+    "conditionalEffects": "Tohumları enerji verici ve afrodizyak iken, yaprakları daha çok detoks ve diüretik etkilidir.",
+    "targetOrgans": "Böbrekler, prostat, kan.",
+    "sideEffects": "Güçlü idrar söktürücüdür, vücuttan su atılımını artırır.",
+    "usage": "Çay veya yemek olarak (pişince yakıcı özelliği kaybolur).",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Kan sulandırıcılarla etkileşebilir.",
+    "activeCompounds": "Lektinler, polisakkaritler, formik asit"
+  },
+  "🍏 Yeşil elma kabuğu": {
+    "name": "Yeşil Elma Kabuğu",
+    "latin": "Malus domestica (Granny Smith)",
+    "origin": "Orta Asya.",
+    "benefits": "Kas erimesini önleme, yağ yakımını destekleme, bağırsak florasını besleme.",
+    "mechanism": "Ursolik asit, kas kütlesini koruyan genleri aktive ederken yağ depolamayı teşvik eden genleri baskılar.",
+    "history": "'Günde bir elma doktoru evden uzak tutar' sözü, eski Galler kaynaklıdır.",
+    "conditionalEffects": "Sadece kabuğunda bulunan ursolik asit için kabuklu tüketilmelidir. Soyulursa prebiyotik ve anti-obezite etkisi azalır.",
+    "targetOrgans": "Kaslar, yağ dokusu, bağırsaklar.",
+    "sideEffects": "Yüksek asit içeriği diş minesini aşındırabilir.",
+    "usage": "Çiğ ve kabuklu olarak.",
+    "dosage": "⚠️🔰 Orta risk: Pestisit kalıntısına dikkat.",
+    "activeCompounds": "Ursolik asit, pektin"
+  },
+  "🫒 Çiğ zeytin": {
+    "name": "Çiğ Zeytin",
+    "latin": "Olea europaea fruit",
+    "origin": "Doğu Akdeniz.",
+    "benefits": "Hücre zarı koruması, E vitamini kaynağı, safra akışını düzenleme, tokluk hissi.",
+    "mechanism": "Tekli doymamış yağ asitleri (Oleik asit), LDL kolesterolün oksidasyonunu önleyerek damar tıkanıklığını engeller.",
+    "history": "Antik Yunan sporcuları enerji ve cilt sağlığı için zeytin tüketir ve yağını sürerdi.",
+    "conditionalEffects": "Fermente edilmemiş ham zeytin çok acıdır (oleuropein). Doğal fermantasyon probiyotik özellik kazandırır.",
+    "targetOrgans": "Kalp, safra kesesi, cilt.",
+    "sideEffects": "Salamura zeytinler yüksek sodyum içerir, tansiyon hastaları suda bekleterek tuzunu almalıdır.",
+    "usage": "Kahvaltıda veya salatalarda.",
+    "dosage": "⚠️🔰 Orta risk: Tuz içeriği.",
+    "activeCompounds": "Oleik asit, E vitamini, skualen"
+  },
+  "🍋 Tarçın": {
+    "name": "Tarçın",
+    "latin": "Cinnamomum verum (Seylan)",
+    "origin": "Sri Lanka.",
+    "benefits": "Kan şekeri dengeleme (insülin taklidi), tatlı krizini önleme, mantar enfeksiyonlarına (candida) karşı etki.",
+    "mechanism": "İnsülin reseptörlerini hassaslaştırarak glikozun hücre içine girmesini kolaylaştırır, böylece kan şekerini düşürür.",
+    "history": "Antik Mısır'da mumyalama işleminde ve parfüm yapımında kullanılırdı. Altından daha değerliydi.",
+    "conditionalEffects": "Yoğurt veya süt ile tüketildiğinde kan şekerini dengeleme etkisi, karbonhidratlı gıdalarla alındığında daha belirgindir.",
+    "targetOrgans": "Pankreas, kan, sindirim sistemi.",
+    "sideEffects": "Çin tarçını (Cassia) yüksek kumarin içerir ve karaciğeri yorabilir. Seylan tarçını güvenlidir.",
+    "usage": "Toz veya çubuk olarak.",
+    "dosage": "💥‼️ Yüksek risk: Çin tarçını (Cassia) karaciğer toksisitesi riski taşır.",
+    "activeCompounds": "Sinnamaldehit, prosiyanidinler"
+  },
+  "🌿 Biberiye": {
+    "name": "Biberiye",
+    "latin": "Rosmarinus officinalis",
+    "origin": "Akdeniz kayalıkları.",
+    "benefits": "Bilişsel performans, saç köklerini uyarma, karaciğer detoksu, gıdaları koruma (doğal koruyucu).",
+    "mechanism": "Kokusunu solumak bile asetilkolin (hafıza nörotransmitteri) yıkımını azaltarak zihni açar.",
+    "history": "Antik Yunan öğrencileri sınavlara çalışırken hafızayı güçlendirmek için başlarına biberiye çelengi takardı.",
+    "conditionalEffects": "Yağı saç derisine masaj yapıldığında kan dolaşımını artırarak saç dökülmesini azaltabilir.",
+    "targetOrgans": "Beyin, saç derisi, karaciğer.",
+    "sideEffects": "Akşam geç saatte tüketilirse uyarıcı etkisi nedeniyle uykuyu kaçırabilir.",
+    "usage": "Çay, baharat veya aromaterapi.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Yüksek tansiyonu tetikleyebilir.",
+    "activeCompounds": "1,8-Sineol, rosmarinik asit, karnosol"
+  },
+  "🍫 Ham kakao": {
+    "name": "Ham Kakao",
+    "latin": "Theobroma cacao",
+    "origin": "Amazon Havzası.",
+    "benefits": "Mutluluk hormonu salgılama, magnezyum deposu, prebiyotik etki, damar elastikiyeti.",
+    "mechanism": "İçerdiği flavanoller nitrik oksit üretimini artırarak kan basıncını düşürür. Anandamid (mutluluk molekülü) içerir.",
+    "history": "Mayalar ve Aztekler tarafından 'Tanrıların Yiyeceği' olarak kabul edilir, para birimi olarak kullanılırdı.",
+    "conditionalEffects": "Süt ile tüketildiğinde antioksidan emilimi azalabilir. İşlenmemiş (ham) olması besin değeri için kritiktir.",
+    "targetOrgans": "Kalp, beyin, bağırsaklar.",
+    "sideEffects": "Teobromin içeriği nedeniyle bazı kişilerde çarpıntı veya migreni tetikleyebilir.",
+    "usage": "Smoothie veya yulaf lapasına eklenerek.",
+    "dosage": "⚠️🔰 Orta risk: Uyarıcı etki.",
+    "activeCompounds": "Teobromin, flavonoidler, anandamid"
+  },
+  "🌿 Kudret Narı": {
+    "name": "Kudret Narı",
+    "latin": "Momordica charantia",
+    "origin": "Hindistan ve Afrika.",
+    "benefits": "Mide ülseri ve reflü onarımı, kan şekeri düşürme, yara iyileştirme.",
+    "mechanism": "Mide mukozasını kaplayarak asitten korur ve iyileşmeyi hızlandırır. İnsülin benzeri peptitler içerir.",
+    "history": "Osmanlı tıbbında mide yaraları ve kesikler için zeytinyağında bekletilerek kullanılırdı.",
+    "conditionalEffects": "Zeytinyağı veya bal içinde fermente edildiğinde mide üzerindeki onarıcı etkisi maksimize olur.",
+    "targetOrgans": "Mide, pankreas, cilt.",
+    "sideEffects": "Kan şekerini ani düşürebilir, diyabet ilacı kullananlar dikkat etmelidir.",
+    "usage": "Yağda bekletilmiş macun olarak aç karnına.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Hamilelikte düşük riski yaratabilir.",
+    "activeCompounds": "Charantin, polipeptid-p, momordisin"
+  },
+  "🍄 Reishi mantarı": {
+    "name": "Reishi Mantarı",
+    "latin": "Ganoderma lucidum",
+    "origin": "Çin, Japonya ve Kuzey Amerika.",
+    "benefits": "Bağışıklık modülasyonu (dengeleme), sakinleştirici (ruhsal denge), kanser destek tedavisi, uzun yaşam.",
+    "mechanism": "Beta-glukanlar bağışıklık hücrelerini (makrofajlar, T hücreleri) aktive ederken, triterpenler alerjik tepkileri ve stresi azaltır.",
+    "history": "Çin tıbbında 'Ölümsüzlük Mantarı' olarak bilinir ve imparatorlara özel ayrılırdı.",
+    "conditionalEffects": "Etkisi kümülatiftir, yani düzenli kullanımda (2-4 hafta sonra) belirginleşir. C vitamini ile alınması emilimini artırır.",
+    "targetOrgans": "Bağışıklık sistemi, sinir sistemi, karaciğer.",
+    "sideEffects": "Kanın pıhtılaşmasını yavaşlatabilir.",
+    "usage": "Kurutulmuş çay, ekstrakt veya kapsül.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Kanama bozukluğu olanlar dikkat.",
+    "activeCompounds": "Ganoderik asit, beta-glukanlar"
+  },
+  "🍃 Matcha": {
+    "name": "Matcha",
+    "latin": "Camellia sinensis (gölgede büyütülmüş)",
+    "origin": "Japonya.",
+    "benefits": "Sakin enerji (jitter yapmaz), yüksek odaklanma, metabolizma hızlandırma, güçlü detoks.",
+    "mechanism": "Gölgede yetiştirildiği için klorofil ve L-theanine oranı çok yüksektir. L-theanine, kafeinin yarattığı gerginliği alarak 'alfa beyin dalgalarını' (rahatlamış odaklanma) teşvik eder.",
+    "history": "Zen Budist rahipleri tarafından uzun meditasyon seanslarında uyanık ve sakin kalmak için kullanılmıştır.",
+    "conditionalEffects": "Süt (özellikle inek sütü) antioksidan emilimini azaltabilir. Su ile çırpılarak tüketilmesi en iyisidir.",
+    "targetOrgans": "Beyin, karaciğer, yağ dokusu.",
+    "sideEffects": "Aç karnına içilirse bazı kişilerde mide bulantısı yapabilir ('tanen' nedeniyle).",
+    "usage": "Toz halinde sıcak suya çırpılarak.",
+    "dosage": "⚠️🔰 Orta risk: Kafein hassasiyeti.",
+    "activeCompounds": "EGCG, L-theanine, klorofil"
+  },
+  "🌶️ Acı biber": {
+    "name": "Acı Biber",
+    "latin": "Capsicum annuum",
+    "origin": "Amerika kıtası.",
+    "benefits": "Ağrı kesici (doğal analjezik), metabolizma hızlandırma, iştah kontrolü, kan dolaşımı.",
+    "mechanism": "Kapsaisin, vücut ısısını artırarak enerji harcamasını tetikler. Ayrıca 'P maddesi'ni (ağrı ileticisi) tüketerek ağrı sinyallerini bloklar.",
+    "history": "Mayalar diş ağrısı ve genel ağrılar için kullanırdı. 15. yüzyılda Avrupa'ya taşındı.",
+    "conditionalEffects": "Düzenli tüketimde tolerans gelişir, yani aynı etki için doz artırılabilir. Mide ülseri olanlarda ağrıyı artırabilir ama ülser yapmaz.",
+    "targetOrgans": "Sinir sistemi, metabolizma, mide.",
+    "sideEffects": "Aşırı tüketim mide ve bağırsak mukozasında tahrişe, yanmaya neden olur.",
+    "usage": "Yemeklerde baharat olarak.",
+    "dosage": "💥‼️ Yüksek risk: Hemoroid ve gastrit hastaları dikkat.",
+    "activeCompounds": "Kapsaisin"
+  },
+  "🌿 Kuşburnu": {
+    "name": "Kuşburnu",
+    "latin": "Rosa canina",
+    "origin": "Avrupa, Kuzeybatı Afrika ve Batı Asya.",
+    "benefits": "Eklem kireçlenmesi (osteoartrit) ağrılarını azaltma, cilt elastikiyeti, bağışıklık.",
+    "mechanism": "Galaktolipidler, kıkırdak yıkımına neden olan enzimleri inhibe eder ve inflamasyonu azaltır.",
+    "history": "2. Dünya Savaşı'nda İngiltere'de C vitamini kaynağı olarak narenciye bulunamadığında halka kuşburnu şurubu dağıtılmıştır.",
+    "conditionalEffects": "C vitamini içeriği ısıyla azalır, ancak eklem sağlığı için olan bileşenler pişmeye dayanıklıdır.",
+    "targetOrgans": "Eklemler, cilt, bağışıklık sistemi.",
+    "sideEffects": "Tüylü çekirdekleri iyi süzülmezse boğazı tahriş edebilir.",
+    "usage": "Çay veya marmelat.",
+    "dosage": "⚠️🔰 Orta risk: Güvenli, diüretik etkisi olabilir.",
+    "activeCompounds": "C vitamini, galaktolipidler, likopen"
+  },
+  "🌱 Spirulina": {
+    "name": "Spirulina",
+    "latin": "Arthrospira platensis",
+    "origin": "Tropikal göller; Aztekler ve Afrika kabileleri tarafından tüketilmiştir.",
+    "benefits": "Ağır metal detoksu, alerjik rinit (saman nezlesi), protein desteği, enerji.",
+    "mechanism": "Fikosiyanin pigmenti güçlü bir antioksidandır ve serbest radikalleri temizler. Yüksek klorofil içeriğiyle toksinleri bağlar.",
+    "history": "Aztekler Texcoco Gölü'nden topladıkları spirulinayı kurutup kek yaparak yerlerdi.",
+    "conditionalEffects": "Güvenilir kaynaklardan alınmazsa, yetiştiği sudaki ağır metalleri ve toksinleri bünyesinde barındırabilir.",
+    "targetOrgans": "Karaciğer, burun mukozası, kaslar.",
+    "sideEffects": "Fenilketonüri (PKU) hastaları kullanmamalıdır (fenilalanin içerir).",
+    "usage": "Tablet veya toz.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Temiz kaynak seçimi kritiktir.",
+    "activeCompounds": "Fikosiyanin, GLA, B12 (analog)"
+  },
+  "🍀 Karahindiba": {
+    "name": "Karahindiba",
+    "latin": "Taraxacum officinale",
+    "origin": "Avrasya ve Kuzey Amerika.",
+    "benefits": "Böbrek ve karaciğer temizliği, ödem atıcı, sindirim desteği.",
+    "mechanism": "Yaprakları potasyum kaybına yol açmadan idrar söktürür (doğal diüretik). Kökü safra üretimini uyarır.",
+    "history": "Arap hekimler tarafından 10. yüzyılda karaciğer toniği olarak kullanıldığı kaydedilmiştir.",
+    "conditionalEffects": "Yaprakları daha çok böbreklere (ödem), kökleri ise karaciğer ve sindirime etki eder.",
+    "targetOrgans": "Böbrekler, karaciğer, safra kesesi.",
+    "sideEffects": "Safra kanalı tıkalı olanlar kullanmamalıdır.",
+    "usage": "Yaprak çayı veya kök kahvesi/çayı.",
+    "dosage": "⚠️🔰 Orta risk: Safra taşı olanlar dikkat.",
+    "activeCompounds": "Taraxacin, inülin, potasyum"
+  },
+  "🌱 Ginseng": {
+    "name": "Ginseng",
+    "latin": "Panax ginseng (Asya)",
+    "origin": "Doğu Asya dağları.",
+    "benefits": "Fiziksel ve zihinsel direnç, cinsel sağlık, yorgunluk giderici.",
+    "mechanism": "Hipofiz-böbrek üstü bezi eksenini düzenleyerek stres hormonlarını dengeler.",
+    "history": "Çin'de 5000 yıldır 'İnsan Kökü' olarak bilinir ve kralların uzun yaşam sırrı sayılırdı.",
+    "conditionalEffects": "Uyarıcı etkisi nedeniyle kahve ile birlikte alındığında çarpıntı riski artar. Dönemsel (kürler halinde) kullanılmalıdır.",
+    "targetOrgans": "Adrenal bezler, beyin, üreme sistemi.",
+    "sideEffects": "Uykusuzluk, sinirlilik, tansiyon artışı.",
+    "usage": "Kök ekstraktı veya çay.",
+    "dosage": "💥‼️ Yüksek risk: Kalp ve tansiyon hastaları doktora danışmalı.",
+    "activeCompounds": "Ginsenosidler"
+  },
+  "🌿 Mate Yaprağı": {
+    "name": "Mate Yaprağı",
+    "latin": "Ilex paraguariensis",
+    "origin": "Güney Amerika.",
+    "benefits": "Zihinsel berraklık, fiziksel performans, iştah baskılama.",
+    "mechanism": "Kafein, teobromin ve teofilin kombinasyonuyla hem uyarır hem de kasları gevşetir, kahveye göre daha dengeli bir enerji verir.",
+    "history": "Güney Amerika yerlileri (Guarani) tarafından 'Tanrıların İçeceği' olarak sosyal törenlerde paylaşılırdı.",
+    "conditionalEffects": "Çok sıcak içilmesi yemek borusu tahrişi riskini artırabilir, ılık tüketilmelidir.",
+    "targetOrgans": "Beyin, kaslar, metabolizma.",
+    "sideEffects": "Aşırı tüketim çarpıntı ve anksiyete yapabilir.",
+    "usage": "Geleneksel kaplarda (bombilla) veya çay olarak.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Kafein hassasiyeti.",
+    "activeCompounds": "Mateine (kafein), klorojenik asit"
+  },
+  "🌱 Chia tohumu": {
+    "name": "Chia Tohumu",
+    "latin": "Salvia hispanica",
+    "origin": "Meksika ve Guatemala.",
+    "benefits": "Uzun süreli enerji, bağırsak hareketliliği, hidrasyon (su tutma), Omega-3 kaynağı.",
+    "mechanism": "Kendi ağırlığının 10-12 katı su emerek jel oluşturur. Bu jel midede karbonhidratların şekere dönüşümünü yavaşlatır ve tokluk sağlar.",
+    "history": "Aztek savaşçıları ve habercileri, uzun koşularda enerji ve dayanıklılık için yanlarında taşırdı.",
+    "conditionalEffects": "Kuru yutulmamalıdır; yemek borusunda şişerek tıkanmaya yol açabilir. Mutlaka sıvıda bekletilmelidir.",
+    "targetOrgans": "Bağırsaklar, kalp.",
+    "sideEffects": "Çok fazla lif içerdiği için, alışkın olmayanlarda gaz ve şişkinlik yapabilir.",
+    "usage": "Puding, yoğurt veya suya eklenerek (jel formunda).",
+    "dosage": "⚠️🔰 Orta risk: Bol su ile tüketilmeli.",
+    "activeCompounds": "Alfa-linolenik asit, çözünür lif"
+  },
+  "🍃 Yeşil çay": {
+    "name": "Yeşil Çay",
+    "latin": "Camellia sinensis",
+    "origin": "Çin.",
+    "benefits": "Hücre koruması, yağ yakımı desteği, kalp sağlığı, ağız hijyen.",
+    "mechanism": "Kateşinler (özellikle EGCG), termogenezi (ısı üretimini) artırarak yağ yakımını destekler ve bakteri plağı oluşumunu engeller.",
+    "history": "Efsaneye göre M.Ö. 2737'de İmparator Shen Nung'un sıcak suyuna tesadüfen yaprak düşmesiyle keşfedilmiştir.",
+    "conditionalEffects": "Yemeklerle birlikte içilirse bitkisel demir emilimini azaltır. Yemeklerden 1 saat sonra içilmesi idealdir.",
+    "targetOrgans": "Kalp, beyin, yağ dokusu.",
+    "sideEffects": "Mide hassasiyeti olanlarda tanenler bulantı yapabilir.",
+    "usage": "Demleme (80 derece suda).",
+    "dosage": "⚠️🔰 Orta risk: Demir eksikliği olanlar dikkat.",
+    "activeCompounds": "EGCG, kafein, L-theanine"
+  },
+  "🌿 Ashwagandha": {
+    "name": "Ashwagandha",
+    "latin": "Withania somnifera",
+    "origin": "Hindistan (Ayurveda).",
+    "benefits": "Stres ve kortizol yönetimi, uyku kalitesi, tiroid fonksiyon desteği (hipotiroidi), kas gücü.",
+    "mechanism": "Kortizol seviyelerini düşürerek vücudun stres tepkisini normalleştirir ve GABA reseptörlerini etkileyerek sakinlik verir.",
+    "history": "Sanskritçe'de 'At Kokusu' anlamına gelir; bu hem kökünün kokusuna hem de at gibi güç verdiğine atıftır.",
+    "conditionalEffects": "Etkisi genellikle hemen görülmez, adaptojen olduğu için düzenli kullanımda (birkaç hafta) stres direnci artar.",
+    "targetOrgans": "Adrenal bezler, tiroid, beyin.",
+    "sideEffects": "Tiroid hormonu üretimini artırabilir, hipertiroidi hastaları dikkat etmelidir.",
+    "usage": "Kök tozu veya kapsül, genelde akşamları.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Tiroid ilacı kullananlar doktora danışmalı.",
+    "activeCompounds": "Withanolides"
+  },
+  "🌿 Sumak": {
+    "name": "Sumak",
+    "latin": "Rhus coriaria",
+    "origin": "Orta Doğu ve Akdeniz.",
+    "benefits": "Kan şekeri dengesi, güçlü antioksidan, kas ağrılarını azaltma, antimikrobiyal.",
+    "mechanism": "İnsülin direncini azaltarak hücrelerin şekeri daha iyi kullanmasını sağlar. ORAC (antioksidan) değeri çok yüksektir.",
+    "history": "Romalılar limonun olmadığı zamanlarda ekşi tat vermek için kullanırdı. Geleneksel tıpta boğaz ağrısı için kullanılmıştır.",
+    "conditionalEffects": "Tuzla karıştırılarak satılanlarda sodyum oranı yüksektir, saf sumak tercih edilmelidir.",
+    "targetOrgans": "Kan, kaslar, sindirim sistemi.",
+    "sideEffects": "Kaju ve mango ile aynı aileden gelir, bunlara alerjisi olanlarda reaksiyon yapabilir.",
+    "usage": "Baharat olarak veya çayı.",
+    "dosage": "⚠️🔰 Orta risk: Güvenli, tuzsuz tercih edilmeli.",
+    "activeCompounds": "Tanenler, antosiyaninler"
+  },
+  "🌿 Nane": {
+    "name": "Nane",
+    "latin": "Mentha piperita",
+    "origin": "Avrupa ve Orta Doğu.",
+    "benefits": "Gaz giderici, baş ağrısı hafifletici, İBS (Huzursuz Bağırsak) semptomlarını yatıştırma, ferahlık.",
+    "mechanism": "Mentol, sindirim sistemi düz kaslarındaki kalsiyum kanallarını bloke ederek kasları gevşetir ve krampı önler.",
+    "history": "Yunan mitolojisinde peri Menthe'nin bitkiye dönüştürülmesiyle oluştuğuna inanılır. Antik Roma'da ziyafet masaları nane ile ovulurdu.",
+    "conditionalEffects": "Mide kapağını (sfinkter) gevşettiği için reflü hastalarında mide asidinin yemek borusuna kaçmasına neden olabilir.",
+    "targetOrgans": "Mide, bağırsaklar, sinir sistemi.",
+    "sideEffects": "Yüksek doz nane yağı mide yanması yapabilir.",
+    "usage": "Çay veya yağ (seyreltilmiş).",
+    "dosage": "⚠️🔰 Orta risk: Reflüsü olanlar dikkat.",
+    "activeCompounds": "Mentol, menton"
+  },
+  "🍃 Maydanoz": {
+    "name": "Maydanoz",
+    "latin": "Petroselinum crispum",
+    "origin": "Akdeniz bölgesi.",
+    "benefits": "Ödem atıcı, böbrek taşı önleme, nefes tazeleyici, yüksek K vitamini.",
+    "mechanism": "Sodyum ve su atılımını artırarak böbrekleri çalıştırır. Klorofil içeriğiyle ağız kokusunu nötralize eder.",
+    "history": "Antik Yunan'da ölüm ve yeniden doğuşla ilişkilendirilirdi, mezarların üzerine ekilirdi.",
+    "conditionalEffects": "Diüretik ilaçlarla birlikte alındığında aşırı sıvı kaybına ve tansiyon düşüklüğüne yol açabilir.",
+    "targetOrgans": "Böbrekler, kemikler (K vit), karaciğer.",
+    "sideEffects": "Rahim kasılmalarını uyarabilir, hamilelikte tedavi edici dozlarda (çay/kür) kaçınılmalıdır.",
+    "usage": "Taze, çay veya kür.",
+    "dosage": "⚠️🔰 Orta risk: Hamilelikte aşırı tüketimden kaçınılmalı.",
+    "activeCompounds": "Apiol, miristisin, luteolin"
+  },
+  "🌿 Adaçayı": {
+    "name": "Adaçayı",
+    "latin": "Salvia officinalis",
+    "origin": "Akdeniz.",
+    "benefits": "Boğaz enfeksiyonları, aşırı terleme, menopoz sıcak basmaları, hafıza.",
+    "mechanism": "Asetilkolin seviyelerini koruyarak hafızayı destekler. Östrojen benzeri etkilerle menopoz semptomlarını hafifletir.",
+    "history": "Orta Çağ'da 'Bahçesinde adaçayı olan neden ölsün?' sözüyle ünlenmiştir. Veba tedavisinde sirkesi kullanılmıştır.",
+    "conditionalEffects": "Emziren annelerde süt üretimini azaltabilir (sütten kesme döneminde kullanılır).",
+    "targetOrgans": "Boğaz, beyin, ter bezleri.",
+    "sideEffects": "İçerdiği thujone maddesi yüksek dozda nörotoksik olabilir.",
+    "usage": "Gargara veya çay (kısa demleme).",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Epilepsi hastaları ve hamileler kullanmamalı.",
+    "activeCompounds": "Rosmarinik asit, thujone"
+  },
+  "🌰 Çam fıstığı / badem": {
+    "name": "Çam Fıstığı / Badem",
+    "latin": "Pinus pinea / Prunus dulcis",
+    "origin": "Akdeniz ve Orta Doğu.",
+    "benefits": "İştah kontrolü, kalp sağlığı, magnezyum desteği.",
+    "mechanism": "Çam fıstığındaki pinolenik asit, tokluk hormonlarının (CCK ve GLP-1) salgılanmasını tetikler.",
+    "history": "Roma lejyonlarının temel kumanya maddelerindendi, enerji ve dayanıklılık için tüketilirdi.",
+    "conditionalEffects": "Kavrulduğunda sağlıklı yağ asitleri okside olabilir, çiğ tüketim daha faydalıdır.",
+    "targetOrgans": "Kalp, bağırsaklar.",
+    "sideEffects": "Nadir görülen 'Çam Ağzı' sendromu (ağızda geçici metalik tat) yapabilir.",
+    "usage": "Çiğ olarak atıştırmalık.",
+    "dosage": "⚠️🔰 Orta risk: Kalori yoğunluğu.",
+    "activeCompounds": "Pinolenik asit, E vitamini, magnezyum"
+  },
+  "🌿 Lion's Mane": {
+    "name": "Lion's Mane",
+    "latin": "Hericium erinaceus",
+    "origin": "Kuzey Yarımküre (Asya, Amerika, Avrupa).",
+    "benefits": "Sinir hücresi yenilenmesi (NGF), odaklanma, hafıza, bağırsak-beyin ekseni.",
+    "mechanism": "Beyin Türevli Nörotrofik Faktör (BDNF) ve Sinir Büyüme Faktörü (NGF) üretimini uyararak nöronların onarılmasını ve büyümesini destekler.",
+    "history": "Budist rahipler tarafından meditasyon sırasında odaklanmayı artırmak için çay olarak tüketilmiştir.",
+    "conditionalEffects": "Etkileri genellikle kümülatiftir, en iyi sonuçlar için düzenli ve uzun süreli kullanım önerilir.",
+    "targetOrgans": "Beyin, sinir sistemi, mide.",
+    "sideEffects": "Nadiren ciltte kaşıntı yapabilir.",
+    "usage": "Toz, kapsül veya pişirilerek (mantar olarak).",
+    "dosage": "⚠️🔰 Orta risk: Güvenli kabul edilir.",
+    "activeCompounds": "Herisenonlar, erinasinler"
+  },
+  "🌱 Aloe vera": {
+    "name": "Aloe Vera",
+    "latin": "Aloe barbadensis miller",
+    "origin": "Arap Yarımadası.",
+    "benefits": "Cilt iyileştirme, kabızlık giderme, mide ülseri yatıştırma.",
+    "mechanism": "Jelindeki polisakkaritler kollajen üretimini artırır. Yaprak kabuğundaki lateks (aloin) güçlü müshil etkisi yapar.",
+    "history": "Kleopatra'nın güzellik sırrı olarak bilinir. Büyük İskender, askerlerinin yaralarını tedavi etmek için aloe vera adasını fethetmiştir.",
+    "conditionalEffects": "Sadece içindeki şeffaf jel tüketilmelidir; dış yeşil kabuk ve sarı sıvı (lateks) toksiktir ve şiddetli ishal yapar.",
+    "targetOrgans": "Cilt, bağırsaklar, mide.",
+    "sideEffects": "Uzun süreli dahili kullanım potasyum eksikliğine yol açabilir.",
+    "usage": "Cilde jel, içecek olarak (aloinsiz).",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Dahili kullanımda dikkatli olunmalı.",
+    "activeCompounds": "Asemanan, aloin (kabukta)"
+  },
+  "🌿 Ekinezya": {
+    "name": "Ekinezya",
+    "latin": "Echinacea purpurea",
+    "origin": "Kuzey Amerika.",
+    "benefits": "Grip ve soğuk algınlığı süresini kısaltma, bağışıklık aktivasyonu.",
+    "mechanism": "Beyaz kan hücrelerinin (makrofajların) enfeksiyon bölgesine göçünü ve fagositoz (mikrop yeme) yeteneğini artırır.",
+    "history": "Kuzey Amerika yerlileri tarafından yılan ısırıkları, ağrılar ve enfeksiyonlar için her derde deva olarak kullanılmıştır.",
+    "conditionalEffects": "Hastalık belirtileri başlar başlamaz alındığında en etkilidir. Koruyucu olarak sürekli kullanımı tartışmalıdır.",
+    "targetOrgans": "Bağışıklık sistemi, üst solunum yolları.",
+    "sideEffects": "Papatyagillere alerjisi olanlarda reaksiyon yapabilir. Otoimmün hastalıklarda (lupus vb.) bağışıklığı aşırı uyarabilir.",
+    "usage": "Çay, tentür veya kapsül.",
+    "dosage": "⚠️❗️ Orta-yüksek doz: 8 haftadan uzun süre ara vermeden kullanılmamalı.",
+    "activeCompounds": "Alkilamidler, fenoller"
+  },
+  "🌿 Melisa": {
+    "name": "Melisa",
+    "latin": "Melissa officinalis",
+    "origin": "Güney Avrupa ve Akdeniz.",
+    "benefits": "Stres ve kaygı azaltma, uykuya geçiş, uçuk virüsü (herpes) baskılama, mide spazmı.",
+    "mechanism": "GABA transaminaz enzimini engelleyerek beyindeki sakinleştirici GABA seviyesini artırır.",
+    "history": "İbni Sina, melisanın 'yürek neşesini artırdığını ve kasveti giderdiğini' yazmıştır.",
+    "conditionalEffects": "Kediotu (valerian) veya papatya ile birlikte kullanıldığında uyku üzerindeki etkisi sinerjik olarak artar.",
+    "targetOrgans": "Sinir sistemi, mide, cilt (uçuk).",
+    "sideEffects": "Hipotiroidi hastalarında tiroid ilacının etkisini azaltabilir.",
+    "usage": "Çay veya krem (uçuk için).",
+    "dosage": "✅☘️ Düşük risk: Güvenli ve yumuşak etkili.",
+    "activeCompounds": "Rosmarinik asit, sitral"
+  },
+  "🌼 Papatya": {
+    "name": "Papatya",
+    "latin": "Matricaria chamomilla",
+    "origin": "Batı Asya ve Avrupa.",
+    "benefits": "Rahatlama, sindirim kramplarını çözme, iltihap giderme, bebeklerde kolik.",
+    "mechanism": "Apigenin bileşeni, beyindeki benzodiazepin reseptörlerine bağlanarak hafif sedatif (sakinleştirici) etki yaratır.",
+    "history": "Eski Mısır'da soylu kadınlar cilt bakımı için kullanırdı. Saksonların 9 kutsal bitkisinden biridir.",
+    "conditionalEffects": "Genellikle uyku getirir ancak çok koyu demlenirse veya aşırı tüketilirse bazı bünyelerde 'ters etki' yaparak uykusuzluk ve huzursuzluk verebilir.",
+    "targetOrgans": "Mide, sinir sistemi, cilt.",
+    "sideEffects": "Kan sulandırıcılarla etkileşime girebilir.",
+    "usage": "Çay (demleme).",
+    "dosage": "✅☘️ Düşük risk: Bebeklerde bile güvenle (doz ayarlı) kullanılır.",
+    "activeCompounds": "Apigenin, bisabolol"
+  },
+  "🍯 Ham bal": {
+    "name": "Ham Bal",
+    "latin": "Mel (Ham)",
+    "origin": "Global.",
+    "benefits": "Doğal öksürük şurubu, yara iyileştirme, antimikrobiyal, enerji kaynağı.",
+    "mechanism": "Doğal hidrojen peroksit üretir ve yüksek ozmotik basıncı sayesinde bakterilerin suyunu çekerek onları öldürür.",
+    "history": "Bilinen en eski tatlandırıcı ve ilaçtır. Arkeolojik kazılarda bozulmamış 3000 yıllık bal bulunmuştur.",
+    "conditionalEffects": "45°C'nin üzerinde ısıtılırsa enzimlerini ve antimikrobiyal özelliğini kaybeder, sadece şekere dönüşür. Sıcak içeceklere ılıyınca eklenmelidir.",
+    "targetOrgans": "Boğaz, mide, cilt.",
+    "sideEffects": "1 yaşından küçük bebeklerde 'botulizm' riski nedeniyle kesinlikle kullanılmamalıdır.",
+    "usage": "Doğrudan veya ılık suya.",
+    "dosage": "⚠️🔰 Orta risk: Bebeklere yasak, diyabetliler dikkatli olmalı.",
+    "activeCompounds": "Glukoz oksidaz, flavonoidler"
+  },
+  "🌿 Rezene": {
+    "name": "Rezene",
+    "latin": "Foeniculum vulgare",
+    "origin": "Akdeniz kıyıları.",
+    "benefits": "Gaz ve şişkinlik, anne sütü artırma, bebeklerde kolik, ağız kokusu.",
+    "mechanism": "Uçucu yağları bağırsak kaslarını gevşeterek gazın atılmasını sağlar. Östrojen benzeri etkiyle süt üretimini uyarabilir.",
+    "history": "Orta Çağ'da kiliselerde oruç tutanların midesini bastırmak ve nefeslerini tazelemek için rezene tohumu çiğnenirdi.",
+    "conditionalEffects": "Rahim kaslarını gevşetici etkisi olabilir, bu nedenle gebeliğin erken dönemlerinde çay olarak yüksek dozda önerilmez.",
+    "targetOrgans": "Mide, bağırsaklar, süt bezleri.",
+    "sideEffects": "Hormon duyarlı rahatsızlığı (meme kanseri geçmişi vb.) olanlar dikkatli kullanmalıdır.",
+    "usage": "Tohum çayı veya çiğneme.",
+    "dosage": "⚠️🔰 Orta risk: Hormonal etkisi vardır.",
+    "activeCompounds": "Anethole, fenchone"
+  },
+  "🌿 Hatmi çiçeği": {
+    "name": "Hatmi Çiçeği",
+    "latin": "Althaea officinalis",
+    "origin": "Avrupa ve Batı Asya.",
+    "benefits": "Kuru öksürük, boğaz tahrişi, mide mukozası koruma, sistit.",
+    "mechanism": "Yüksek müsilaj (bitkisel sümük) içeriğiyle boğaz ve mide yüzeyinde koruyucu bir tabaka oluşturarak tahrişi fiziksel olarak engeller.",
+    "history": "Adı Yunanca 'iyileştirmek' (altho) kökünden gelir. Orijinal 'Marshmallow' şekerlemesi bu bitkinin kökünden yapılırdı.",
+    "conditionalEffects": "Müsilajın diğer ilaçların emilimini engelleyebileceği için ilaçlardan 1-2 saat sonra alınması önerilir.",
+    "targetOrgans": "Boğaz, akciğerler, mide, mesane.",
+    "sideEffects": "Çok nadirdir, diyabetlilerde kan şekerini biraz düşürebilir.",
+    "usage": "Soğuk suda bekletilerek (kök) veya sıcak demleme (çiçek/yaprak).",
+    "dosage": "✅☘️ Düşük risk: Oldukça güvenli bir bitkidir.",
+    "activeCompounds": "Müsilaj, pektin"
+  },
+  "🥥 Hindistan cevizi": {
+    "name": "Hindistan Cevizi",
+    "latin": "Cocos nucifera",
+    "origin": "Hint-Pasifik bölgesi.",
+    "benefits": "Hızlı beyin enerjisi (MCT), mantar (candida) karşıtı, cilt nemlendirme.",
+    "mechanism": "İçerdiği Orta Zincirli Yağ Asitleri (MCT), karaciğerde doğrudan ketonlara dönüşerek beyin için anlık yakıt sağlar.",
+    "history": "Sanskritçe'de 'hayatın tüm gereksinimlerini sağlayan ağaç' (kalpa vriksha) olarak adlandırılır.",
+    "conditionalEffects": "Yağı (MCT) enerji verirken, suyu elektrolit dengesini sağlar. Antibakteriyel etkisi için 'Laurik Asit' içeriği önemlidir.",
+    "targetOrgans": "Beyin, bağırsak florası, cilt.",
+    "sideEffects": "Yüksek doymuş yağ içerir, kolesterol sorunu olanlar dengeli tüketmelidir.",
+    "usage": "Yağ, süt veya taze meyve.",
+    "dosage": "⚠️🔰 Orta risk: Kalori ve yağ içeriği yüksektir.",
+    "activeCompounds": "Laurik asit, kaprilik asit"
+  },
+  "🌿 Kırkkilit": {
+    "name": "Kırkkilit (At Kuyruğu)",
+    "latin": "Equisetum arvense",
+    "origin": "Kuzey Yarımküre.",
+    "benefits": "Saç ve tırnak güçlendirme, kemik sağlığı, idrar yolu enfeksiyonları, ödem atma.",
+    "mechanism": "Doğadaki en zengin silika kaynaklarından biridir. Silika, kollajen üretimi ve kalsiyum emilimi için kritiktir.",
+    "history": "Dinozorlar döneminden kalma fosil bitkilerdendir. Antik çağda metal parlatma ve yara iyileştirme için kullanılırdı.",
+    "conditionalEffects": "B1 vitaminini parçalayan bir enzim içerir (tiaminaz). Bu nedenle uzun süreli kullanımlarda B1 takviyesi gerekebilir veya kaynatılarak bu enzim yok edilmelidir.",
+    "targetOrgans": "Böbrekler, kemikler, saç/tırnak.",
+    "sideEffects": "Böbrek yetmezliği olanlarda potasyum dengesini bozabilir.",
+    "usage": "Çay (kaynatılarak).",
+    "dosage": "⚠️❗️ Orta-yüksek doz: Uzun süre (6 haftadan fazla) aralıksız kullanılmamalı.",
+    "activeCompounds": "Silika, potasyum, flavonoidler"
+  }
+};
+
+        const tableData = [
+    ["🌱 Bitki","🪣doz","🔥 Anti-inf.","🧠 Beyin","🛡 Bağışıklık","🫀 Damar","🌬 Sindirim","⚖️ Metab.","⭐Genel"],
+    ["🌱 Sarımsak","💥‼️",4,2,5,5,3,3,4.0],
+    ["🌾 Zerdeçal","⚠️❗️",5,2,4,3,2,2,3.5],
+    ["🌱 Zencefil","⚠️❗️",4,2,3,3,5,3,3.5],
+    ["🧅 Kırmızı soğan","⚠️🔰",4,2,3,5,2,2,3.4],
+    ["🌿 Kekik Yağı","💥‼️",4,1,5,3,3,2,3.3],
+    ["🍇 Çekirdekli üzüm","⚠️🔰",3,3,3,5,2,2,3.3],
+    ["🍇 Zeytin yaprağı çayı","⚠️❗️",3,2,5,4,2,2,3.3],
+    ["🌿 Kekik","⚠️❗️",3,1,5,3,3,2,3.2],
+    ["🍋 Limon kabuğu","⚠️🔰",3,2,4,4,2,2,3.2],
+    ["🫘 Ceviz","⚠️🔰",3,5,2,4,2,2,3.2],
+    ["🌿 Moringa","⚠️❗️",3,3,4,3,3,2,3.0],
+    ["🌿 Isırgan Otu","⚠️❗️",3,2,4,3,3,2,3.0],
+    ["🍏 Yeşil elma kabuğu","⚠️🔰",3,2,3,3,4,3,3.0],
+    ["🫒 Çiğ zeytin","⚠️🔰",3,2,3,4,2,2,3.0],
+    ["🍋 Tarçın","💥‼️",3,2,3,3,2,5,3.0],
+    ["🌿 Biberiye","⚠️❗️",3,5,2,3,2,2,3.1],
+    ["🍫 Ham kakao","⚠️🔰",3,4,2,4,2,2,3.1],
+    ["🌿 Kudret Narı","⚠️❗️",4,1,4,2,3,2,2.8],
+    ["🍄 Reishi mantarı","⚠️❗️",4,2,5,2,2,1,2.8],
+    ["🍃 Matcha","⚠️🔰",2,4,3,3,2,3,2.8],
+    ["🌶️ Acı biber","💥‼️",3,2,2,3,2,5,2.8],
+    ["🌿 Kuşburnu","⚠️🔰",3,1,5,3,2,2,2.9],
+    ["🌱 Spirulina","⚠️❗️",3,3,4,2,2,2,2.7],
+    ["🍀 Karahindiba","⚠️🔰",3,2,3,2,4,2,2.7],
+    ["🌱 Ginseng","💥‼️",2,5,3,2,1,3,2.7],
+    ["🌿 Mate Yaprağı","⚠️❗️",2,4,2,2,2,3,2.5],
+    ["🌱 Chia tohumu","⚠️🔰",2,3,2,3,3,2,2.5],
+    ["🍃 Yeşil çay","⚠️🔰",2,3,2,3,2,3,2.5],
+    ["🌿 Ashwagandha","⚠️❗️",2,4,2,2,1,2,2.3],
+    ["🌿 Sumak","⚠️🔰",3,1,3,3,2,2,2.3],
+    ["🌿 Nane","⚠️🔰",2,2,2,2,4,2,2.3],
+    ["🍃 Maydanoz","⚠️🔰",2,1,3,3,3,2,2.3],
+    ["🌿 Adaçayı","⚠️❗️",2,3,4,2,2,1,2.3],
+    ["🌰 Çam fıstığı / badem","⚠️🔰",2,3,2,3,2,2,2.3],
+    ["🌿 Lion's Mane","⚠️🔰",2,5,2,2,2,1,2.3],
+    ["🌱 Aloe vera","⚠️❗️",2,1,3,1,5,1,2.1],
+    ["🌿 Ekinezya","⚠️❗️",2,1,5,1,2,1,2.0],
+    ["🌿 Melisa","✅☘️",1,4,2,2,2,1,2.0],
+    ["🌼 Papatya","✅☘️",1,2,3,1,4,1,2.0],
+    ["🍯 Ham bal","⚠️🔰",1,1,4,2,2,2,2.0],
+    ["🌿 Rezene","⚠️🔰",2,1,2,2,4,1,2.0],
+    ["🌿 Hatmi çiçeği","✅☘️",1,1,3,1,4,1,1.9],
+    ["🥥 Hindistan cevizi","⚠️🔰",1,3,1,2,2,2,1.9],
+    ["🌿 Kırkkilit (At kuyruğu otu)","⚠️❗️",2,1,2,3,1,1,1.7]
+  ];
+
+        // *** VANILLA JS İŞLEVSELLİK ***
+
+        let selectedPlant = null;
+        let comparisonPlants = [];
+
+        const tableBody = document.getElementById('plant-table-body');
+        const detailContent = document.getElementById('detail-content');
+        const comparisonListContainer = document.getElementById('comparison-list');
+        const comparisonCountSpan = document.getElementById('comparison-count');
+        const analysisResultsDiv = document.getElementById('analysis-results');
+        const analysisPlantCountSpan = document.getElementById('analysis-plant-count');
+
+        /**
+         * Skor rengi CSS sınıfını döndürür.
+         * @param {number} score Puan değeri (1-5).
+         * @returns {string} CSS sınıf adı.
+         */
+        function getScoreColorClass(score) {
+            if (score >= 4) return 'score-green';
+            if (score === 3) return 'score-yellow';
+            return 'score-red';
+        }
+
+        /**
+         * Tabloyu oluşturur ve DOM'a ekler.
+         */
+        function renderTable() {
+            tableBody.innerHTML = ''; 
+
+            tableData.slice(1).forEach((row) => {
+                const plantName = row[0];
+                const tr = document.createElement('tr');
+                tr.dataset.plantName = plantName;
+
+                // Seçili satır vurgusunu uygulama
+                if (selectedPlant === plantName) {
+                    tr.classList.add('selected');
+                } else {
+                    tr.classList.remove('selected');
+                }
+
+                row.forEach((cell, cellIdx) => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+
+                    const isNameCell = cellIdx === 0;
+                    // Skor hücreleri 2. (0-tabanlı) indeksten başlar ve 7. indekste biter.
+                    const isScoreCell = cellIdx >= 2 && cellIdx <= 7; 
+
+                    if (isNameCell) {
+                        td.classList.add('plant-name-cell');
+                        td.onclick = () => handlePlantClick(plantName);
+                    } else if (isScoreCell) {
+                        td.classList.add(getScoreColorClass(cell));
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+
+        /**
+         * Bitki ismine tıklandığında çalışır.
+         * @param {string} plantName Tıklanan bitkinin adı.
+         */
+        function handlePlantClick(plantName) {
+            selectedPlant = selectedPlant === plantName ? null : plantName;
+            
+            renderTable(); 
+            renderDetailConsole();
+        }
+
+        /**
+         * Detay Konsolu içeriğini oluşturur ve DOM'a ekler.
+         */
+        function renderDetailConsole() {
+            if (!selectedPlant) {
+                // Başlangıç/Boş durum
+                detailContent.innerHTML = `
+                    <div style="font-size: 16px; margin-bottom: 10px">► SİSTEM BAŞLATILIYOR... [V 2.1]</div>
+                    <div style="border-bottom: 1px solid #00ff00; margin-bottom: 15px;"></div>
+                    <p>🌿 Bitkisel Veri Terminaline Hoş Geldiniz.</p>
+                    <p>💾 Veri Arşivi taranıyor... **45+ Bitki Kaydı Bulundu.**</p>
+                    <p>📊 Tabloda bir bitkiye tıklayarak derinlemesine **Biyoaktif Raporlara** ulaşabilirsiniz.</p>
+                    <p>⚠️ **UYARI:** Bu terminaldeki tüm veriler bilimsel ve geleneksel özetlerdir. Tıbbi teşhis veya tedavi amaçlı kullanılmamalıdır.</p>
+                    <div style="margin-top: 15px; border-top: 1px solid #00ff00; padding-top: 10px;"></div>
+                    <div style="margin-top: 10px">► Detaylı Analiz için bir **🌱 Bitkiye** tıklayın...</div>
+                `;
+            } else {
+                const plant = PLANT_DATA[selectedPlant];
+                const isInComparison = comparisonPlants.includes(selectedPlant);
+                const buttonText = isInComparison ? '✓ LABORATUVARDA' : '➕ LABORATUVARA EKLE';
+                const buttonClass = isInComparison ? 'in-comparison' : '';
+
+                detailContent.innerHTML = `
+                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #00ff00;">
+                        ${selectedPlant.toUpperCase()}
+                    </div>
+                    <div style="border-bottom: 2px solid #00ff00; margin-bottom: 15px;"></div>
+                    
+                    ${plant ? `
+                        <p><strong>► Bilimsel Adı:</strong> ${plant.latin}</p>
+                        <p><strong>► Kaynak Kaydı:</strong> ${plant.origin}</p>
+                        <p><strong>► ✨ Popüler Kullanım Alanı:</strong> ${plant.popularUse}</p>
+                        <p><strong>► Genel Faydası:</strong> ${plant.benefits}</p>
+                        <p><strong>► 🧪 Ana Biyoaktif Bileşen:</strong> ${plant.activeCompounds}</p>
+                        <p><strong>► Kayıtlara Geçen Yan Etkiler:</strong> ${plant.sideEffects}</p>
+                        <p><strong>► Uygulama Şekli:</strong> ${plant.usage}</p>
+                        <p><strong>► Dozaj Uyarısı:</strong> ${plant.dosage}</p>
+                    ` : '<p>Seçili bitki için detaylı Biyoaktif Rapor bilgisi bulunamadı.</p>'}
+
+                    <div style="margin-top: 20px; border-top: 2px solid #00ff00; padding-top: 15px;">
+                        <button 
+                            id="toggle-comparison-btn"
+                            class="${buttonClass}"
+                            onclick="toggleComparisonPlant('${selectedPlant}')"
+                        >
+                            ${buttonText}
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Karşılaştırma listesine bitki ekler veya çıkarır.
+         * @param {string} plantName İşlem yapılacak bitkinin adı.
+         */
+        function toggleComparisonPlant(plantName) {
+            const index = comparisonPlants.indexOf(plantName);
+
+            if (index > -1) {
+                // Çıkar
+                comparisonPlants.splice(index, 1);
+            } else if (comparisonPlants.length < 5) {
+                // Ekle (maksimum 5 kontrolü)
+                comparisonPlants.push(plantName);
+            }
+            
+            // UI Güncelleme
+            renderDetailConsole();
+            renderComparisonAnalyzer();
+        }
+
+        /**
+         * Karşılaştırma Analizörü içeriğini oluşturur ve DOM'a ekler.
+         */
+        function renderComparisonAnalyzer() {
+            comparisonListContainer.innerHTML = ''; 
+
+            comparisonPlants.forEach((plant) => {
+                const tag = document.createElement('div');
+                tag.classList.add('comparison-plant-tag');
+                tag.innerHTML = `
+                    <span>${plant}</span>
+                    <button onclick="toggleComparisonPlant('${plant}')">✕</button>
+                `;
+                comparisonListContainer.appendChild(tag);
+            });
+
+            comparisonCountSpan.textContent = comparisonPlants.length;
+            analysisPlantCountSpan.textContent = comparisonPlants.length;
+
+            if (comparisonPlants.length > 0) {
+                analysisResultsDiv.style.display = 'block';
+            } else {
+                analysisResultsDiv.style.display = 'none';
+            }
+        }
+
+        // Sayfa yüklendiğinde ilk render'ı yap
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            renderDetailConsole();
+            renderComparisonAnalyzer();
+        });
+    </script>
+
+</body>
+</html>
