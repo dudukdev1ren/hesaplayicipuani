@@ -1,390 +1,3980 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kümülatif Veri Takip Uygulaması</title>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', Arial, sans-serif; padding: 10px; background-color: #f4f7f9; }
-.container { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-.data-section { background-color: white; border: 1px solid #ddd; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 100%; max-width: 400px; }
-h1 { color: #2c3e50; margin-bottom: 20px; text-align: center; font-size: 24px; }
-h3 { color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; font-size: 18px; }
-.button-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-.button-grid button { padding: 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; transition: all 0.2s; font-weight: bold; background-color: #ecf0f1; }
-.button-grid button:hover { background-color: #bdc3c7; transform: translateY(-2px); }
-.button-grid button:active { transform: translateY(0); }
-#save-button { margin-top: 20px; padding: 12px 25px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 17px; transition: background-color 0.2s; box-shadow: 0 4px #27ae60; }
-#save-button:active { box-shadow: 0 1px #27ae60; transform: translateY(3px); }
-#chart-button { padding: 12px 25px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 17px; transition: background-color 0.2s; box-shadow: 0 4px #2980b9; margin-bottom: 10px; }
-#chart-button:active { box-shadow: 0 1px #2980b9; transform: translateY(3px); }
-.toggle-button { padding: 10px 20px; background-color: #9b59b6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; width: 100%; transition: background-color 0.2s; }
-.toggle-button:hover { background-color: #8e44ad; }
-.toggle-button:active { transform: translateY(2px); }
-.chart-container { width: 100%; background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; overflow-x: auto; }
-.chart-wrapper { min-width: 100%; position: relative; }
-#current-cumulative-value { font-size: 20px; font-weight: bold; margin-top: 15px; text-align: center; color: #e74c3c; padding: 10px; border: 2px dashed #e74c3c; border-radius: 8px; }
-input[type="date"] { padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; width: 100%; margin-bottom: 15px; }
-#selected-value { font-size: 20px; color: #2980b9; display: block; margin-bottom: 15px; }
-.analysis-container { width: 100%; background-color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: 20px; }
-.trend-box { background-color: #ecf0f1; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #3498db; font-size: 14px; }
-.trend-up { border-left-color: #2ecc71; color: #27ae60; }
-.trend-down { border-left-color: #e74c3c; color: #c0392b; }
-.chart-title { text-align: center; color: #2c3e50; margin-bottom: 15px; font-size: 16px; }
-@media (max-width: 768px) {
-.container { flex-direction: column; }
-.data-section { max-width: none; }
-h1 { font-size: 20px; }
-.button-grid button { padding: 12px; font-size: 14px; }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Bitkisel Veri Terminali</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in;
+        }
+        .sticky-header {
+            position: sticky;
+            top: 100px;
+            z-index: 30;
+        }
+        .sticky-column {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 pb-24">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 shadow-lg sticky top-0 z-40">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-2">🌿 Bitkisel Veri Terminali</h1>
+        <p class="text-center text-green-100 text-sm md:text-base">Modern Fitoterapötik Analiz Platformu</p>
+    </div>
 
-<h1>📅 Kümülatif Veri Kaydedici</h1>
+    <!-- Bilgi Kutusu -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="bg-white rounded-xl shadow-md p-4 md:p-6 border-l-4 border-green-500">
+            <div class="flex items-start gap-3">
+                <div class="text-2xl">💡</div>
+                <div class="flex-1 text-sm md:text-base">
+                    <p class="font-semibold text-gray-800 mb-2">Nasıl Kullanılır?</p>
+                    <ul class="space-y-1 text-gray-600">
+                        <li>• Tabloda bir satıra tıklayarak detaylı bilgi görün</li>
+                        <li>• Sütun başlıklarına tıklayarak o sütunu vurgulayın</li>
+                        <li>• Sağ alttaki butona tıklayarak karşılaştırma yapın (max 5 bitki)</li>
+                        <li>• Skorlar: 1 (Düşük) - 5 (Yüksek) arası etki gücünü gösterir</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="container">
-<div class="data-section">
-<h3>Veri Girişi</h3>
-<label for="date-picker" style="font-weight: bold;">Tarih Seçin:</label>
-<input type="date" id="date-picker" required>
-<span style="display: block; font-weight: bold;">Seçilen Değer:</span> 
-<strong id="selected-value">0.00</strong>
-<div class="button-grid" id="button-container"></div>
-<button id="save-button" onclick="saveData()">💾 Seçilen Değeri Kaydet</button>
-<p id="save-status" style="color: #27ae60; font-weight: bold; text-align: center; margin-top: 10px;"></p>
-</div>
+    <!-- Tablo -->
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+            <div class="overflow-x-auto">
+                <table id="plantTable" class="w-full text-base md:text-lg">
+                    <thead class="bg-gradient-to-r from-green-700 to-emerald-700 text-white sticky-header">
+                        <tr id="tableHeaders"></tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-<div class="data-section">
-<h3>Grafik & Analiz</h3>
-<button id="chart-button" onclick="generateChart()">📈 Grafiği Şimdi Güncelle</button>
-<button class="toggle-button" onclick="toggleChartMode()">📊 Tüm Grafik / Yakın Grafik</button>
-<div id="current-cumulative-value"></div>
-</div>
-</div>
+    <!-- Detay Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4 animate-fadeIn">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 flex justify-between items-center z-10">
+                <div id="detailHeader"></div>
+                <button onclick="closeDetailModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="detailContent" class="p-6 space-y-6 text-base md:text-lg"></div>
+        </div>
+    </div>
 
-<div class="chart-container">
-<h3 class="chart-title">Grafik 1: Kümülatif Toplam</h3>
-<div class="chart-wrapper">
-<canvas id="cumulativeChart"></canvas>
-</div>
-</div>
+    <!-- Karşılaştırma Modal -->
+    <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 flex justify-between items-center z-10">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold">📊 Karşılaştırmalı Analiz</h2>
+                    <p class="text-blue-100" id="comparisonCount">0 bitki seçildi</p>
+                </div>
+                <button onclick="closeComparisonModal()" class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="comparisonContent" class="p-6 space-y-6 text-base md:text-lg"></div>
+        </div>
+    </div>
 
-<div class="chart-container">
-<h3 class="chart-title">Grafik 2: Günlük Değerler</h3>
-<div class="chart-wrapper">
-<canvas id="dailyChart"></canvas>
-</div>
-</div>
+    <!-- Karşılaştırma Butonu -->
+    <button onclick="openComparisonModal()" id="comparisonButton" class="fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white font-bold text-2xl transition-all duration-300 hover:scale-110 z-40 bg-gradient-to-r from-green-600 to-emerald-600">
+        <div class="relative">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            <span id="comparisonBadge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+        </div>
+    </button>
 
-<div class="chart-container">
-<h3 class="chart-title">Grafik 3: Kümülatif Toplam (+1 Bonus)</h3>
-<div class="chart-wrapper">
-<canvas id="cumulativePlusOneChart"></canvas>
-</div>
-</div>
+    <script>
+        // VERİ TABANI
+        const PLANT_DATABASE = {
+  "a1": {
+    "table": ["🌱 Sarımsak","🔴",3,4,2,5,5,3,3,4.0,"a1","a5,a10,b3,b2"],
+    "fullName": "Sarımsak",
+    "latinName": "Allium sativum",
+    "category": "Bitki - Yumru",
+    "origin": "Orta Asya",
+    "benefits": ["Damar sağlığı desteği","Bağışıklık desteği","Antimikrobiyal etkinlik","Kolesterol düşürme eğilimi"],
+    "mechanism": "Allisin ve diğer sülfür bileşikleri ile antimikrobiyal, antitrombotik ve anti-inflamatuar etki sağlar.",
+    "historicalUse": "Antik uygarlıklarda enfeksiyon, güç artırma ve solunum problemlerinde kullanılmıştır.",
+    "conditionalEffects": "Kan sulandırıcı (antikoagülan) etkiyi artırabilir; ameliyat öncesi/damar içi tedavilerde dikkat gerekir.",
+    "targetOrgans": ["Damar sistemi","Bağışıklık sistemi","Sindirim"],
+    "sideEffects": ["Ağız kokusu","Mide rahatsızlığı","Artmış kanama riski (yüksek doz)"],
+    "usage": "Günlük 1–2 diş taze veya işlenmiş (pişmiş/ezilmiş) form.",
+    "dosageDetail": "Gıda düzeyinde genelde güvenli; takviye şeklinde yüksek dozlarda doktor kontrolü önerilir.",
+    "activeCompounds": ["Allisin","Sülfür bileşikleri","Saponinler"],
+    "preparationWarnings": "Ezildikten sonra 5–10 dakika bekletmek alicin oluşumunu artırır.",
+    "avoidWith": {"codes": ["a5","a10","b3","b2"], "reason": "Birlikte alındığında antikoagülan/antiplatelet etkiyi artırma potansiyeli."},
+    "timing": "Öğünlerle birlikte alınması sindirimi kolaylaştırır.",
+    "longTermSafety": "Günlük gıda düzeyinde uzun süre kullanılabilir; yüksek doz ve ilaç kombinasyonlarında takip gerekir."
+  },
 
-<div class="chart-container">
-<h3 class="chart-title">Grafik 4: Günlük Değerler (+1 Bonus)</h3>
-<div class="chart-wrapper">
-<canvas id="dailyPlusOneChart"></canvas>
-</div>
-</div>
+  "b2": {
+    "table": ["🌾 Zerdeçal","🟠",3,5,2,4,3,2,2,3.5,"b2","a1,b1,a5"],
+    "fullName": "Zerdeçal (Kurkumin içeren)",
+    "latinName": "Curcuma longa",
+    "category": "Bitki - Rizom / Kök",
+    "origin": "Güney Asya (Hindistan)",
+    "benefits": ["Güçlü anti-inflamatuar etkiler","Antioksidan","Hafif metabolizma desteği"],
+    "mechanism": "Kurkumin, NF-κB ve diğer inflamatuar yolakları modüle eder; antioksidan etki gösterir.",
+    "historicalUse": "Hint geleneksel tıbbı (Ayurveda) ve Güney Asya mutfağında yüzyıllardır kullanılmıştır.",
+    "conditionalEffects": "Yüksek dozlarda kanama riskini biraz artırabilir; saf kurkumin ekstraktları ilaç etkileşimlerine dikkat gerektirir.",
+    "targetOrgans": ["Eklemler","Bağışıklık","Karaciğer (metabolik etkiler)"],
+    "sideEffects": ["Mide rahatsızlığı (yüksek doz)","Kanama eğiliminde artış"],
+    "usage": "Baharat ya da düşük dozlu özüt; emilimini artırmak için piperin (karabiber) ile kombinlenir.",
+    "dosageDetail": "Gıda düzeyinde güvenli; standardize ekstraktlarda üretici dozuna uyulmalı.",
+    "activeCompounds": ["Kurkumin","Diğer kurkuminoidler"],
+    "preparationWarnings": "Yüksek doz ekstraktları ilaçlarla etkileşebilir; hamilelikte dikkat.",
+    "avoidWith": {"codes": ["a1","b1","a5"], "reason": "Kanama riski artırıcı etkileşimler ve benzer farmakolojik profil."},
+    "timing": "Yemeklerle birlikte emilimi daha iyi olur.",
+    "longTermSafety": "Gıda düzeyinde güvenli; yüksek doz ekstraktlarında doktor takibi önerilir."
+  },
 
-<div class="analysis-container">
-<h3 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">📊 Trend Analizi</h3>
-<div id="trend-analysis"></div>
-</div>
+  "b1": {
+    "table": ["🌱 Zencefil","🟠",4,4,2,3,3,5,3,3.5,"b1","b2,a5"],
+    "fullName": "Zencefil",
+    "latinName": "Zingiber officinale",
+    "category": "Bitki - Rizom",
+    "origin": "Güneydoğu Asya",
+    "benefits": ["Bulantı azaltma","Anti-inflamatuar","Sindirim desteği","Dolaşım desteği"],
+    "mechanism": "Gingeroller ve shogaoller aracılığıyla anti-inflamatuar ve gastrointestinal motilite düzenleyici etki sağlar.",
+    "historicalUse": "Tarihi olarak mide bulantısı ve sindirim sorunlarında kullanılmıştır.",
+    "conditionalEffects": "Yüksek dozlarda antikoagülan etkiyle etkileşim potansiyeli olabilir.",
+    "targetOrgans": ["Sindirim sistemi","Damar sistemi"],
+    "sideEffects": ["Mide yanması","Kanama riskinde artış (yüksek doz)"],
+    "usage": "Çay, taze kök, kapsül veya toz formu.",
+    "dosageDetail": "Günlük 1–3 g taze kök veya üretici önerisi.",
+    "activeCompounds": ["Gingeroller","Shogaoller"],
+    "preparationWarnings": "Yüksek doz ve aynı anda antikoagülan kullanımında doktorla kontrol.",
+    "avoidWith": {"codes": ["b2","a5"], "reason": "Kan sulandırıcı etkiler toplanabilir."},
+    "timing": "Gün içinde, ihtiyaca göre (ör. bulantıda hemen).",
+    "longTermSafety": "Kısa süreli kullanım güvenlidir; kronik çok yüksek dozlarda dikkat."
+  },
 
-<script>
-const firebaseConfig = {
-apiKey: "AIzaSyAIGzwmEB9F7K7KQzsEU5etVWejZ3oSluc",
-authDomain: "paralayici.firebaseapp.com",
-projectId: "paralayici",
-storageBucket: "paralayici.firebasestorage.app",
-messagingSenderId: "980843550614",
-appId: "1:980843550614:web:93dd5bda4ddc377b20efb7"
+  "a2": {
+    "table": ["🧅 Kırmızı soğan","🟡",5,4,2,3,5,2,2,3.4,"a2","0"],
+    "fullName": "Kırmızı Soğan",
+    "latinName": "Allium cepa",
+    "category": "Sebze / Bitki",
+    "origin": "Orta Doğu / Orta Asya",
+    "benefits": ["Antioksidan","Anti-inflamatuar","Damar sağlığı"],
+    "mechanism": "Quercetin ve kükürt bileşikleri antioksidan ve anti-inflamatuar etki sağlar.",
+    "historicalUse": "Geleneksel tıpta birçok kültürde kullanılmıştır.",
+    "conditionalEffects": "Çiğ yüksek miktarda tüketim bazı kişilerde irritasyona neden olabilir.",
+    "targetOrgans": ["Damar sistemi","Sindirim"],
+    "sideEffects": ["Gaz","Hafif mide tahrişi"],
+    "usage": "Gıdalarda çiğ ya da pişmiş.",
+    "dosageDetail": "Günlük normal diyette güvenli.",
+    "activeCompounds": ["Quercetin","Kükürt bileşikleri"],
+    "preparationWarnings": "Çiğ tüketim bazı hassas kişilerde rahatsızlık verebilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle birlikte alınabilir.",
+    "longTermSafety": "Günlük beslenme düzeyinde güvenli."
+  },
+
+  "a4": {
+    "table": ["🌿 Kekik Yağı","🔴",1,4,1,5,3,3,2,3.3,"a4","0"],
+    "fullName": "Kekik Yağı (Uçucu Yağ)",
+    "latinName": "Thymus vulgaris (oil)",
+    "category": "Esansiyel yağ",
+    "origin": "Akdeniz",
+    "benefits": ["Güçlü antimikrobiyal","Antifungal","Bağışıklık destekleyici (lokal)"],
+    "mechanism": "Karvakrol ve timol gibi fenolik bileşikler mikroorganizmaların membranını hedefler.",
+    "historicalUse": "Tarihte yara dezenfeksiyonu ve tütsü amaçlı kullanılmıştır.",
+    "conditionalEffects": "Dahilen yüksek doz toksik ve mukozalarda tahriş edicidir.",
+    "targetOrgans": ["Cilt","Solunum (lokal inhalasyon)"],
+    "sideEffects": ["Deri tahrişi","Alerjik reaksiyon riski"],
+    "usage": "Harici kullanım veya çok seyreltilmiş dahili kullanım (uzman gözetimiyle).",
+    "dosageDetail": "Haricen birkaç damla; dahili kullanım için uzman danışmanlığı zorunlu.",
+    "activeCompounds": ["Karvakrol","Timol"],
+    "preparationWarnings": "Seyreltilmeden cilde uygulanmamalıdır.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Günlük lokal kullanım kısa süreli olabilir; sürekli kullanım önerilmez.",
+    "longTermSafety": "Uzun süreli dahili kullanım önerilmez; haricen dikkatli kullanılmalı."
+  },
+
+  "f2": {
+    "table": ["🍇 Çekirdekli üzüm","🟡",3,3,3,3,5,2,2,3.3,"f2","0"],
+    "fullName": "Üzüm Çekirdeği (Ekstrakt)",
+    "latinName": "Vitis vinifera (seed extract)",
+    "category": "Meyve çekirdeği / Ekstrakt",
+    "origin": "Global (üzüm yetiştirilen bölgeler)",
+    "benefits": ["Antioksidan güçlü","Damar sağlığı desteği","Kollajen koruma"],
+    "mechanism": "Proantosiyanidin (OPC) gibi flavonoidler antioksidan ve damar koruyucu etki sağlar.",
+    "historicalUse": "Modern fitoterapide antioksidan kaynak olarak popülerdir.",
+    "conditionalEffects": "Antikoagülan ilaçlarla dikkat gerekebilir (yüksek dozlarda pıhtılaşma üzerinde etkiler bildirilmiş).",
+    "targetOrgans": ["Damar sistemi","Cilt"],
+    "sideEffects": ["Nadir alerji","Mide rahatsızlığı (yüksek doz)"],
+    "usage": "Ekstrakt kapsül veya toz formu; çerez olarak çekirdek nadiren tüketilir.",
+    "dosageDetail": "Üretici tavsiyesine göre; gıda düzeyinde genelde güvenli.",
+    "activeCompounds": ["Proantosiyanidinler (OPC)","Flavonoidler"],
+    "preparationWarnings": "Ekstrakt formlar yüksek doz sağlayabilir; doz kontrolü önemli.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gün içinde, öğünlerle alınabilir.",
+    "longTermSafety": "Gıda düzeyinde uzun dönem kullanım güvenli kabul edilir."
+  },
+
+  "a5": {
+    "table": ["🍇 Zeytin yaprağı çayı","🟠",3,3,2,5,4,2,2,3.3,"a5","a1,b3,b1,b2"],
+    "fullName": "Zeytin Yaprağı",
+    "latinName": "Olea europaea (leaf)",
+    "category": "Bitki - Yaprak",
+    "origin": "Akdeniz",
+    "benefits": ["Antioksidan","Antiviral/antimikrobiyal","Tansiyon desteği"],
+    "mechanism": "Oleuropein ve fenolik bileşikler antioksidan ve vasküler etki gösterir.",
+    "historicalUse": "Geleneksel tıpta çeşitli enfeksiyon ve ateşli durumlard a kullanılmıştır.",
+    "conditionalEffects": "Kan sulandırıcı veya antihipertansif ilaçlarla etkileşim potansiyeli.",
+    "targetOrgans": ["Damar sistemi","Bağışıklık"],
+    "sideEffects": ["Mide hassasiyeti (nadir)","İlaç etkileşim riski"],
+    "usage": "Demleme çay veya standardize ekstrakt.",
+    "dosageDetail": "Günlük çay formu genelde güvenli; yüksek doz ekstraktlarda dikkat.",
+    "activeCompounds": ["Oleuropein","Fenolikler"],
+    "preparationWarnings": "Ekstrakt ürünlerde bileşen standardizasyonu kontrol edilmeli.",
+    "avoidWith": {"codes": ["a1","b3","b1","b2"], "reason": "Antikoagülan/antiplatelet etkilerin toplanması ve farmakodinamik etkileşim riski."},
+    "timing": "Gün içinde alınabilir; tansiyon düşürücü etkisi olan kişilerde takip gerekebilir.",
+    "longTermSafety": "Gıda düzeyinde kısa ve orta dönem güvenli; ilaçlarla kombinasyonda takip."
+  },
+
+  "a3": {
+    "table": ["🌿 Kekik","🟠",4,3,1,5,3,3,2,3.2,"a3","0"],
+    "fullName": "Kekik",
+    "latinName": "Thymus vulgaris",
+    "category": "Bitki - Ot",
+    "origin": "Akdeniz bölgesi",
+    "benefits": ["Antimikrobiyal","Solunum desteği","Sindirim desteği"],
+    "mechanism": "Timol ve karvakrol içerikleri sayesinde mikrobiyal membranları hedef alır; antiinflamatuar etki sağlar.",
+    "historicalUse": "Yiyecek koruyucu ve geleneksel tıpta solunum yolu rahatsızlıklarında kullanılmıştır.",
+    "conditionalEffects": "Yüksek doz uçucu yağ formu tahriş edici olabilir.",
+    "targetOrgans": ["Solunum yolları","Sindirim"],
+    "sideEffects": ["Mukoza tahrişi (yoğun yağ)"],
+    "usage": "Çay, baharat, hafif uçucu yağ kullanımları.",
+    "dosageDetail": "Çay: günde 1–2 fincan makul; yağ seyreltilerek kullanılmalı.",
+    "activeCompounds": ["Timol","Karvakrol"],
+    "preparationWarnings": "Uçucu yağlar konsantre olduğundan dahilen uzman onayı gerekebilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemeklerle veya sindirim şikayetlerinde çay olarak.",
+    "longTermSafety": "Gıda düzeyinde güvenli; yüksek doz uçucu yağlarda süreklilik önerilmez."
+  },
+
+  "a39": {
+    "table": ["🍋 Limon kabuğu","🟡",5,3,2,4,4,2,2,3.2,"a39","0"],
+    "fullName": "Limon Kabuğu",
+    "latinName": "Citrus limon (peel)",
+    "category": "Meyve Kabuğu / Aromatik",
+    "origin": "Asya kökenli, Akdeniz ve dünya çapında yetiştirildi",
+    "benefits": ["Antioksidan","Sindirim desteği","C vitamini türevleriyle bağışıklık desteği"],
+    "mechanism": "Flavonoidler ve esansiyel yağlar antioksidan ve sindirimi destekleyici etki verir.",
+    "historicalUse": "Geleneksel olarak sindirim sorunları ve yemeklere aroma vermek için kullanılmıştır.",
+    "conditionalEffects": "Aşırı esansiyel yağ alımı hassasiyete neden olabilir.",
+    "targetOrgans": ["Sindirim","Bağışıklık"],
+    "sideEffects": ["Nadir alerjik reaksiyon"],
+    "usage": "Rendelenmiş kabuk, çay veya aroma olarak.",
+    "dosageDetail": "Gıda düzeyinde günlük kullanımlar genelde güvenli.",
+    "activeCompounds": ["Limonen","Flavonoidler","Vitamin prekursörleri"],
+    "preparationWarnings": "Meyve kabukları pestisit içerebilir; uygun yıkama/organik tercih edin.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah çaylarına veya yemeklere eklenebilir.",
+    "longTermSafety": "Gıda düzeyinde uzun dönem güvenli."
+  },
+
+  "e2": {
+    "table": ["🫘 Ceviz","🟡",5,3,5,2,4,2,2,3.2,"e2","0"],
+    "fullName": "Ceviz",
+    "latinName": "Juglans regia",
+    "category": "Kuruyemiş",
+    "origin": "Orta Asya ve Hazar havzası",
+    "benefits": ["Omega-3 desteği","Beyin sağlığı","Antioksidan"],
+    "mechanism": "Omega-3 yağ asitleri ve polifenoller inflamasyonu azaltır ve nöroproteksiyona katkıda bulunur.",
+    "historicalUse": "Besin ve yağ kaynağı olarak uzun süredir kullanılmıştır.",
+    "conditionalEffects": "Kuru yemiş alerjisi olanlar için kontraendikedir.",
+    "targetOrgans": ["Beyin","Damar sistemi"],
+    "sideEffects": ["Alerji (ciddi)"],
+    "usage": "Günlük 1 avuç (gıda düzeyinde).",
+    "dosageDetail": "Günde 20–30 g arası faydalı kabul edilir.",
+    "activeCompounds": ["Omega-3 (ALA)","Polifenoller"],
+    "preparationWarnings": "Aşırı tüketim kalori alımını artırır.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerde ara öğün olarak.",
+    "longTermSafety": "Gıda düzeyinde güvenli, alerjisi olanlar hariç."
+  },
+
+  "a6": {
+    "table": ["🌿 Biberiye","🟠",4,3,1,5,3,2,2,3.1,"a6","0"],
+    "fullName": "Biberiye",
+    "latinName": "Salvia rosmarinus (syn. Rosmarinus officinalis)",
+    "category": "Bitki - Ot",
+    "origin": "Akdeniz",
+    "benefits": ["Beyin fonksiyon desteği","Antioksidan","Sindirim destek"],
+    "mechanism": "Karnosik asit ve rosmarinik asit gibi fenolik bileşikler antioksidan ve nöroprotektif etki sağlar.",
+    "historicalUse": "Hatıra ve hafıza ile ilişkilendirilmiş; pişirme ve şifalı bitki olarak kullanılmıştır.",
+    "conditionalEffects": "Yüksek doz uçucu yağlarda tahriş riski.",
+    "targetOrgans": ["Beyin","Sindirim"],
+    "sideEffects": ["Nadir alerji","Yüksek yağ konsantrasyonunda irritasyon"],
+    "usage": "Baharat, çay, düşük konsantrasyonlu yağlar.",
+    "dosageDetail": "Günlük çay formu genelde güvenli.",
+    "activeCompounds": ["Karnosik asit","Rosmarinik asit"],
+    "preparationWarnings": "Hamilelikte yüksek doz uçucu yağ kullanımından kaçınılmalı.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle uyumlu.",
+    "longTermSafety": "Gıda düzeyinde güvenli."
+  },
+
+  "e4": {
+    "table": ["🍫 Ham kakao","🟡",4,3,4,2,4,2,2,3.1,"e4","0"],
+    "fullName": "Ham Kakao (Kakao Nibs)",
+    "latinName": "Theobroma cacao",
+    "category": "Tohum / Kuruyemiş",
+    "origin": "Orta ve Güney Amerika",
+    "benefits": ["Antioksidan","Bilişsel uyanıklık","Duygu durum desteği (hafif)"],
+    "mechanism": "Flavanoller ve küçük miktarda kafein tepkime vererek vasküler ve nörolojik fayda sağlar.",
+    "historicalUse": "Geleneksel olarak ritüellerde ve beslenmede kullanılmıştır.",
+    "conditionalEffects": "Kafein benzeri uyarıcı etki bazı kişilerde uykusuzluk yapabilir.",
+    "targetOrgans": ["Beyin","Damar sistemi"],
+    "sideEffects": ["Uyarıcı etki (yüksek miktar)","Alerji (nadir)"],
+    "usage": "Kakao nibs olarak atıştırmalık veya smoothie içinde.",
+    "dosageDetail": "Günlük küçük porsiyonlar (10–20 g) makul.",
+    "activeCompounds": ["Flavanoller","Teobromin","Az miktarda kafein"],
+    "preparationWarnings": "Aşırı tüketimde uyku düzenini bozabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah/öğleden sonra tercih edilebilir.",
+    "longTermSafety": "Gıda düzeyinde genelde güvenli."
+  },
+
+  "a8": {
+    "table": ["🌿 Moringa","🟠",3,3,3,4,3,3,2,3.0,"a8","0"],
+    "fullName": "Moringa",
+    "latinName": "Moringa oleifera",
+    "category": "Bitki - Yaprak/Kök (ağaç)",
+    "origin": "Hindistan & tropik bölge kökeni",
+    "benefits": ["Besin yoğunluğu (vitamin/mineral)","Antioksidan","Anti-inflamatuar"],
+    "mechanism": "Zengin polifenol, vitamin ve mineral içeriği ile metabolik ve antioksidan destek sağlar.",
+    "historicalUse": "Geleneksel tıpta besin takviyesi ve şifa kaynağı.",
+    "conditionalEffects": "Ham kök veya çok yüksek dozlarda toksisite raporlarına dikkat.",
+    "targetOrgans": ["Metabolizma","Bağışıklık"],
+    "sideEffects": ["Nadir sindirim rahatsızlığı","Yüksek dozda riskler"],
+    "usage": "Yaprak tozu, çay veya taze yaprak.",
+    "dosageDetail": "Üretici önerisine göre (çay/toz formu).",
+    "activeCompounds": ["Flavonoidler","Vitaminler","Mineraller"],
+    "preparationWarnings": "Kök ve tohum formları farklı etki gösterir; kök dikkatle kullanılmalı.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gün içinde öğünlerle alınabilir.",
+    "longTermSafety": "Gıda düzeyinde yaprak formları genelde güvenli."
+  },
+
+  "a7": {
+    "table": ["🌿 Isırgan Otu","🟠",4,3,2,4,3,3,2,3.0,"a7","b5"],
+    "fullName": "Isırgan Otu",
+    "latinName": "Urtica dioica",
+    "category": "Bitki - Yaprak",
+    "origin": "Kuzey yarımküre",
+    "benefits": ["İdrar yolu sağlığı","İltihap azaltma","Vitamin/mineral desteği"],
+    "mechanism": "Flavonoidler ve mineraller üzerinden antiinflamatuar ve diüretik etkiler.",
+    "historicalUse": "Halk hekimliğinde eklem ağrıları ve idrar yolu sorunları için kullanılmıştır.",
+    "conditionalEffects": "Meyan kökü (b5) ile elektrolit/damar etkileri yönünden dikkat gerekebilir.",
+    "targetOrgans": ["Böbrekler","Eklem sistemi"],
+    "sideEffects": ["Deri temasında irritasyon (taze form)","İdrar artışı"],
+    "usage": "Çay veya haşlama; kurutulmuş yaprak formları.",
+    "dosageDetail": "Günlük çay formu genelde güvenli.",
+    "activeCompounds": ["Flavonoidler","Mineraller"],
+    "preparationWarnings": "Taze bitki ile çalışırken iğneleyici tüyler giderilmelidir.",
+    "avoidWith": {"codes": ["b5"], "reason": "Meyan kökü ile elektrolit/kan basıncı etkileri toplanabilir."},
+    "timing": "Sabah veya öğünlerle birlikte.",
+    "longTermSafety": "Kısa-orta dönemde güvenli; kronik yüksek dozlarda izleme gerekebilir."
+  },
+
+  "a40": {
+    "table": ["🍏 Yeşil elma kabuğu","🟡",5,3,2,3,3,4,3,3.0,"a40","0"],
+    "fullName": "Yeşil Elma Kabuğu",
+    "latinName": "Malus domestica (peel)",
+    "category": "Meyve kabuğu",
+    "origin": "Evrensel olarak yetiştirilen elma türleri",
+    "benefits": ["Lif ve polifenol kaynağı","Sindirim desteği","Antioksidan"],
+    "mechanism": "Pektin ve flavonoidler sindirim ve metabolik yarar sağlar.",
+    "historicalUse": "Geleneksel beslenmede yaygın.",
+    "conditionalEffects": "Pestisit kalıntılarına dikkat; organik tercih önerilir.",
+    "targetOrgans": ["Sindirim","Metabolizma"],
+    "sideEffects": ["Nadir alerji"],
+    "usage": "Kabuklu olarak taze tüketim veya rendelenmiş form.",
+    "dosageDetail": "Günlük 1 elma kabuğu gıda düzeyinde güvenli.",
+    "activeCompounds": ["Pektin","Flavonoidler"],
+    "preparationWarnings": "İyi yıkanmalıdır.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah veya öğünlerle.",
+    "longTermSafety": "Günlük gıda düzeyinde güvenli."
+  },
+
+  "f1": {
+    "table": ["🫒 Çiğ zeytin","🟡",5,3,2,3,4,2,2,3.0,"f1","0"],
+    "fullName": "Çiğ Zeytin (Olive fruit, raw)",
+    "latinName": "Olea europaea (fruit)",
+    "category": "Meyve",
+    "origin": "Akdeniz",
+    "benefits": ["Sağlıklı yağlar","Antioksidan","Damar sağlığı"],
+    "mechanism": "Oleik asit ve fenolik bileşikler inflamasyonu azaltır ve lipid profiline fayda sağlar.",
+    "historicalUse": "Akdeniz kültürlerinde temel besin ve tıbbi kullanım.",
+    "conditionalEffects": "Aşırı tuzlu salamura zeytinlerde sodyum alımına dikkat.",
+    "targetOrgans": ["Damar sistemi","Sindirim"],
+    "sideEffects": ["Yüksek tuz içeren işlenmiş formlarda sodyum yükü"],
+    "usage": "Günlük birkaç adet çiğ (işlenmemiş) zeytin faydalıdır.",
+    "dosageDetail": "Günde birkaç tane gıda düzeyinde önerilir.",
+    "activeCompounds": ["Oleik asit","Fenolikler"],
+    "preparationWarnings": "Çiğ ve işlenmemiş zeytinler acı olabilir; doğru olgunlaştırma gerekir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Ara öğün veya salatalarda.",
+    "longTermSafety": "Günlük gıda düzeyinde uzun süreli kullanım genel olarak güvenlidir."
+  },
+
+  "c1": {
+    "table": ["🍋 Tarçın","🔴",2,3,2,3,3,2,5,3.0,"c1","0"],
+    "fullName": "Tarçın (Kabuk)",
+    "latinName": "Cinnamomum verum / C. cassia (var.)",
+    "category": "Kabuk / Baharat",
+    "origin": "Sri Lanka / Güneydoğu Asya",
+    "benefits": ["Kan şekeri yönetimine yardımcı olma eğilimi","Antioksidan"],
+    "mechanism": "Polifenolik bileşikler glukoz metabolizmasını etkileyebilir; cinnamaldehyde gibi bileşenler etkilidir.",
+    "historicalUse": "Baharat ve geleneksel tıpta yaygın kullanılmıştır.",
+    "conditionalEffects": "Cassia türleri yüksek kumarin içeriyorsa karaciğer toksisitesi riski olabilir (yüksek dozlarda).",
+    "targetOrgans": ["Metabolizma","Sindirim"],
+    "sideEffects": ["Yüksek dozda karaciğer üzerinde risk (kumarin)"],
+    "usage": "Gıda aroması, çay, baharat olarak sınırlı miktarda.",
+    "dosageDetail": "Gıda düzeyinde küçük miktarlar güvenli; takviye formunda dikkat.",
+    "activeCompounds": ["Cinnamaldehyde","Polifenoller"],
+    "preparationWarnings": "Uzun süreli ve yüksek doz kullanımdan kaçının; özellikle cassia türü için kumarin riski vardır.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah veya öğünlerle birlikte metabolik etkiler için.",
+    "longTermSafety": "Gıda düzeyinde uygun; takviye ve yüksek dozda kontrol gerektirir."
+  },
+
+  "d1": {
+    "table": ["🍄 Reishi mantarı","🟠",3,4,2,5,2,2,1,2.8,"d1","0"],
+    "fullName": "Reishi Mantarı",
+    "latinName": "Ganoderma lucidum",
+    "category": "Mantar",
+    "origin": "Doğu Asya ormanları",
+    "benefits": ["Bağışıklık modulasyonu","Anti-inflamatuar","Adaptogenik özellikler"],
+    "mechanism": "Beta-glukanlar ve triterpenidler immün yanıtı düzenleyebilir.",
+    "historicalUse": "Geleneksel Çin tıbbında uzun ömür ve bağışıklık desteği için kullanılmıştır.",
+    "conditionalEffects": "Kanama bozukluğu veya immünsupresif ilaç kullananlarda dikkat.",
+    "targetOrgans": ["Bağışıklık sistemi","Karaciğer (metabolik destek)"],
+    "sideEffects": ["Nadir alerji","Mide rahatsızlığı"],
+    "usage": "Kurutulmuş toz, çay veya ekstrakt formu.",
+    "dosageDetail": "Üretici önerisine göre; kronik yüksek dozda takip gerekebilir.",
+    "activeCompounds": ["Beta-glukanlar","Triterpenidler"],
+    "preparationWarnings": "Bağışıklık sistemi ile etkileşebilecek ilaçlar ile kombinasyona dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gün içinde alınabilir; sabah/öğlen önerilir.",
+    "longTermSafety": "Kısa-orta vadede çoğunlukla güvenli; kronik kullanımda doktor kontrolü önerilir."
+  },
+
+  "a10": {
+    "table": ["🍃 Matcha","🟡",4,2,4,3,3,2,3,2.8,"a10","a1,a5"],
+    "fullName": "Matcha (Yeşil Çay Tozu)",
+    "latinName": "Camellia sinensis (matcha)",
+    "category": "Çay - Yaprak / Toz",
+    "origin": "Japonya (kültüre özgü işleme)",
+    "benefits": ["Bilişsel uyanıklık","Antioksidan","Metabolik hafif destek"],
+    "mechanism": "Kateşinler (EGCG) ve kafein kombinasyonu antioksidan ve nöroaktif etki verir.",
+    "historicalUse": "Japon çay törenleri ve geleneksel kullanım.",
+    "conditionalEffects": "Yüksek doz ekstraktlarda karaciğer üzerinde nadir riskler raporlanmıştır; kafein hassasiyeti olanlar dikkat.",
+    "targetOrgans": ["Beyin","Metabolizma"],
+    "sideEffects": ["Uykusuzluk (kafein)","Nadir mide rahatsızlığı"],
+    "usage": "Toz halinde sıcak su ile çırpılarak hazırlanır.",
+    "dosageDetail": "Günlük 1 fincan matcha genelde güvenli; ekstrakt formları yüksek doz olabilir.",
+    "activeCompounds": ["EGCG","Kateşinler","Kafein"],
+    "preparationWarnings": "Ekstrakt ürünlerde konsantrasyon kontrolü önemli.",
+    "avoidWith": {"codes": ["a1","a5"], "reason": "Yüksek dozlarda antikoagülan etkiler ve hepatik yük riski toplanabilir."},
+    "timing": "Sabah veya öğleden önce (kafein nedeniyle).",
+    "longTermSafety": "Gıda düzeyinde (1 fincan) uzun dönem genelde güvenli; yüksek doz ekstraktlarda takip."
+  },
+
+  "g9": {
+    "table": ["🌶️ Acı biber","🔴",4,3,2,2,3,2,5,2.8,"g9","0"],
+    "fullName": "Acı Biber (Capsaicin içeren)",
+    "latinName": "Capsicum spp.",
+    "category": "Baharat / Türev",
+    "origin": "Amerika kıtası kökenli",
+    "benefits": ["Metabolizma uyarımı","Ağrı yönetiminde topikal kullanımlarda yarar","Sindirim uyarımı"],
+    "mechanism": "Capsaicin TRPV reseptörlerini aktive ederek lokal ağrı modulasyonu ve termogenez sağlar.",
+    "historicalUse": "Yiyeceklerde ve halk hekimliğinde ağrı/sıcak tutucu olarak kullanılmıştır.",
+    "conditionalEffects": "Mide hassasiyeti veya ülseratif durumlarda tahriş edebilir; topikal formlarda yanma hissi.",
+    "targetOrgans": ["Sindirim","Deri"],
+    "sideEffects": ["Mide yanması","Mukozal tahriş"],
+    "usage": "Gıda düzeyinde soslar, toz; topikal kapsaisin ürünleri ağrı için kontrollü kullanılır.",
+    "dosageDetail": "Gıda düzeyinde porsiyonlarla sınırlı kullanın.",
+    "activeCompounds": ["Capsaicin"],
+    "preparationWarnings": "Ellere temas sonrası göz/yanak temasından kaçının.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemeklerle birlikte alınması genelde daha tolere edilebilir.",
+    "longTermSafety": "Gıda düzeyinde tolere edilir; sürekli çok yüksek miktarda kullanım tahrişe sebep olabilir."
+  },
+
+  "a9": {
+    "table": ["🌿 Kuşburnu","🟡",4,3,1,5,3,2,2,2.9,"a9","0"],
+    "fullName": "Kuşburnu",
+    "latinName": "Rosa canina (hiperikum değil)",
+    "category": "Meyve - Kabuğu/Tohum",
+    "origin": "Avrupa/Asya",
+    "benefits": ["Yüksek C vitamini","Antioksidan","Eklem sağlığına yardımcı olma eğilimi"],
+    "mechanism": "Askorbik asit ve flavonoidler antioksidan ve hafif antiinflamatuar etki sağlar.",
+    "historicalUse": "Geleneksel çay ve besin kaynağı olarak kullanılmıştır.",
+    "conditionalEffects": "C vitamini hassasiyeti veya böbrek taşı öyküsü olanlarda dikkat.",
+    "targetOrgans": ["Bağışıklık","Eklemler"],
+    "sideEffects": ["Nadir mide hassasiyeti"],
+    "usage": "Çay, marmelat veya ekstrakt.",
+    "dosageDetail": "Günlük çay formları genelde güvenli.",
+    "activeCompounds": ["Vitamin C","Flavonoidler"],
+    "preparationWarnings": "Aşırı ısı uzun süreli C vitamini kaybına yol açabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah veya öğünlerle alınabilir.",
+    "longTermSafety": "Gıda düzeyinde uzun dönem kullanımda genellikle güvenli."
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "a41": {
+    "table": ["🌱 Spirulina","🟠",3,3,3,4,2,2,2,2.7,"a41","0"],
+    "fullName": "Spirulina (Mavi-yeşil alg)",
+    "latinName": "Arthrospira platensis / A. maxima",
+    "category": "Mikroalg / Süper gıda",
+    "origin": "Tatlı su algleri, tropik ve subtropik bölgeler",
+    "benefits": ["Zengin protein ve B vitaminleri kaynağı","Antioksidan","Bağışıklık desteği"],
+    "mechanism": "Klorofil, fikosiyanin ve çeşitli antioksidan bileşikler aracılığıyla metabolik ve immün destek sağlar.",
+    "historicalUse": "Modern dönemde besin takviyesi olarak popülerleşti.",
+    "conditionalNotes": "Kontamine üretimlerde toksin riski (mikroalg toksinleri) olabilir; güvenilir kaynak seçilmeli.",
+    "targetSystems": ["İmmün sistem","Metabolizma"],
+    "sideEffects": ["Nadiren sindirim rahatsızlığı","Kontamine ürünlerde hepatotoksik risk"],
+    "usage": "Toz veya tablet formunda; smoothie veya suya karıştırılarak.",
+    "dosageDetail": "Günlük 1–3 g tipiktir; üretici önerisine uyun.",
+    "activeCompounds": ["Fikosiyanin","Proteinler","Vitaminler (B kompleks)"],
+    "preparationWarnings": "Güvenilir, test edilmiş ürün tercih edilmeli; ham doğrudan doğal kaynaklardan toplanmış ürünler riskli olabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gün içinde öğünlerle alınabilir.",
+    "longTermSafety": "Güvenilir kaynaklardan alındığında kısa-orta vadede güvenli; kontaminasyon riski nedeniyle kalite takibi önemli."
+  },
+
+  "a42": {
+    "table": ["🍀 Karahindiba","🟡",4,3,2,3,2,4,2,2.7,"a42","0"],
+    "fullName": "Karahindiba (Dandelion)",
+    "latinName": "Taraxacum officinale",
+    "category": "Bitki - Yaprak / Kök",
+    "origin": "Kuzey yarımküre",
+    "benefits": ["Safra ve karaciğer desteği","Diüretik","Sindirim desteği"],
+    "mechanism": "Taraxasterol ve diğer bileşikler safra akışını destekleyip diüretik etki gösterebilir.",
+    "historicalUse": "Geleneksel tıpta karaciğer ve sindirim sorunlarında kullanılmıştır.",
+    "conditionalNotes": "İdrar söktürücü etkisi olan ilaçlarla dikkat; alerjiye yatkın kişilerde reaksiyon olabilir.",
+    "targetSystems": ["Karaciğer","Böbrekler","Sindirim"],
+    "sideEffects": ["Alerjik reaksiyon (çiçekli bitkilere duyarlılık)","Artmış idrar çıkışı"],
+    "usage": "Yaprak çayı veya kök kaynatması.",
+    "dosageDetail": "Çay formlarında günlük 1–2 fincan makul.",
+    "activeCompounds": ["Taraxasterol","Polifenoller"],
+    "preparationWarnings": "Diüretik etkisi nedeniyle su ve elektrolit dengesine dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah/öğlen; idrar artırıcı olduğu için akşamdan kaçınılabilir.",
+    "longTermSafety": "Kısa-orta vadede genelde güvenli; kronik yüksek dozda izleme gerekebilir."
+  },
+
+  "b3": {
+    "table": ["🌱 Ginseng","🔴",2,2,5,3,2,1,3,2.7,"b3","a1,a5"],
+    "fullName": "Ginseng (Panax ginseng / P. quinquefolius)",
+    "latinName": "Panax ginseng / Panax quinquefolius",
+    "category": "Kök / Adaptogen",
+    "origin": "Kuzeydoğu Asya / Kuzey Amerika (çeşidine göre)",
+    "benefits": ["Enerji ve dayanıklılık desteği","Bilişsel performans","Bağışıklık desteği"],
+    "mechanism": "Ginsenosidler yoluyla steroid benzeri adaptogenik ve nöromodülatör etkiler sağlar.",
+    "historicalUse": "Geleneksel Çin tıbbında tonik ve güçlendirici olarak binlerce yıldır kullanılmıştır.",
+    "conditionalNotes": "Antikoagülan veya kanama eğilimi olanlarla, aynı zamanda bazı antidepresan/hipertansiyon ilaçları ile etkileşebilir.",
+    "targetSystems": ["Sinir sistemi","Endokrin/Metabolik sistem"],
+    "sideEffects": ["Uykusuzluk","Çarpıntı","Kanama riski (nadir)"],
+    "usage": "Kurutulmuş kök, kapsül veya tentür.",
+    "dosageDetail": "Kısa kürler halinde kullanmak tercih edilir (ör. 2–3 haftalık döngüler); üretici önerisine uyulmalı.",
+    "activeCompounds": ["Ginsenosidler"],
+    "preparationWarnings": "Uzun süreli yüksek doz kullanımlarda uykusuzluk ve hipertansiyon görülebilir.",
+    "avoidWith": {"codes": ["a1","a5"], "reason": "Sarımsak ve zeytin yaprağı gibi antiplatelet etki toplayıcılarla kanama riski artabilir."},
+    "timing": "Sabah/öğlen (uykuya etkisi olabilir).",
+    "longTermSafety": "Kısa dönem kullanımlar güvenli; uzun süreli kullanımda döngü (ara) önerilir."
+  },
+
+  "a36": {
+    "table": ["🌿 Mate Yaprağı","🟠",3,2,4,2,2,2,3,2.5,"a36","i6"],
+    "fullName": "Yerba Mate",
+    "latinName": "Ilex paraguariensis",
+    "category": "Çay - Uyarıcı",
+    "origin": "Güney Amerika (Paraguay, Arjantin, Brezilya)",
+    "benefits": ["Uyanıklık","Antioksidan","Metabolik destek"],
+    "mechanism": "Mate alkaloidleri (kafein benzer) ve polifenoller uyarıcı ve antioksidan etki sağlar.",
+    "historicalUse": "Geleneksel Güney Amerika içeceği, sosyal ve ritüel kullanımları vardır.",
+    "conditionalNotes": "Yüksek sıcaklıkta ve yoğun/uzun kullanımda özofagus kanseri riskine dair epidemiyolojik veriler tartışılmıştır; ekstrakt/konsantre ürünler karaciğer üzerinde etki gösterebilir.",
+    "targetSystems": ["Sinir sistemi","Metabolizma"],
+    "sideEffects": ["Uykusuzluk (kafein etkisi)","Nadir sindirim rahatsızlığı"],
+    "usage": "Demlenmiş çay veya sıcak infüzyon; geleneksel gourde/pipe ile tüketim.",
+    "dosageDetail": "Günlük 1–3 fincan makul; ekstrakt formlarında dikkat.",
+    "activeCompounds": ["Matein (kafein benzeri)","Polifenoller"],
+    "preparationWarnings": "Çok sıcak tüketimden kaçının; ekstrakt formlar yüksek doz sağlayabilir.",
+    "avoidWith": {"codes": ["i6"], "reason": "Yeşil çay ekstraktı veya yüksek EGCG içeren ürünlerle karaciğer yükü artabilir."},
+    "timing": "Sabah/öğlen (kafein nedeniyle akşam önerilmez).",
+    "longTermSafety": "Geleneksel tüketim makul; ekstrakt/yoğun kullanımda doktor kontrolü önerilir."
+  },
+
+  "e1": {
+    "table": ["🌱 Chia tohumu","🟡",5,2,3,2,3,3,2,2.5,"e1","0"],
+    "fullName": "Chia Tohumu",
+    "latinName": "Salvia hispanica",
+    "category": "Tohum / Besin",
+    "origin": "Orta ve Güney Amerika",
+    "benefits": ["Omega-3 kaynağı","Lif desteği","Tokluk hissi"],
+    "mechanism": "Alfa-linolenik asit (ALA) ve çözünür lif sayesinde inflamasyonu azaltma ve sindirimi düzenleme etkileri vardır.",
+    "historicalUse": "Aztek ve Maya besin geleneğinde yer almıştır.",
+    "conditionalNotes": "Yeterli sıvı ile tüketilmelidir; tohumların jel oluşturması boğulma riski yaratabilir (kuru yutmayın).",
+    "targetSystems": ["Sindirim","Metabolizma","Damar sistemi"],
+    "sideEffects": ["Gaz/şişkinlik (yüksek lif)","Boğulma riski kuru yutulursa"],
+    "usage": "Su veya yoğurt ile jel haline getirilip tüketilir; smoothielere eklenir.",
+    "dosageDetail": "Günlük 10–20 g tipiktir.",
+    "activeCompounds": ["ALA (omega-3)","Çözünür lif"],
+    "preparationWarnings": "Kuru halde yutmaktan kaçının; yeterli sıvı ile alın.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle birlikte alınması önerilir.",
+    "longTermSafety": "Gıda düzeyinde uzun dönem güvenli."
+  },
+
+  "a11": {
+    "table": ["🍃 Yeşil çay","🟡",4,2,3,2,3,2,3,2.5,"a11","a1,a10,i6"],
+    "fullName": "Yeşil Çay (Camellia sinensis)",
+    "latinName": "Camellia sinensis",
+    "category": "Çay - Yaprak",
+    "origin": "Doğu Asya",
+    "benefits": ["Antioksidan","Metabolik destek","Hafif uyanıklık"],
+    "mechanism": "Kateşinler (EGCG) antioksidan ve metabolik etkilere aracılık eder.",
+    "historicalUse": "Asya kültürlerinde uzun süreli çay tüketimi gelenektir.",
+    "conditionalNotes": "Ekstrakt formlarda (yüksek EGCG) nadiren hepatotoksisite raporları olmuştur; kafein hassasiyeti olanlar dikkat.",
+    "targetSystems": ["Metabolizma","Karaciğer","Beyin"],
+    "sideEffects": ["Uykusuzluk (kafein)","Nadir karaciğer etkileri (yüksek doz ekstrakt)"],
+    "usage": "Demleme çay formu; ekstrakt kapsüller kontrollü dozda alınmalıdır.",
+    "dosageDetail": "Günlük 1–3 fincan çay genelde güvenli; ekstraktlarda üretici önerisi.",
+    "activeCompounds": ["EGCG","Kateşinler","Kafein"],
+    "preparationWarnings": "Ekstrakt ürünleri dikkatli seçin; yüksek doz EGCG karaciğer yükü yapabilir.",
+    "avoidWith": {"codes": ["a1","a10","i6"], "reason": "Antikoagülan etkiler ve yüksek doz ekstraktların karaciğer üzerindeki yükü."},
+    "timing": "Sabah/öğleden önce (kafein nedeniyle).",
+    "longTermSafety": "Gıda düzeyinde uzun dönem güvenli; ekstraktlarda izleme gerekebilir."
+  },
+
+  "b4": {
+    "table": ["🌿 Ashwagandha","🟠",3,2,4,2,2,1,2,2.3,"b4","0"],
+    "fullName": "Ashwagandha (Withania somnifera)",
+    "latinName": "Withania somnifera",
+    "category": "Kök / Adaptogen",
+    "origin": "Hindistan (Ayurveda)",
+    "benefits": ["Stres/anksiyete azaltma","Uyku kalitesi desteği","Adaptogenik etki"],
+    "mechanism": "Withanolidler aracılığıyla HPA aksını düzenleyici ve nöroprotektif etkiler sağladığı düşünülür.",
+    "historicalUse": "Ayurveda'da uzun süren tonik ve sinir sistemi desteği olarak kullanılır.",
+    "conditionalNotes": "Tiroid ilaçları ve sedatiflerle etkileşim potansiyeli olabileceği için dikkat.",
+    "targetSystems": ["Sinir sistemi","Endokrin"],
+    "sideEffects": ["Mide rahatsızlığı (nadir)","Sedasyon (yüksek doz)"],
+    "usage": "Kapsül, toz veya tentür formu.",
+    "dosageDetail": "Üretici önerisine göre; genelde 300–600 mg standardize ekstrakt aralığı.",
+    "activeCompounds": ["Withanolidler"],
+    "preparationWarnings": "Hamilelikte kullanım önerilmez.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Akşam veya yatmadan önce (rahatlatıcı etkisi nedeniyle).",
+    "longTermSafety": "Kısa-orta vadede güvenli kabul edilir; uzun süreli yüksek dozlarda izleme önerilir."
+  },
+
+  "a19": {
+    "table": ["🌿 Sumak","🟡",4,3,1,3,3,2,2,2.3,"a19","0"],
+    "fullName": "Sumak (Sumac)",
+    "latinName": "Rhus coriaria ve benzeri türler",
+    "category": "Baharat / Meyve",
+    "origin": "Akdeniz ve Orta Doğu",
+    "benefits": ["Antioksidan","Antiinflamatuar","Yemeklere aroma ve sindirim desteği"],
+    "mechanism": "Polifenoller ve tanenler üzerinden antioksidan etki sağlar.",
+    "historicalUse": "Geleneksel mutfak ve tıbbi amaçlı kullanımı vardır.",
+    "conditionalNotes": "Aşırı tüketimde tanen kaynaklı sindirim şikayetleri olabilir.",
+    "targetSystems": ["Sindirim","Metabolizma"],
+    "sideEffects": ["Nadir mide rahatsızlığı"],
+    "usage": "Baharat olarak yemeklerde kullanılır.",
+    "dosageDetail": "Gıda düzeyinde kullanımlar genelde güvenli.",
+    "activeCompounds": ["Polifenoller","Tanenler"],
+    "preparationWarnings": "Aşırı miktarda konsantre ekstraktlardan kaçının.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemeklerle birlikte.",
+    "longTermSafety": "Gıda düzeyinde güvenlidir."
+  },
+
+  "a12": {
+    "table": ["🌿 Nane","🟡",4,2,2,2,2,4,2,2.3,"a12","0"],
+    "fullName": "Nane (Peppermint / Mentha)",
+    "latinName": "Mentha × piperita",
+    "category": "Bitki - Ot",
+    "origin": "Dünya çapında yetiştirilen aromatik bitki",
+    "benefits": ["Sindirim rahatlatma","Nane yağı ile spazm çözücü","Baş ağrısında rahatlama"],
+    "mechanism": "Mentol ve uçucu yağlar düz kas gevşetici ve lokal analjezik etki sağlayabilir.",
+    "historicalUse": "Geleneksel olarak sindirim sorunları ve baş ağrılarında kullanılmıştır.",
+    "conditionalNotes": "Reflü (GERD) olanlarda özofageal reflüyü artırabilir; nane yağı konsantre kullanımlarda dikkat.",
+    "targetSystems": ["Sindirim","Baş-boyun bölgesi"],
+    "sideEffects": ["Reflü semptomlarını artırabilir","Nadir alerji"],
+    "usage": "Çay, nane yağı (seyreltilmiş) veya taze yaprak.",
+    "dosageDetail": "Günlük çay formları genelde güvenli.",
+    "activeCompounds": ["Mentol","Uçucu yağlar"],
+    "preparationWarnings": "Nane yağı seyreltilmeden kullanılmamalıdır.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemek sonrası sindirim desteği için uygundur.",
+    "longTermSafety": "Gıda düzeyinde güvenlidir."
+  },
+
+  "a13": {
+    "table": ["🍃 Maydanoz","🟡",4,2,1,3,3,3,2,2.3,"a13","0"],
+    "fullName": "Maydanoz",
+    "latinName": "Petroselinum crispum",
+    "category": "Bitki - Yaprak",
+    "origin": "Akdeniz bölgesi",
+    "benefits": ["Vitamin/mineral kaynağı","Sindirim desteği","İdrar söktürücü hafif etki"],
+    "mechanism": "Uçucu yağlar ve flavonoidler aracılığıyla antioksidan ve diüretik etki gösterebilir.",
+    "historicalUse": "Mutfakta yaygın kullanım yanında geleneksel tıpta da yer almıştır.",
+    "conditionalNotes": "Büyük miktarlarda ve uçucu yağ konsantrelerinde hamilelikte dikkat edilmelidir.",
+    "targetSystems": ["Sindirim","Böbrekler"],
+    "sideEffects": ["Alerji (nadir)","Yüksek miktarda kullanımda rahatsızlık"],
+    "usage": "Taze veya kurutulmuş olarak yemeklerde.",
+    "dosageDetail": "Günlük gıda düzeyinde kullanım güvenlidir.",
+    "activeCompounds": ["Apiole (iz miktarda)","Uçucu yağlar","Vitaminler"],
+    "preparationWarnings": "Hamilelikte yüksek dozundan kaçının.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemeklerle beraber veya garnitür olarak.",
+    "longTermSafety": "Günlük besin düzeyinde güvenlidir."
+  },
+
+  "a14": {
+    "table": ["🌿 Adaçayı","🟠",2,2,3,4,2,2,1,2.3,"a14","b5"],
+    "fullName": "Adaçayı (Sage)",
+    "latinName": "Salvia officinalis",
+    "category": "Bitki - Ot",
+    "origin": "Akdeniz",
+    "benefits": ["Bilişsel destek (hafif)","Antioksidan","Menopozal semptomlarda destek"],
+    "mechanism": "Uçucu yağlar ve fenolik bileşikler nöroaktif ve antiinflamatuar etkiler gösterebilir.",
+    "historicalUse": "Geleneksel olarak hafıza ve sindirim için kullanılmıştır.",
+    "conditionalNotes": "Thujone içeriği yüksek formlar nörotoksik olabilir; meyan kökü ile elektrolit/etki etkileşimi uyarısı nedeniyle dikkat.",
+    "targetSystems": ["Sinir sistemi","Sindirim"],
+    "sideEffects": ["Yüksek dozda nörotoksik etki (thujone)","Nadiren alerji"],
+    "usage": "Çay veya yemeklerde baharat olarak.",
+    "dosageDetail": "Günlük çay kullanımı kısa süreli güvenli; uzun süreli yüksek doz önerilmez.",
+    "activeCompounds": ["Thujone (iz), Rosmarinik asit"],
+    "preparationWarnings": "Yoğun uçucu yağ içeren formlardan kaçının; hamilelikte dikkat.",
+    "avoidWith": {"codes": ["b5"], "reason": "Meyan kökü ile elektrolit/kan basıncı etkileri toplanabilir."},
+    "timing": "Gün içinde ölçülü kullanım.",
+    "longTermSafety": "Döngülü kullanım tercih edilir; kronik yüksek doz önerilmez."
+  },
+
+  "e3": {
+    "table": ["🌰 Çam fıstığı / badem","🟡",5,2,3,2,3,2,2,2.3,"e3","0"],
+    "fullName": "Çam Fıstığı / Badem (Kuruyemiş Karışımı)",
+    "latinName": "Pinus spp. / Prunus dulcis",
+    "category": "Kuruyemiş / Tohum",
+    "origin": "Akdeniz / Dünya çapı",
+    "benefits": ["Sağlıklı yağlar","Vitamin/mineral desteği","Bilişsel destek"],
+    "mechanism": "Tekli ve çoklu doymamış yağ asitleri ve antioksidanlar damar ve beyin sağlığını destekler.",
+    "historicalUse": "Besin kaynağı ve yağ üretimi için uzun süreli kullanım.",
+    "conditionalNotes": "Alerji riski olanlarda kontraendikedir.",
+    "targetSystems": ["Beyin","Damar sistemi"],
+    "sideEffects": ["Alerji (ciddi)"],
+    "usage": "Atıştırmalık, salata veya yemek katkısı.",
+    "dosageDetail": "Günlük 20–30 g arası makul.",
+    "activeCompounds": ["MUFA/PUFA","Vitamin E","Mineraller"],
+    "preparationWarnings": "Aşırı tüketim yüksek kalori alımına neden olur.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Ara öğün veya yemekler sırasında.",
+    "longTermSafety": "Gıda düzeyinde uzun dönem güvenli (alerji yoksa)."
+  },
+
+  "d4": {
+    "table": ["🌿 Lion's Mane","🟡",2,2,5,2,2,2,1,2.3,"d4","b11"],
+    "fullName": "Lion's Mane (Hericium erinaceus)",
+    "latinName": "Hericium erinaceus",
+    "category": "Mantar - Nootropik",
+    "origin": "Kuzey yarımküre ormanları",
+    "benefits": ["Nöroprotektif","Bilişsel destek","Sinir büyüme faktörlerini teşvik etme potansiyeli"],
+    "mechanism": "Hericenon ve erinacin bileşikleri NGF (sinir büyüme faktörleri) yolaklarını etkileyebilir.",
+    "historicalUse": "Geleneksel Çin ve Japon tıbbında yenilebilir mantar olarak kullanılmıştır.",
+    "conditionalNotes": "Kava gibi sedatiflerle birlikte merkezi sinir sistemi etkileri etkileşime girebilir.",
+    "targetSystems": ["Sinir sistemi","Beyin"],
+    "sideEffects": ["Nadir alerji veya sindirim şikayetleri"],
+    "usage": "Kurutulmuş toz, çay veya ekstrakt.",
+    "dosageDetail": "Ekstrakt formlarında üretici önerisine uyun; genelde 500–3000 mg arası çalışmalar vardır.",
+    "activeCompounds": ["Hericenonlar","Erinacinler","Polisakkaritler"],
+    "preparationWarnings": "Kava ve güçlü sedatiflerle birlikte kullanım dikkat gerektirir.",
+    "avoidWith": {"codes": ["b11"], "reason": "Kava ile sedasyon/etkileşim riski."},
+    "timing": "Sabah veya öğle (bilişsel destek amacıyla).",
+    "longTermSafety": "Kısa-orta vadede genelde iyi tolere edilir; uzun dönem çalışmaları sınırlıdır."
+  },
+
+  "a43": {
+    "table": ["🌱 Aloe vera","🟠",2,2,1,3,1,5,1,2.1,"a43","0"],
+    "fullName": "Aloe vera",
+    "latinName": "Aloe vera",
+    "category": "Bitki - Sütlü öz / Jel",
+    "origin": "Afrika ve Arabistan kökenli, dünya çapında yetişir",
+    "benefits": ["Cilt iyileştirme","Sindirim rahatlatma (dıştan/dahilen farklı etkiler)","Nemlendirme"],
+    "mechanism": "Aloe jeli polisakkaritleri doku iyileşmesi ve antiinflamatuar etki gösterebilir; lateks formu müshil etkili antrakinonlar içerir.",
+    "historicalUse": "Antik dönemlerden beri yaralar ve cilt sorunlarında kullanılan sakinleştirici bitki.",
+    "conditionalNotes": "Aloe latex (sarımsı sıvı) müshil etkilidir ve uzun süreli dahili kullanımda elektrolit bozukluklarına neden olabilir.",
+    "targetSystems": ["Cilt","Sindirim"],
+    "sideEffects": ["Dışardan genelde güvenli; dahilen uzun süreli kullanımda kramp ve elektrolit kaybı"],
+    "usage": "Haricen jel; dahilen yalnızca işlenmiş, müshil etkisizleştirilmiş formlar (uzman önerisiyle).",
+    "dosageDetail": "Haricen sınırsız kullanımda genelde güvenli; dahilen kısa süreli ve kontrollü kullanım önerilir.",
+    "activeCompounds": ["Polisakkaritler","Antrakinon (lateks kısmı)"],
+    "preparationWarnings": "Lateks (sararmış kısımlar) dahilen kullanılmamalıdır; ham latex toksik olabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Haricen gün içinde kullanılabilir; dahilen yalnızca uzman önerisiyle.",
+    "longTermSafety": "Dahilen uzun süreli kullanım önerilmez; haricen uzun süreli kullanım genelde güvenlidir."
+  },
+
+  "i1": {
+    "table": ["🌿 Ekinezya","🟠",2,2,1,5,1,2,1,2.0,"i1","0"],
+    "fullName": "Ekinezya (Echinacea)",
+    "latinName": "Echinacea purpurea / E. angustifolia",
+    "category": "Bitki - Kök/Çiçek",
+    "origin": "Kuzey Amerika",
+    "benefits": ["Bağışıklık uyarımı (kısa dönem)","Soğuk algınlığı süresini kısaltma potansiyeli"],
+    "mechanism": "Polisakkaritler ve alkilamidler immün hücre aktivasyonunu destekleyebilir.",
+    "historicalUse": "Kızılderili tıbbında yara ve enfeksiyonlarda uzun süreli kullanım.",
+    "conditionalNotes": "Otoimmün hastalığı olanlar veya immünsupresif ilaç kullananlar dikkat etmelidir.",
+    "targetSystems": ["Bağışıklık"],
+    "sideEffects": ["Alerjik reaksiyon (özellikle Asteraceae ailesine duyarlı kişiler)"],
+    "usage": "Kısa dönem (soğuk algınlığı başlangıcı) takviyesi olarak kullanılır.",
+    "dosageDetail": "Kısa süreli kürler (günler-hafta) önerilir; uzun süreli kullanımın etkinliği ve güvenliği sınırlıdır.",
+    "activeCompounds": ["Polisakkaritler","Alkilamidler"],
+    "preparationWarnings": "Uzun süreli ve sürekli kullanım önerilmez; otoimmünite riski olanlarda dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Semptom başlangıcında kısa süreli kullanım.",
+    "longTermSafety": "Uzun süreli kullanım önerilmez."
+  },
+
+  "h1": {
+    "table": ["🌿 Melisa","🟢",5,1,4,2,2,2,1,2.0,"h1","b11"],
+    "fullName": "Melisa (Lemon balm)",
+    "latinName": "Melissa officinalis",
+    "category": "Bitki - Yaprak/Çiçek",
+    "origin": "Akdeniz bölgesi ve Avrupa",
+    "benefits": ["Rahatlatıcı","Antianksiyete","Sindirim desteği"],
+    "mechanism": "Uçucu yağlar ve fenolik bileşikler GABA benzeri yoldan yatıştırıcı etki gösterebilir.",
+    "historicalUse": "Geleneksel olarak huzursuzluk ve uyku sorunlarında kullanılmıştır.",
+    "conditionalNotes": "Kava gibi sedatif bitkilerle birlikte aşırı sedasyon potansiyeli olabilir.",
+    "targetSystems": ["Sinir sistemi","Sindirim"],
+    "sideEffects": ["Nadir sedasyon","Alerji (nadir)"],
+    "usage": "Çay veya tentür formunda kullanılır.",
+    "dosageDetail": "Günlük çay formunda kısa dönem güvenli.",
+    "activeCompounds": ["Uçucu yağlar","Flavonoidler"],
+    "preparationWarnings": "Sedatif ilaçlarla birlikte kullanımda dikkat.",
+    "avoidWith": {"codes": ["b11"], "reason": "Kava ve güçlü sedatifler ile birlikte sedasyon artabilir."},
+    "timing": "Akşam veya yatmadan önce tercih edilebilir.",
+    "longTermSafety": "Günlük gıda/çay düzeyinde uzun süreli kullanıma genelde uygundur."
+  },
+
+  "h2": {
+    "table": ["🌼 Papatya","🟢",5,1,2,2,3,1,4,2.0,"h2","b11"],
+    "fullName": "Papatya (Chamomile)",
+    "latinName": "Matricaria chamomilla / Chamaemelum nobile",
+    "category": "Bitki - Çiçek",
+    "origin": "Eurasia",
+    "benefits": ["Rahatlatıcı","Sindirim destek","Anti-inflamatuar hafif etkiler"],
+    "mechanism": "Uçucu yağlar ve flavonoidler düz kas gevşetici ve antiinflamatuar etki sağlar.",
+    "historicalUse": "Yüzyıllardır uyku ve sindirim için kullanılan bir bitkidir.",
+    "conditionalNotes": "Asteraceae ailesi alerjisi olanlarda reaksiyon olabilir; sedatif etkileri kava ile artabilir.",
+    "targetSystems": ["Sinir sistemi","Sindirim"],
+    "sideEffects": ["Alerjik reaksiyon (çiçek ailesine duyarlı kişiler)"],
+    "usage": "Çay ve harici uygulama olarak.",
+    "dosageDetail": "Günlük 1–3 fincan çay genelde güvenli.",
+    "activeCompounds": ["Apigenin","Uçucu yağlar"],
+    "preparationWarnings": "Alerjisi olanlarda dikkat.",
+    "avoidWith": {"codes": ["b11"], "reason": "Kava benzeri sedatiflerle birlikte sedasyon riski artabilir."},
+    "timing": "Akşam yatmadan önce çayı sıkça tercih edilir.",
+    "longTermSafety": "Günlük çay düzeyinde uzun süreli kullanım genelde güvenlidir."
+  },
+
+  "f6": {
+    "table": ["🍯 Ham bal","🟡",5,1,1,4,2,2,2,2.0,"f6","0"],
+    "fullName": "Ham Bal (Raw honey)",
+    "latinName": "Apis mellifera ürünleri",
+    "category": "Gıda / Tatlandırıcı",
+    "origin": "Dünya çapında arıcılık ürünleri",
+    "benefits": ["Antimikrobiyal (lokal)","Enerji kaynağı","Öksürük rahatlatma"],
+    "mechanism": "Hidrojen peroksit oluşumu ve fenolik bileşikler lokal antimikrobiyal etki sağlar.",
+    "historicalUse": "Tarihten beri yara bakımında ve besin olarak kullanılmıştır.",
+    "conditionalNotes": "İlk yıl (infant) bebeklere verilmemelidir (botulizm riski). Diyabetiklerde dikkat.",
+    "targetSystems": ["Sindirim","Solunum (öksürük)"],
+    "sideEffects": ["Alerji (çiçek poleni duyarlılığı)","Kan şekerini yükseltebilir"],
+    "usage": "Gıda düzeyinde kullanılır; lokal boğaz rahatlatma için tüketilebilir.",
+    "dosageDetail": "Günlük 1–2 tatlı kaşığı gıda düzeyinde.",
+    "activeCompounds": ["Fenolikler","Enzimler"],
+    "preparationWarnings": "İlk 1 yaşındaki bebeklere verilmemelidir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gerekirse gece öksürük rahatlatmak için alınabilir.",
+    "longTermSafety": "Gıda düzeyinde uygun; diyabetiklerde dikkat."
+  },
+
+  "a17": {
+    "table": ["🌿 Rezene","🟡",4,2,1,2,2,4,1,2.0,"a17","0"],
+    "fullName": "Rezene (Fennel)",
+    "latinName": "Foeniculum vulgare",
+    "category": "Bitki - Tohum / Ot",
+    "origin": "Akdeniz",
+    "benefits": ["Sindirim rahatlatma","Gaz gidermeye yardımcı","Emziren annelerde süt desteği (geleneksel)"],
+    "mechanism": "Uçucu yağlar gastrik motiliteyi düzenleyip spazm çözer.",
+    "historicalUse": "Geleneksel sindirim ilacı ve emzirme desteği olarak kullanılmıştır.",
+    "conditionalNotes": "Hormon benzeri etkileri nedeniyle bazı durumlarda dikkat gerekebilir (özellikle yüksek dozlarda).",
+    "targetSystems": ["Sindirim","Meme/emenme destek"],
+    "sideEffects": ["Nadir alerji","Yüksek dozda hormonal etkileşim potansiyeli"],
+    "usage": "Çay, tohum çiğ veya pişmiş formda.",
+    "dosageDetail": "Çay: günde 1–2 fincan; tohum az miktarda yemeklerde.",
+    "activeCompounds": ["Anethole","Uçucu yağlar"],
+    "preparationWarnings": "Yüksek dozdan kaçının; hamilelikte dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemekten sonra sindirim rahatlatmak için.",
+    "longTermSafety": "Gıda düzeyinde güvenlidir; takviye yüksek dozunda izleme gerekebilir."
+  },
+
+  "h3": {
+    "table": ["🌿 Hatmi çiçeği","🟢",4,1,1,3,1,4,1,1.9,"h3","b11"],
+    "fullName": "Hatmi Çiçeği (Marshmallow flower)",
+    "latinName": "Althaea officinalis",
+    "category": "Bitki - Çiçek / Kök (kök de kullanılır)",
+    "origin": "Eurasia",
+    "benefits": ["Mukozal yatıştırma","Boğaz ve öksürük rahatlatma","Sindirim örtücü etki"],
+    "mechanism": "Yüksek mukilaj içeriği ile mukozayı örtüp yatıştırır, inflamasyonu azaltır.",
+    "historicalUse": "Geleneksel olarak boğaz ve öksürük şikayetlerinde kullanılmıştır.",
+    "conditionalNotes": "Gıda düzeyinde güvenlidir; bazı antidiyabetik ilaçlarla lif etkisi aracılığıyla emilim değişikliği olabilir.",
+    "targetSystems": ["Solunum mukozası","Sindirim mukozası"],
+    "sideEffects": ["Çok nadir alerji"],
+    "usage": "Çay veya şurup formunda; kök ve çiçekten infüzyon.",
+    "dosageDetail": "Günlük 1–2 fincan çay genelde güvenlidir.",
+    "activeCompounds": ["Mukilajlar","Flavonoidler"],
+    "preparationWarnings": "Aşırı kaynatma mukilajı azaltabilir; 10 dakika ideal infüzyon süresi.",
+    "avoidWith": {"codes": ["b11"], "reason": "Kava gibi sedatiflerle birlikte sedasyon artışı gözlenebilir (ihtiyat)."},
+    "timing": "Akşam boğaz rahatlatma amacıyla tercih edilebilir.",
+    "longTermSafety": "Günlük gıda/çay düzeyinde güvenlidir."
+  },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  "f10": {
+    "table": ["🥥 Hindistan cevizi","🟡",5,1,3,1,2,2,2,1.9,"f10","0"],
+    "fullName": "Hindistan Cevizi (Coconut)",
+    "latinName": "Cocos nucifera",
+    "category": "Meyve / Yağlı tohum",
+    "origin": "Tropikal bölgeler",
+    "benefits": ["Sağlıklı yağlar (orta zincir trigliseridler)","Enerji desteği","Cilt ve saç desteği"],
+    "mechanism": "MCT'ler (orta zincir trigliseridler) hızlı enerji sağlar; yağda çözünen antioksidanlar içerir.",
+    "historicalUse": "Tropikal mutfak ve halk tıbbında geniş kullanım.",
+    "conditionalNotes": "Aşırı yağ ve kalori alımına dikkat; alerji nadir fakat mümkündür.",
+    "targetSystems": ["Metabolizma","Cilt"],
+    "sideEffects": ["Yüksek miktarda alımda kalori artışı","Nadiren alerji"],
+    "usage": "Etli meyve, süt, yağ ve rendelenmiş form.",
+    "dosageDetail": "Gıda düzeyinde porsiyonlarla sınırlı kullanım önerilir.",
+    "activeCompounds": ["MCT (laurik asit vb.)","Fenolikler"],
+    "preparationWarnings": "İşlenmiş formlarda ilave şeker/yağ içeriklerine dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle birlikte alınabilir.",
+    "longTermSafety": "Gıda düzeyinde genelde güvenli."
+  },
+
+  "a44": {
+    "table": ["🌿 Kırkkilit (At kuyruğu otu)","🟠",1,2,1,2,3,1,1,1.7,"a44","0"],
+    "fullName": "Kırkkilit (At Kuyruğu)",
+    "latinName": "Equisetum arvense",
+    "category": "Bitki - Ot",
+    "origin": "Kuzey yarımküre, ılıman bölgeler",
+    "benefits": ["Saç ve tırnak desteği","Kemik sağlığı dolaylı desteği","Ödem atma"],
+    "mechanism": "Zengin silika içeriği kollajen sentezini destekler; diüretik etki bildiren bileşenler içerir.",
+    "historicalUse": "Antik çağlarda yara iyileştirme ve metal parlatmada kullanılmıştır.",
+    "conditionalNotes": "Tiaminaz etkinliği nedeniyle uzun süreli yüksek dozlarda B1 eksikliği riski olabilir; kaynatma tiaminazı etkisizleştirir.",
+    "targetSystems": ["Böbrekler","Kemikler","Saç/tırnak"],
+    "sideEffects": ["Uzun süre yüksek dozda B1 eksikliği riski","Böbrek yetmezliği olanlarda elektrolit dengesizlik riski"],
+    "usage": "Kaynatılarak hazırlanan çay formu (kullanımda kaynatma önerilir).",
+    "dosageDetail": "Kısa kürler halinde (ör. 4–6 hafta) ve ardından ara verilmesi önerilir.",
+    "activeCompounds": ["Silika","Flavonoidler","Mineraller (potasyum vb.)"],
+    "preparationWarnings": "Aşırı kaynatma bazı uçucu bileşenleri azaltabilir; kaynatma tiaminazı inaktive eder.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah/öğle (diüretik etkisi nedeniyle akşamdan kaçınılabilir).",
+    "longTermSafety": "Uzun süreli sürekli kullanımdan kaçınılmalı; döngüsel kullanım daha güvenli."
+  },
+
+  "a16": {
+    "table": ["🌿 Fesleğen (Basil)","🟡",4,2,2,2,2,3,2,2.2,"a16","0"],
+    "fullName": "Fesleğen (Basil)",
+    "latinName": "Ocimum basilicum",
+    "category": "Bitki - Ot",
+    "origin": "Tropikal Asya; Akdeniz'de yaygın kültür",
+    "benefits": ["Antioksidan","Sindirim desteği","Hafif antimikrobiyal etki"],
+    "mechanism": "Uçucu yağlar ve fenolik bileşikler antiinflamatuar ve antioksidan etkiler gösterir.",
+    "historicalUse": "Aromatik ve şifalı bitki olarak geleneksel kullanımlar.",
+    "conditionalNotes": "Esansiyel yağ formunda yoğun kullanım tahriş edebilir.",
+    "targetSystems": ["Sindirim","Metabolizma"],
+    "sideEffects": ["Nadiren alerji"],
+    "usage": "Taze yaprak, çay veya baharat olarak.",
+    "dosageDetail": "Gıda düzeyinde günlük kullanım güvenlidir.",
+    "activeCompounds": ["Eugenol","Linalool","Flavonoidler"],
+    "preparationWarnings": "Çok yüksek sıcaklıkta uzun süre pişirme uçucu bileşenleri azaltabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemeklerle birlikte önerilir.",
+    "longTermSafety": "Günlük gıda düzeyinde güvenli."
+  },
+
+  "h4": {
+    "table": ["🌸 Lavanta","🟢",5,1,4,1,1,1,1,1.5,"h4","b11"],
+    "fullName": "Lavanta (Lavender)",
+    "latinName": "Lavandula angustifolia",
+    "category": "Bitki - Çiçek / Uçucu yağ",
+    "origin": "Akdeniz",
+    "benefits": ["Rahatlatıcı","Uyku desteği","Anksiyete hafifletme"],
+    "mechanism": "Uçucu yağ bileşenleri (linalool, linalyl acetate) GABA benzeri etkileri modüle eder.",
+    "historicalUse": "Geleneksel aromaterapi ve rahatlama amaçlı geniş kullanım.",
+    "conditionalNotes": "Sedatif etkiler gösterebilir; sedatif ilaçlarla etkileşim potansiyeli vardır.",
+    "targetSystems": ["Sinir sistemi"],
+    "sideEffects": ["Nadir alerji","Aşırı sedasyon (çok yüksek doz)"],
+    "usage": "Aromaterapi, çay, konsantre yağ formları (seyreltilmiş).",
+    "dosageDetail": "Çay ve aromaterapide gıda/kişisel bakım düzeyinde güvenli.",
+    "activeCompounds": ["Linalool","Linalyl acetate"],
+    "preparationWarnings": "Uçucu yağları dahilen kullanmadan önce uzman görüşü alınmalıdır.",
+    "avoidWith": {"codes": ["b11"], "reason": "Kava ve güçlü sedatiflerle sedasyon artışı olabileceği için dikkat."},
+    "timing": "Akşam yatmadan önce kullanımı yaygındır.",
+    "longTermSafety": "Günlük aromaterapi/çay kullanımında genelde güvenli."
+  },
+
+  "b5": {
+    "table": ["🌿 Meyan kökü (Licorice)","🔴",1,3,1,2,1,3,1,1.8,"b5","0"],
+    "fullName": "Meyan Kökü (Licorice)",
+    "latinName": "Glycyrrhiza glabra",
+    "category": "Kök / Tatlandırıcı bitki",
+    "origin": "Akdeniz, Orta Doğu, Asya",
+    "benefits": ["Adrenal destek (geleneksel)","Öksürük rahatlatma","Gastrointestinal destek"],
+    "mechanism": "Glycyrrhizin mineralokortikoid benzeri etki gösterebilir; kortizol metabolizmasını etkileyerek indirgeyici etki yapabilir.",
+    "historicalUse": "Tadı ve şifalı özellikleri için uzun süredir kullanılmıştır.",
+    "conditionalNotes": "Uzun süreli veya yüksek doz kullanım hipokaliemi, hipertansiyon ve ödem yapabilir; etkileşimleri dikkat gerektirir.",
+    "targetSystems": ["Adrenal/HPA aksı","Sindirim","Böbrek/elektrolit dengesi"],
+    "sideEffects": ["Hipokalemi","Hipertansiyon","Ödem"],
+    "usage": "Kısa dönem öksürük çayları veya standartize özler (dikkatli).",
+    "dosageDetail": "Kısa süreli kullanın; uzun süreli kullanımlarda tuz-elektrolit izleme gerekir.",
+    "activeCompounds": ["Glycyrrhizin","Flavonoidler"],
+    "preparationWarnings": "Yüksek dozlarda veya uzun süreli kullanım önerilmez; hipertansiyon ilaçları ile dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gün içinde kısa süreli kullanım.",
+    "longTermSafety": "Uzun süreli sürekli kullanımdan kaçınılmalıdır."
+  },
+
+  "a45": {
+    "table": ["🌿 Alıç (Hawthorn)","🟠",3,2,1,1,5,1,1,1.8,"a45","0"],
+    "fullName": "Alıç (Hawthorn)",
+    "latinName": "Crataegus spp.",
+    "category": "Bitki - Meyve/Çiçek",
+    "origin": "Avrupa, Asya",
+    "benefits": ["Kalp/damar desteği (hafif)","Damar tonusu","Kardiyak fonksiyon desteği (geleneksel)"],
+    "mechanism": "Flavonoidler damar tonusunu ve dolaşımı destekleyebilir; hafif inotropik etki bildirilmiştir.",
+    "historicalUse": "Geleneksel tıpta kalp desteği için uzun süre kullanılmıştır.",
+    "conditionalNotes": "Kalp ilaçları ile etkileşim potansiyeline karşı dikkatli olunmalı; doz ve form dikkate alınmalı.",
+    "targetSystems": ["Kalp-damar sistemi"],
+    "sideEffects": ["Nadir mide rahatsızlığı","İlaç etkileşim riski (özellikle kalp ilaçları)"],
+    "usage": "Çay, tentür veya standardize ekstrakt.",
+    "dosageDetail": "Standardize ekstraktlarla üretici dozlarına uyulmalı.",
+    "activeCompounds": ["Flavonoidler","Proantosiyanidinler"],
+    "preparationWarnings": "Kalp hastalığı veya reçeteli kardiyak ilaç alanlar doktor kontrolünde kullanmalı.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle birlikte alınabilir.",
+    "longTermSafety": "Uzun süreli kontrollü kullanımda genelde iyi tolere edilir (doktor takibi önerilir)."
+  },
+
+  "a46": {
+    "table": ["🌺 Hibiskus (Karkade)","🟡",4,2,1,2,1,4,2,2.2,"a46","0"],
+    "fullName": "Hibiskus (Karkade)",
+    "latinName": "Hibiscus sabdariffa",
+    "category": "Bitki - Çiçek / Meyve çayı",
+    "origin": "Tropikal/Subtropikal bölgeler",
+    "benefits": ["Tansiyon desteği (hafif)","Antioksidan","Sindirim desteği"],
+    "mechanism": "Organik asitler ve polifenoller vasküler etki ve antioksidan özellik sağlar.",
+    "historicalUse": "İçecek olarak ve halk tıbbında kullanılmıştır.",
+    "conditionalNotes": "Hipotansiyon eğilimi olanlarda dikkat; gebelikte kullanım sınırlandırılabilir.",
+    "targetSystems": ["Damar sistemi","Metabolizma"],
+    "sideEffects": ["Alerji (nadir)","Düşük tansiyon riski bazı kişilerde"],
+    "usage": "Soğuk veya sıcak çay olarak tüketilir.",
+    "dosageDetail": "Günlük 1–2 fincan makul; tansiyon ilaçları ile kombinasyonda takip.",
+    "activeCompounds": ["Anthocyaninler","Asitler"],
+    "preparationWarnings": "Hamilelikte yüksek dozdan kaçınılmalı.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Gün içinde tercih edilebilir; tansiyon etkisi izlenmelidir.",
+    "longTermSafety": "Genel olarak gıda düzeyinde güvenlidir."
+  },
+
+  "a47": {
+    "table": ["🌱 Çörek Otu (Nigella sativa)","🟠",3,3,2,3,2,3,2,2.3,"a47","0"],
+    "fullName": "Çörek Otu (Nigella sativa)",
+    "latinName": "Nigella sativa",
+    "category": "Tohum / Baharat",
+    "origin": "Güneybatı Asya, Akdeniz çevresi",
+    "benefits": ["Antioksidan","Bağışıklık desteği","Antiinflamatuar potansiyel"],
+    "mechanism": "Thymoquinone ve uçucu yağ bileşikleri antiinflamatuar ve antioksidan etki sağlar.",
+    "historicalUse": "Geleneksel tıpta geniş kullanım; 'her derde devadır' şeklinde anılmaktadır.",
+    "conditionalNotes": "Yüksek dozlarda hipotansiyon veya ilaç etkileşimleri olabilir.",
+    "targetSystems": ["Bağışıklık","Sindirim"],
+    "sideEffects": ["Nadir alerji","Düşük tansiyon riski yüksek dozda"],
+    "usage": "Tohum veya yağ formu; yemeklere, kapsüle veya çaya eklenir.",
+    "dosageDetail": "Gıda düzeyinde küçük miktarlar güvenli; takviye formunda üretici önerisine uyun.",
+    "activeCompounds": ["Thymoquinone","Uçucu yağlar"],
+    "preparationWarnings": "Gebelikte yüksek dozlardan kaçınılmalı.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle birlikte alınması tolereyi artırır.",
+    "longTermSafety": "Gıda düzeyinde kısa-orta vadede güvenli."
+  },
+
+  "g1": {
+    "table": ["🌿 Karanfil (Clove)","🟡",3,4,1,2,1,4,2,2.3,"g1","0"],
+    "fullName": "Karanfil (Clove)",
+    "latinName": "Syzygium aromaticum",
+    "category": "Baharat / Uçucu yağ",
+    "origin": "Endonezya/Hint okyanusu bölgesi",
+    "benefits": ["Ağrı kesici (lokal)","Antimikrobiyal","Sindirim desteği"],
+    "mechanism": "Eugenol başta olmak üzere fenolik bileşikler antimikrobiyal ve analjezik etki sağlar.",
+    "historicalUse": "Geleneksel tıpta diş ağrısı ve sindirim sorunlarında kullanılmıştır.",
+    "conditionalNotes": "Yoğun yağ formu tahriş edebilir; dahilen yüksek dozlarda dikkat.",
+    "targetSystems": ["Ağız/diş","Sindirim"],
+    "sideEffects": ["Mukozal tahriş (yoğun form)","Alerji (nadir)"],
+    "usage": "Baharat olarak, çay veya lokal anestezik uygulamalarda seyreltilmiş yağ formu.",
+    "dosageDetail": "Gıda düzeyinde nadiren sorun yaratır; yağ formunda dikkat.",
+    "activeCompounds": ["Eugenol","Fenolik bileşikler"],
+    "preparationWarnings": "Uçucu yağlar seyreltilmeden kullanılmamalıdır.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "İhtiyaca göre (ağız/gargara veya yemeklerle).",
+    "longTermSafety": "Gıda düzeyinde güvenli."
+  },
+
+  "a48": {
+    "table": ["🌿 Defne yaprağı (Bay leaf)","🟢",5,2,1,1,1,3,1,1.5,"a48","0"],
+    "fullName": "Defne Yaprağı (Bay leaf)",
+    "latinName": "Laurus nobilis",
+    "category": "Bitki - Yaprak / Baharat",
+    "origin": "Akdeniz bölgesi",
+    "benefits": ["Sindirim desteği","Lezzet/aroma","Hafif antioksidan"],
+    "mechanism": "Uçucu yağlar sindirimi destekleyici etki; aroma bileşenleri antioksidan katkı sağlar.",
+    "historicalUse": "Mutfağa aroma verici ve halk tıbbında sindirim destekçisi olarak kullanılmıştır.",
+    "conditionalNotes": "Gıda düzeyinde genelde güvenlidir; tüm olarak yutmayıp pişirme sonrası çıkarılması önerilir.",
+    "targetSystems": ["Sindirim"],
+    "sideEffects": ["Nadir alerji"],
+    "usage": "Pişirme esnasında aroma için yaprak eklenir, servis öncesi çıkarılır.",
+    "dosageDetail": "Gıda düzeyinde güvenlidir; çay formunda moderasyon önerilir.",
+    "activeCompounds": ["Uçucu yağlar","Fenolikler"],
+    "preparationWarnings": "Tüm yaprakların yutulması boğaz tahrişine yol açabilir; pişirme sonrası çıkarın.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemek pişirme sırasında.",
+    "longTermSafety": "Günlük gıda düzeyinde güvenlidir."
+  },
+
+  "d2": {
+    "table": ["🍄 Shiitake mantarı","🟡",4,3,1,1,4,3,2,2.5,"d2","0"],
+    "fullName": "Shiitake Mantarı",
+    "latinName": "Lentinula edodes",
+    "category": "Mantar",
+    "origin": "Doğu Asya",
+    "benefits": ["Bağışıklık desteği","Antioksidan","Damar desteği (LDL üzerinde olumlu etkiler)"],
+    "mechanism": "Beta-glukanlar ve lentinan benzeri polisakkaritler immünomodülatör etki sağlar.",
+    "historicalUse": "Geleneksel Çin ve Japon tıbbında gıda ve şifa amaçlı kullanılmıştır.",
+    "conditionalNotes": "Nadir alerjik reaksiyonlar ve antibiyotik benzeri etki bildiren durumlar olabilir.",
+    "targetSystems": ["Bağışıklık","Damar sistemi"],
+    "sideEffects": ["Alerjik reaksiyon (nadir)","Sindirim hassasiyeti"],
+    "usage": "Pişmiş gıda olarak veya ekstrakt form.",
+    "dosageDetail": "Gıda düzeyinde tüketim güvenli; ekstrakt dozlarına dikkat.",
+    "activeCompounds": ["Beta-glukanlar","Lentinan benzeri polisakkaritler"],
+    "preparationWarnings": "Çiğ tüketim yerine pişirme önerilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Yemeklerle birlikte.",
+    "longTermSafety": "Gıda düzeyinde uzun dönem güvenli."
+  },
+
+  "d3": {
+    "table": ["🍄 Maitake mantarı","🟠",3,3,1,1,4,2,2,2.3,"d3","0"],
+    "fullName": "Maitake Mantarı",
+    "latinName": "Grifola frondosa",
+    "category": "Mantar",
+    "origin": "Kuzey yarımküre ormanları",
+    "benefits": ["Bağışıklık modulasyonu","Metabolik destek","Antioksidan"],
+    "mechanism": "Polisakkaritler ve beta-glukanlar immün yanıtı etkileyebilir.",
+    "historicalUse": "Geleneksel Japon tıbbında besin ve şifa amaçlı kullanılmıştır.",
+    "conditionalNotes": "İmmün sistemi etkileyebileceği için immünsupresif ilaçla kombine kullanımlarda dikkat.",
+    "targetSystems": ["Bağışıklık","Metabolizma"],
+    "sideEffects": ["Nadir sindirim şikayetleri"],
+    "usage": "Pişmiş gıda veya ekstrakt formu.",
+    "dosageDetail": "Gıda düzeyinde güvenli; ekstrakt dozlarına dikkat.",
+    "activeCompounds": ["Beta-glukanlar","Polisakkaritler"],
+    "preparationWarnings": "Ekstrakt formlar yüksek doz sağlayabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Öğünlerle birlikte.",
+    "longTermSafety": "Gıda düzeyinde genelde güvenli."
+  },
+
+  "b6": {
+    "table": ["🌱 Maca kökü","🟡",4,1,2,1,2,2,4,1.8,"b6","0"],
+    "fullName": "Maca Kökü",
+    "latinName": "Lepidium meyenii",
+    "category": "Kök / Besin",
+    "origin": "And Dağları (Peru)",
+    "benefits": ["Enerji ve dayanıklılık","Hormonal dengeye yardımcı olma (geleneksel)","Besin desteği"],
+    "mechanism": "Glukozinolat türevleri ve besin içerikleriyle dolaylı hormonal ve enerji desteği sunar.",
+    "historicalUse": "And yerli halkı tarafından besin ve tonik olarak kullanılmıştır.",
+    "conditionalNotes": "Tiroid bozukluğu veya hormon hassasiyeti olanlarda dikkat.",
+    "targetSystems": ["Endokrin","Enerji/metabolizma"],
+    "sideEffects": ["Nadir sindirim rahatsızlığı"],
+    "usage": "Toz formda smoothielere, yoğurda eklenir.",
+    "dosageDetail": "Günlük 1–3 çay kaşığı toz formu tipiktir.",
+    "activeCompounds": ["Glukozinolat benzeri bileşikler","Mineraller"],
+    "preparationWarnings": "Yüksek ısıda uzun süreli işleme bazı besin maddelerini azaltabilir.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah/öğle (enerji desteği için).",
+    "longTermSafety": "Orta vadede güvenli kabul edilir."
+  },
+
+  "a49": {
+    "table": ["🌿 Ginkgo biloba","🟠",2,1,5,1,1,1,2,1.7,"a49","a1,a5"],
+    "fullName": "Ginkgo biloba",
+    "latinName": "Ginkgo biloba",
+    "category": "Bitki - Yaprak / Nootropik",
+    "origin": "Doğu Asya (Çin)",
+    "benefits": ["Bilişsel destek (hafif)","Dolaşım desteği","Antioksidan"],
+    "mechanism": "Flavonoidler ve terpen-laktonlar mikrovasküler dolaşımı destekleyebilir.",
+    "historicalUse": "Geleneksel Çin tıbbında uzun süreli kullanılmıştır.",
+    "conditionalNotes": "Antikoagülan etkili bitkilerle beraber kanama riski artabilir; epilepsi öyküsü olanlarda dikkat.",
+    "targetSystems": ["Beyin","Damar"],
+    "sideEffects": ["Baş ağrısı","Nadiren alerji","Kanama riski (kombinasyonlarda)"],
+    "usage": "Standardize ekstrakt (EGb 761) yaygın kullanımdadır.",
+    "dosageDetail": "Standardize ekstraktlarda üretici dozlarına uyun.",
+    "activeCompounds": ["Ginkgoflavonlar","Terpen-laktonlar"],
+    "preparationWarnings": "Antikoagülan ilaç kullananlar doktor kontrolünde kullanmalı.",
+    "avoidWith": {"codes": ["a1","a5"], "reason": "Sarımsak, zeytin yaprağı vb. ile kanama riskini artırabilir."},
+    "timing": "Sabah veya öğle (uyku bozulmasın diye).",
+    "longTermSafety": "Kısa-orta vadede standartize formların güvenliği kabul görmüştür; nadir yan etkiler izlenmelidir."
+  },
+
+  "a50": {
+    "table": ["🌿 Rhodiola","🟠",3,2,4,2,2,1,1,2.0,"a50","0"],
+    "fullName": "Rhodiola (Altın Kök)",
+    "latinName": "Rhodiola rosea",
+    "category": "Kök / Adaptogen",
+    "origin": "Soğuk iklimler (Rusya, Kuzey Avrupa, Asya)",
+    "benefits": ["Stres toleransı","Enerji ve dayanaklılık","Bilişsel performans desteği"],
+    "mechanism": "Rosavinler ve salidrozid gibi bileşikler HPA aksını modüle edebilir.",
+    "historicalUse": "Geleneksel tıpta yorgunluğa karşı kullanılmıştır.",
+    "conditionalNotes": "Uykusuzluk eğilimi yapabilir; uyarıcı etkili bitkilerle etkileşim dikkat.",
+    "targetSystems": ["Sinir sistemi","Endokrin"],
+    "sideEffects": ["Uykusuzluk (bazı kişilerde)","Aşırı kullanımda çarpıntı"],
+    "usage": "Kapsül veya tentür şeklinde kullanılır.",
+    "dosageDetail": "Üretici önerisine göre; sabah alımı önerilir.",
+    "activeCompounds": ["Rosavin","Salidrozid"],
+    "preparationWarnings": "Akşam alımı uyku bozar; uyarıcı bitkilerle beraber dikkat.",
+    "avoidWith": {"codes": [], "reason": "0"},
+    "timing": "Sabah/öğle (enerji desteği için).",
+    "longTermSafety": "Kısa-orta dönem kullanımlarda güvenli kabul edilir."
+  },
+
+  "tulsi": {
+    "table": [
+      "🌿 Tulsi (Kutsal Fesleğen)",
+      "🟡",
+      3,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2.0,
+      "0",
+      "0"
+    ],
+    "fullName": "Tulsi (Kutsal Fesleğen)",
+    "latinName": "Ocimum tenuiflorum",
+    "category": "Ot",
+    "origin": "Güney ve Güneydoğu Asya",
+    "benefits": [
+      "Trad: adaptogen, stres/anksiyete desteği, antioksidan etkiler"
+    ],
+    "mechanism": "Uçucu yağlar (eugenol vb.) ve fenolik bileşiklerin kombinasyonu ile antioksidan ve hafif adaptogen etkiler sağlar.",
+    "historicalUse": "Ayurvedik uygulamalarda ruhsal ve bedensel denge için uzun kullanımı vardır.",
+    "conditionalNotes": "Hamilelik/emzirme/ilaçlarla etkileşim durumunda hekime danışılmalı.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Bağışıklık"
+    ],
+    "sideEffects": [
+      "Nadir olarak hassasiyet; yüksek dozlarda sindirim şikayetleri"
+    ],
+    "usage": "Çay veya tentür olarak; gıda takviyesi formunda yaygın.",
+    "dosageDetail": "Çay olarak günlük 1–2 fincan geleneksel düzeydedir; ekstraktlarda üretici talimatına uyun.",
+    "activeCompounds": [
+      "Eugenol, ursolic asit, flavonoidler"
+    ],
+    "preparationWarnings": "Uçucu yağ formunda yüksek dozlardan kaçınılmalı.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Spesifik güçlü etkileşim bildirilmemiştir, ilaç kullananlar dikkat etmelidir."
+    },
+    "timing": "Gün içinde; akşam alımı kişiye göre değişir.",
+    "longTermSafety": "Kısa süreli kullanımı güvenli kabul edilir; kronik yüksek dozlarda klinik gözetim önerilir."
+  },
+  "i3": {
+    "table": [
+      "🌷 Sarı Kantaron (St. John's Wort)",
+      "🔴",
+      1,
+      1,
+      4,
+      1,
+      1,
+      1,
+      1,
+      1.2,
+      "i3",
+      "i2"
+    ],
+    "fullName": "Sarı Kantaron (St. John's Wort)",
+    "latinName": "Hypericum perforatum",
+    "category": "Çiçek",
+    "origin": "Avrupa, Asya",
+    "benefits": [
+      "Hafif-orta depresyon destekleyici (geleneksel/çeşitli çalışmalarda belirtilmiş)"
+    ],
+    "mechanism": "Monoaminlerin yeniden alımını etkileyen fitokimyasal bileşenler içerir; CYP enzimlerini etkileyebilir.",
+    "historicalUse": "Geleneksel olarak ruh hali destekleyici ve yara iyileştirici olarak kullanılmıştır.",
+    "conditionalNotes": "Çok sayıda ilaçla (antidepresanlar, doğum kontrol hapları, antikoagülanlar vb.) ciddi etkileşim bildirildi — doktor onayı olmadan kullanmayın.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Hepatik metabolizma (CYP etkisi)"
+    ],
+    "sideEffects": [
+      "Işığa duyarlılık, gastrointestinal şikayetler, ilaç etkileşimleri"
+    ],
+    "usage": "Standart ekstreler ve kapsüller; tıbbi gözetim önerilir.",
+    "dosageDetail": "Ürün standartizasyonuna göre değişir; doktor reçetesi/önerisi önemli.",
+    "activeCompounds": [
+      "Hypericin, hyperforin"
+    ],
+    "preparationWarnings": "Diğer ilaçlarla potansiyel etkileşim riski yüksek.",
+    "avoidWith": {
+      "codes": [
+        "i2"
+      ],
+      "reason": "Goldenseal gibi farmakokinetiği etkileyen bitkilerle kombine etmek önerilmez."
+    },
+    "timing": "Gün içinde; düzenli kullanımda etki zaman alır.",
+    "longTermSafety": "Uzun süreli ve özellikle ilaçla birlikte kullanımı dikkat gerektirir."
+  },
+  "b11": {
+    "table": [
+      "🌿 Çarkıfelek (Passionflower)",
+      "🟢",
+      5,
+      1,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1.3,
+      "b11",
+      "b11"
+    ],
+    "fullName": "Çarkıfelek (Passionflower)",
+    "latinName": "Passiflora incarnata",
+    "category": "Çiçek/örtü",
+    "origin": "Amerika",
+    "benefits": [
+      "Geleneksel olarak hafif uyku/anksiyete desteği"
+    ],
+    "mechanism": "flavonoid ve alkaloid içeriği ile GABA benzeri yolları etkileyebilir.",
+    "historicalUse": "Geleneksel halk tıbbında sedatif/rahatlatıcı amaçlı kullanılmıştır.",
+    "conditionalNotes": "Sedatif ilaçlarla birlikte kullanıldığında etkiler toplanabilir.",
+    "targetSystems": [
+      "Sinir sistemi"
+    ],
+    "sideEffects": [
+      "Aşırı dozda sersemlik, mide şikayetleri"
+    ],
+    "usage": "Çay veya tentür; kısa süreli kullanım için yaygın.",
+    "dosageDetail": "Çay: 1 fincan; ürün bazlı doz değişir.",
+    "activeCompounds": [
+      "Flavonoidler, harman alkaloidler"
+    ],
+    "preparationWarnings": "Sedatif ilaçlarla birlikte dikkatli olun.",
+    "avoidWith": {
+      "codes": [
+        "b11"
+      ],
+      "reason": "Kava, valerian gibi sedatif bitkilerle etkileşim riski."
+    },
+    "timing": "Akşam (uyku desteği amaçlı) tercih edilir.",
+    "longTermSafety": "Uzun süreli yüksek dozlarda veri sınırlı; ara kullanımlar daha güvenli."
+  },
+  "i4,i5,i6,a20,h1,h2": {
+    "table": [
+      "🌿 Kava kava",
+      "🔴",
+      1,
+      1,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1.3,
+      "i4,i5,i6,a20,h1,h2",
+      "i4,i5,i6,a20,h1,h2"
+    ],
+    "fullName": "Kava kava (kombine kodlu giriş)",
+    "latinName": "Piper methysticum",
+    "category": "Kök/Rizom",
+    "origin": "Pasifik adaları",
+    "benefits": [
+      "Kısa süreli anksiyete/rahatlama desteği (geleneksel kullanım)"
+    ],
+    "mechanism": "Kavalaktonlar merkezi sinir sistemi üzerinde sedatif/anksiyolitik etkiler gösterebilir.",
+    "historicalUse": "Pasifik kültürlerinde ritüel ve sosyal içecek olarak uzun kullanım.",
+    "conditionalNotes": "Karaciğer toksisitesi bildirilmiş; karaciğer hastalığı/alkol/karaciğer toksik ilaçlarla kombinasyon kesinlikle sakıncalı.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Karaciğer (metabolizma)"
+    ],
+    "sideEffects": [
+      "Nadir karaciğer hasarı raporları, sersemlik"
+    ],
+    "usage": "Kısa süreli, düşük dozlarda tıbbi gözetimle kullanılmalı.",
+    "dosageDetail": "Uzun süreli veya yüksek doz kullanım önerilmez.",
+    "activeCompounds": [
+      "Kavalaktonlar"
+    ],
+    "preparationWarnings": "Karaciğer riski nedeniyle yüksek doz ve ekstraktlardan kaçınılmalı.",
+    "avoidWith": {
+      "codes": [
+        "i4",
+        "i5",
+        "i6",
+        "a20",
+        "h1",
+        "h2"
+      ],
+      "reason": "Diğer hepatotoksik/ sedatif bitkilerle birlikte risk artışı."
+    },
+    "timing": "Gün içinde düşük doz; doktor takibiyle kullanılmalı.",
+    "longTermSafety": "Uzun süreli kullanım kesinlikle önerilmez; karaciğer fonksiyonları izlenmeli."
+  },
+  "a51": {
+    "table": [
+      "🌿 Kediotu (Valerian)",
+      "🟡",
+      2,
+      1,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1.3,
+      "a51",
+      "b11"
+    ],
+    "fullName": "Kediotu (Valerian)",
+    "latinName": "Valeriana officinalis",
+    "category": "Kök",
+    "origin": "Avrupa, Asya",
+    "benefits": [
+      "Kısa süreli uyku desteği, hafif anksiyete rahatlatma"
+    ],
+    "mechanism": "Valerenik asit ve uçucu bileşenlerce GABA benzeri etkilere katkı olabilir.",
+    "historicalUse": "Geleneksel olarak uykusuzluk/rahatlama amaçlı kullanılmıştır.",
+    "conditionalNotes": "Alkol veya sedatif ilaçlarla birlikte kullanılmamalı; uzun süreli etkinlik verileri sınırlı.",
+    "targetSystems": [
+      "Sinir sistemi"
+    ],
+    "sideEffects": [
+      "Sabah uyuşukluğu, baş ağrısı nadir"
+    ],
+    "usage": "Çay, tentür veya kapsül formları yaygın.",
+    "dosageDetail": "Kısa dönem (haftalar) kullanımı yaygın; doz ürün spesifik.",
+    "activeCompounds": [
+      "Valerenik asit, uçucu yağlar"
+    ],
+    "preparationWarnings": "Sedatif ilaç kombinasyonunda dikkat.",
+    "avoidWith": {
+      "codes": [
+        "b11"
+      ],
+      "reason": "Kava/passionflower gibi sedatiflerle etkileşim potansiyeli."
+    },
+    "timing": "Akşam uykudan önce alınması daha etkilidir.",
+    "longTermSafety": "Uzun süreli yüksek doz veri eksikliği; aralıklı kullanım önerilir."
+  },
+  "sinameki": {
+    "table": [
+      "🌿 Sinameki (Senna)",
+      "🟠",
+      1,
+      1,
+      1,
+      1,
+      1,
+      5,
+      1,
+      1.4,
+      "0",
+      "0"
+    ],
+    "fullName": "Sinameki (Senna)",
+    "latinName": "Senna alexandrina",
+    "category": "Yaprak/bitki (laksatif)",
+    "origin": "Afrika, Güney Asya",
+    "benefits": [
+      "Kısa süreli kabızlık tedavisinde laksatif etki"
+    ],
+    "mechanism": "Antrakinon glikozitleri bağırsak motilitesini artırır.",
+    "historicalUse": "Geleneksel laksatif olarak uzun süre kullanılmıştır.",
+    "conditionalNotes": "Uzun süreli veya sürekli kullanım bağırsak bağımlılığına yol açabilir; elektrolit dengesine dikkat.",
+    "targetSystems": [
+      "Sindirim sistemi"
+    ],
+    "sideEffects": [
+      "Kramp, elektrolit dengesizlikleri, uzun süreli bağımlılık"
+    ],
+    "usage": "Kısa süreli kullanım; reçeteli/önerilen süre sınırına uyun.",
+    "dosageDetail": "Genelde gecelik ya da kısa rejimler halinde; uzun süre kullanılmamalı.",
+    "activeCompounds": [
+      "Sennosides (antrakinon türevleri)"
+    ],
+    "preparationWarnings": "Elektriklosit bozuklukları, hamilelikte dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Uzun süreli kombinasyonlardan kaçınılmalı."
+    },
+    "timing": "Akşam alımı yaygındır (gecelik etki).",
+    "longTermSafety": "Kronik kullanım önerilmez."
+  },
+  "kakule": {
+    "table": [
+      "🌿 Kakule (Cardamom)",
+      "🟡",
+      4,
+      2,
+      1,
+      1,
+      1,
+      4,
+      3,
+      2.0,
+      "0",
+      "0"
+    ],
+    "fullName": "Kakule (Cardamom)",
+    "latinName": "Elettaria cardamomum",
+    "category": "Tohum / Baharat",
+    "origin": "Güney Hindistan",
+    "benefits": [
+      "Geleneksel olarak sindirim destekleyici, ağız hijyeni ve antioksidan etkiler"
+    ],
+    "mechanism": "Uçucu yağlarda bulunan terpen ve fenoller sindirim desteği ve antimikrobiyal etkilere katkı sağlar.",
+    "historicalUse": "Baharat ve tıbbi bitki olarak uzun kullanım geçmişi.",
+    "conditionalNotes": "Gıda düzeyinde genelde güvenli; yüksek ekstraktlarda dikkat.",
+    "targetSystems": [
+      "Sindirim sistemi",
+      "Ağız/solunum"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay, baharat, ekstrakt formu",
+    "dosageDetail": "Baharat düzeyinde güvenlidir; tıbbi ekstraktlarda üretici talimatı takip edilmeli.",
+    "activeCompounds": [
+      "1,8-cineole, terpenler"
+    ],
+    "preparationWarnings": "Ekstrakt kullanımında doz kontrolü önemli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde genel olarak güvenli."
+    },
+    "timing": "Yemeklerle birlikte uygun.",
+    "longTermSafety": "Gıda düzeyinde uzun süreli tüketim güvenli kabul edilir."
+  },
+  "g7": {
+    "table": [
+      "🌿 Çemen (Fenugreek)",
+      "🟠",
+      3,
+      2,
+      1,
+      1,
+      2,
+      2,
+      4,
+      2.0,
+      "b3",
+      "b3"
+    ],
+    "fullName": "Çemen (Fenugreek)",
+    "latinName": "Trigonella foenum-graecum",
+    "category": "Tohum",
+    "origin": "Akdeniz ve Orta Doğu",
+    "benefits": [
+      "Geleneksel olarak sindirim, süt artışı (laktasyon) ve glisemik kontrol iddiaları"
+    ],
+    "mechanism": "Saponin ve fenolik bileşikler kan şekeri/metabolizma üzerinde etkiler oluşturabilir.",
+    "historicalUse": "Yüzyıllardır baharat ve tıbbi bitki olarak kullanılmıştır.",
+    "conditionalNotes": "Hamilelikte uterotonik etkiler olabileceği için dikkat; ilaç-etkileşimleri olabilir.",
+    "targetSystems": [
+      "Sindirim",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Büyük dozlarda mide rahatsızlığı; koku değişikliği"
+    ],
+    "usage": "Tohum, ezme, çay veya kapsül formu",
+    "dosageDetail": "Gıda düzeyinde güvenli; terapötik dozlar için profesyonel rehberlik önerilir.",
+    "activeCompounds": [
+      "Saponinler, fenolik bileşikler"
+    ],
+    "preparationWarnings": "Hamilelikte dikkatli kullanılmalı.",
+    "avoidWith": {
+      "codes": [
+        "b3"
+      ],
+      "reason": "Ginseng gibi kan şekerini etkileyen bitkilerle birlikte etki toplanabilir."
+    },
+    "timing": "Yemeklerle birlikte uygun olabilir.",
+    "longTermSafety": "Gıda düzeyinde genelde güvenli; takviye dozlarında uzman kontrolü önerilir."
+  },
+  "f3": {
+    "table": [
+      "🌿 Mürver (Elderberry)",
+      "🟡",
+      3,
+      2,
+      1,
+      5,
+      1,
+      2,
+      1,
+      2.0,
+      "0",
+      "0"
+    ],
+    "fullName": "Mürver (Elderberry)",
+    "latinName": "Sambucus nigra",
+    "category": "Meyve/Çiçek",
+    "origin": "Avrupa, Kuzey Afrika",
+    "benefits": [
+      "Geleneksel olarak üst solunum yolu destekçisi; antiviral iddialar"
+    ],
+    "mechanism": "Flavonoidler ve polisakkaritler immün yanıtı destekleyebilir; ekstrakt standardizasyonu önemlidir.",
+    "historicalUse": "Halk tıbbında çiçek ve meyve formları yaygın kullanımda.",
+    "conditionalNotes": "Çiğ meyve ham tohum/kabuk kısmı toksik glikozidler içerebilir; uygun işlem şart.",
+    "targetSystems": [
+      "Solunum",
+      "Bağışıklık"
+    ],
+    "sideEffects": [
+      "İşlenmemiş meyve/çiçek tüketiminde mide rahatsızlığı riski"
+    ],
+    "usage": "Isıtılmış şurup, ekstrakt veya işlenmiş ürünler; çiçek çayı",
+    "dosageDetail": "Ürüne göre değişir; işlenmiş/standart ekstrakt tercih edilmeli.",
+    "activeCompounds": [
+      "Anthocyanins, flavonoidler"
+    ],
+    "preparationWarnings": "Ham/işlenmemiş çiğ meyve tüketiminden kaçınılmalı.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Genel olarak gıdada güvenli formlar tercih edilmeli."
+    },
+    "timing": "Gün içinde; akut desteğe yönelik kısa süreli kullanım.",
+    "longTermSafety": "Uzun süreli yüksek doz verileri sınırlı; standart ürünler kısa kullanım için tercih edilir."
+  },
+  "f4": {
+    "table": [
+      "🍇 Yaban mersini (Blueberry)",
+      "🟡",
+      5,
+      3,
+      3,
+      2,
+      2,
+      2,
+      3,
+      2.5,
+      "0",
+      "0"
+    ],
+    "fullName": "Yaban mersini (Blueberry)",
+    "latinName": "Vaccinium myrtillus",
+    "category": "Meyve",
+    "origin": "Kuzey Yarımküre",
+    "benefits": [
+      "Antioksidan yoğun; görme ve vasküler destek iddiaları (beslenme düzeyinde faydalar)"
+    ],
+    "mechanism": "Anthocyanin ve flavonoidler antioksidan kapasite sağlar.",
+    "historicalUse": "Geleneksel olarak meyve olarak ve şifalı gıda kapsamında kullanılmıştır.",
+    "conditionalNotes": "Gıda düzeyinde genelde güvenli; konsantre ekstraktlarda doz kontrolü.",
+    "targetSystems": [
+      "Göz",
+      "Damar",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Taze/dondurulmuş meyve, ekstrakt, toz veya kapsül.",
+    "dosageDetail": "Günlük beslenme ile düzenli tüketim önerilir; ekstrakt dozları ürün bazlı.",
+    "activeCompounds": [
+      "Anthocyanins, phenolics"
+    ],
+    "preparationWarnings": "Ekstrakt formlarında standartlaşma tercih edilmeli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde güvenli."
+    },
+    "timing": "Gün içinde besin olarak alınabilir.",
+    "longTermSafety": "Gıda olarak uzun süreli tüketim güvenlidir."
+  },
+  "kudzu": {
+    "table": [
+      "🌿 Kudzu (Pueraria)",
+      "🟡",
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1.3,
+      "0",
+      "0"
+    ],
+    "fullName": "Kudzu",
+    "latinName": "Pueraria lobata",
+    "category": "Kök / Bitki",
+    "origin": "Doğu Asya",
+    "benefits": [
+      "Geleneksel olarak alkol toleransı/alkol çekilme desteği ve bazı metabolik etkiler iddiaları"
+    ],
+    "mechanism": "İsoflavon içerikleriyle hormon benzeri ve nöro-destekleyici etkiler olabilir.",
+    "historicalUse": "Çin tıbbında uzun süre kullanımı vardır.",
+    "conditionalNotes": "Estrojen benzeri etkiler nedeniyle hormonla ilişkili durumlarda dikkat.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Endokrin/metabolik"
+    ],
+    "sideEffects": [
+      "Büyük dozlarda hormonal etki potansiyeli"
+    ],
+    "usage": "Kök ekstraktları, toz formları",
+    "dosageDetail": "Ürüne göre değişir; uzun süreli yüksek dozlarda uzman kontrolü.",
+    "activeCompounds": [
+      "Daidzein, puerarin (isoflavonlar)"
+    ],
+    "preparationWarnings": "Hamilelik/östrojenle ilişkili kanser öyküsü olanlar dikkatli olmalı.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Hormon hassasiyeti olan durumlarda dikkat."
+    },
+    "timing": "Gün içinde, üretici talimatına göre.",
+    "longTermSafety": "Uzun süreli yüksek doz kullanımında uzman görüşü önerilir."
+  },
+  "a22": {
+    "table": [
+      "🌿 Gotu Kola (Centella asiatica)",
+      "🟠",
+      3,
+      2,
+      3,
+      1,
+      3,
+      1,
+      1,
+      1.8,
+      "0",
+      "0"
+    ],
+    "fullName": "Gotu Kola (Centella asiatica)",
+    "latinName": "Centella asiatica",
+    "category": "Yaprak / Ot",
+    "origin": "Güneydoğu Asya",
+    "benefits": [
+      "Bilişsel destek ve dolaşım/venöz sağlık iddiaları"
+    ],
+    "mechanism": "Triterpenoidler ve flavonoidlerle kollajen ve dolaşım destekleri olabilir.",
+    "historicalUse": "Geleneksel tıpta yara iyileştirici ve bilişsel destek amaçlı kullanılmıştır.",
+    "conditionalNotes": "Karaciğer sorunları veya yüksek doz kullanımında dikkat.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Damar/bağ dokusu"
+    ],
+    "sideEffects": [
+      "Nadir kas spazmı, baş ağrısı, mide şikayetleri"
+    ],
+    "usage": "Çay, tentür veya kapsül",
+    "dosageDetail": "Günlük düşük-orta dozlarda önerilir; ürün spesifik.",
+    "activeCompounds": [
+      "Asiaticoside, madecassoside"
+    ],
+    "preparationWarnings": "Yüksek doz veya uzun süreli kullanımda uzman görüşü alın.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Genel kullanımda dikkatli olunmalı."
+    },
+    "timing": "Gün içinde alınabilir.",
+    "longTermSafety": "Uzun süreli yüksek doz çalışmaları sınırlı."
+  },
+  "a53": {
+    "table": [
+      "🌿 Okaliptus (Eucalyptus)",
+      "🟡",
+      2,
+      2,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1.3,
+      "0",
+      "0"
+    ],
+    "fullName": "Okaliptus (Eucalyptus)",
+    "latinName": "Eucalyptus globulus",
+    "category": "Ağaç yaprağı / yağ",
+    "origin": "Avustralya",
+    "benefits": [
+      "Solunum desteği (buhar/soğuk algınlığı), lokal antiseptik kullanım"
+    ],
+    "mechanism": "1,8-cineole gibi uçucu bileşikler solunum yollarında dekonjestan/antimikrobiyal etki sağlayabilir.",
+    "historicalUse": "Geleneksel olarak solunum yolu sorunlarına yönelik kullanılmıştır.",
+    "conditionalNotes": "Çocuklarda ve hassas kişilerde uçucu yağlar dikkatli kullanılmalı; oral yüksek doz toksik olabilir.",
+    "targetSystems": [
+      "Solunum sistemi"
+    ],
+    "sideEffects": [
+      "Deri tahrişi, yüksek dozda toksisite"
+    ],
+    "usage": "Buhar inhalasyonu, topikal preparatlar; oral kullanımdan kaçınılmalı (yüksek dozlar).",
+    "dosageDetail": "Topikal/buhar formunda üretici önerisi takip edilmeli.",
+    "activeCompounds": [
+      "1,8-cineole (eucalyptol)"
+    ],
+    "preparationWarnings": "Çocuklarda ve hamilelikte dikkat; oral yüksek dozdan kaçınılmalı.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Uçucu yağ formunda dikkat gerektirir."
+    },
+    "timing": "Gerektiğinde, kısa süreli kullanım.",
+    "longTermSafety": "Sürekli yüksek doz inhalasyon/topikal kullanımında dikkat."
+  },
+  "f9": {
+    "table": [
+      "🌿 Noni (Morinda citrifolia)",
+      "🟠",
+      2,
+      2,
+      1,
+      3,
+      1,
+      2,
+      2,
+      1.8,
+      "0",
+      "0"
+    ],
+    "fullName": "Noni (Morinda citrifolia)",
+    "latinName": "Morinda citrifolia",
+    "category": "Meyve / Bitki",
+    "origin": "Pasifik",
+    "benefits": [
+      "Geleneksel olarak enerji ve bağışıklık dest. iddiaları"
+    ],
+    "mechanism": "Polisakkarit ve fitokimyasal kombinasyonla genel destek iddiaları vardır; kanıta dayalı veri sınırlı.",
+    "historicalUse": "Polinezya halk tıbbında uzun süreli kullanım.",
+    "conditionalNotes": "Karaciğer hassasiyeti raporları olduğundan kronik yüksek dozdan kaçınılmalı.",
+    "targetSystems": [
+      "Karaciğer (izlem gerekli), bağışıklık"
+    ],
+    "sideEffects": [
+      "Nadir karaciğer fonksiyon bozukluğu raporları"
+    ],
+    "usage": "İşlenmiş meyve suyu veya ekstraktlar; güvenli ürün seçimi önemli.",
+    "dosageDetail": "Ürüne göre değişir; üretici talimatı izlenmeli.",
+    "activeCompounds": [
+      "Iridoidler, polisakkaritler"
+    ],
+    "preparationWarnings": "Karaciğer hastalığı/ilaç kullanımı olanlarda dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Karaciğer ile etkileşim potansiyeli nedeniyle dikkat."
+    },
+    "timing": "Gün içinde, üretici önerisine göre.",
+    "longTermSafety": "Uzun süreli yüksek dozlarda uzman kontrolü önerilir."
+  },
+  "a29": {
+    "table": [
+      "🌿 Civanperçemi (Yarrow)",
+      "🟡",
+      3,
+      2,
+      1,
+      2,
+      1,
+      3,
+      1,
+      1.7,
+      "0",
+      "0"
+    ],
+    "fullName": "Civanperçemi (Yarrow)",
+    "latinName": "Achillea millefolium",
+    "category": "Çiçek/ot",
+    "origin": "Kuzey Yarımküre",
+    "benefits": [
+      "Geleneksel olarak anti-inflamatuar, damar/menstrüel destek iddiaları"
+    ],
+    "mechanism": "Flavonoidler ve uçucu yağların kombinasyonu ile lokal anti-inflamatuar ve kramp çözücü etkiler olabilir.",
+    "historicalUse": "Geleneksel yara bakımında ve sindirim/kramp desteğinde kullanılmıştır.",
+    "conditionalNotes": "Alerji/hassasiyeti olanlarda dikkat (Asteraceae familisi).",
+    "targetSystems": [
+      "Sindirim",
+      "Damar"
+    ],
+    "sideEffects": [
+      "Alerjik reaksiyon (pollen/bitki ailesine duyarlı kişiler)"
+    ],
+    "usage": "Çay, tentür, topikal uygulama",
+    "dosageDetail": "Çay olarak kısa süreli kullanımlar uygundur.",
+    "activeCompounds": [
+      "Flavonoidler, sesquiterpenler"
+    ],
+    "preparationWarnings": "Alerjik kişiler dikkat etmeli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Alerjik yanıt riski olan kişiler için sakıncalı olabilir."
+    },
+    "timing": "Gün içinde, kısa dönem uygulamalar.",
+    "longTermSafety": "Uzun süreli kullanımda veri sınırlı."
+  },
+  "a55": {
+    "table": [
+      "🌿 Arnika",
+      "🔴",
+      1,
+      4,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1.5,
+      "0",
+      "0"
+    ],
+    "fullName": "Arnika",
+    "latinName": "Arnica montana",
+    "category": "Çiçek / Topikal",
+    "origin": "Avrupa dağları",
+    "benefits": [
+      "Topikal olarak çürük/ezilme sonrası kullanımda geleneksel rahatlatıcı etkiler"
+    ],
+    "mechanism": "Topikal fitokonstituentler inflamasyonu azaltabilir; oral kullanım toksisite riskli.",
+    "historicalUse": "Yüzyıllardır topikal yara/çarpma tedavilerinde kullanılmıştır.",
+    "conditionalNotes": "Açık yaraya uygulamayın; oral kullanım toksik olabilir.",
+    "targetSystems": [
+      "Derive lokal (cilt)"
+    ],
+    "sideEffects": [
+      "Deri irritasyonu, oral toksisite"
+    ],
+    "usage": "Sadece topikal krem/jel olarak; açık yaraya uygulamayın.",
+    "dosageDetail": "Topikal ürün etiketine uygun kullanım.",
+    "activeCompounds": [
+      "Helenalin ve diğer sesquiterpen laktonlar"
+    ],
+    "preparationWarnings": "Oral kullanılmamalı; ham çiçeklerle temas hassasiyete neden olabilir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Oral kullanım tavsiye edilmez."
+    },
+    "timing": "Gerektiğinde topikal uygulama.",
+    "longTermSafety": "Topikal kontrollü kullanımda genelde güvenli; aşırı kullanım irritasyona neden olabilir."
+  },
+  "a56": {
+    "table": [
+      "🌿 Andız otu",
+      "🟠",
+      3,
+      3,
+      1,
+      2,
+      2,
+      3,
+      2,
+      2.1,
+      "0",
+      "0"
+    ],
+    "fullName": "Andız otu",
+    "latinName": "Tamus communis",
+    "category": "Ot",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Traditionally used in folk remedies (local), veri sınırlı"
+    ],
+    "mechanism": "Fitokimyasallar bitkiye göre değişir; güvenlik sınırlandırılmış veri ile değerlendirilmelidir.",
+    "historicalUse": "Yerel halk tıbbında sınırlı kullanım geçmişi.",
+    "conditionalNotes": "Bazı türler tahriş/allerji yapabilir; toksisite/bilgi eksikliği nedeniyle dikkat.",
+    "targetSystems": [
+      "Yerel kullanım"
+    ],
+    "sideEffects": [
+      "Deri tahrişi, alerji"
+    ],
+    "usage": "Geleneksel yerel uygulamalar; ticari ürünlerde nadir.",
+    "dosageDetail": "Standart doz veri yetersiz, uzman görüşü önerilir.",
+    "activeCompounds": [
+      "Fitokimyasallar (tür-spesifik)"
+    ],
+    "preparationWarnings": "Güvenlik verileri sınırlı; dikkatli olun.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Güvenlik belirsizliği."
+    },
+    "timing": "Kısıtlı kullanım önerilir.",
+    "longTermSafety": "Uzun süreli kullanım güvenlik verisi yok."
+  },
+  "a57": {
+    "table": [
+      "🌿 Süpürge otu (Butcher’s broom)",
+      "🟠",
+      3,
+      2,
+      1,
+      1,
+      4,
+      1,
+      1,
+      1.7,
+      "0",
+      "0"
+    ],
+    "fullName": "Süpürge otu (Butcher’s broom)",
+    "latinName": "Ruscus aculeatus",
+    "category": "Kök/odunsu",
+    "origin": "Avrupa",
+    "benefits": [
+      "Venöz dolaşım desteği, bacak/varis şikayetlerinde geleneksel kullanım"
+    ],
+    "mechanism": "Saponinler ven tonusunu artırıp ödemi azaltabilir.",
+    "historicalUse": "Yaprak/kök formları geleneksel kullanımdadır.",
+    "conditionalNotes": "Hamilelikte doktor onayıyla kullanılmalı.",
+    "targetSystems": [
+      "Damar/venöz sistem"
+    ],
+    "sideEffects": [
+      "Nadir alerjik reaksiyon"
+    ],
+    "usage": "Kapsül veya ekstakt formları yaygın.",
+    "dosageDetail": "Ürüne göre değişir; klinik öneriyle kullanın.",
+    "activeCompounds": [
+      "Saponinler (ruscin vb.)"
+    ],
+    "preparationWarnings": "Hamilelik ve bazı ilaçlarla kombinasyonlarda dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Kan basıncı/damar etkisi olan ilaç kullananlar dikkat etmeli."
+    },
+    "timing": "Gün içinde, yemekle alınabilir.",
+    "longTermSafety": "Kısa-orta dönem güvenlik verisi daha güçlü; uzun dönem veri sınırlı."
+  },
+  "a26": {
+    "table": [
+      "🌿 Kedi nanesi (Catnip)",
+      "🟢",
+      4,
+      1,
+      2,
+      1,
+      1,
+      3,
+      1,
+      1.5,
+      "0",
+      "0"
+    ],
+    "fullName": "Kedi nanesi (Catnip)",
+    "latinName": "Nepeta cataria",
+    "category": "Yaprak / Ot",
+    "origin": "Avrupa, Asya",
+    "benefits": [
+      "Geleneksel olarak sindirim ve yatıştırıcı amaçlı kullanılmıştır"
+    ],
+    "mechanism": "Uçucu yağlar ve flavonoidler sindirim rahatlatma ve hafif sedasyon sağlayabilir.",
+    "historicalUse": "Çay formları geleneksel kullanımda.",
+    "conditionalNotes": "Gıda/çay düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Sindirim",
+      "Sinir sistemi"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay şeklinde yaygın kullanım.",
+    "dosageDetail": "Çay olarak günlük 1–2 fincan yaygın.",
+    "activeCompounds": [
+      "Nepetalactone (uçucu yağ), flavonoidler"
+    ],
+    "preparationWarnings": "Yüksek ekstraktlarda dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda/çay düzeyinde genelde güvenli."
+    },
+    "timing": "Yemek sonrası veya yatmadan önce uygun olabilir.",
+    "longTermSafety": "Gıda çay kullanımı ile ilgili önemli güvenlik sorunu raporlanmamıştır."
+  },
+  "sarimsak_cicagi": {
+    "table": [
+      "🌿 Sarımsak çiçeği (garlic scape)",
+      "🟡",
+      4,
+      3,
+      1,
+      3,
+      4,
+      2,
+      2,
+      2.5,
+      "a5,a1",
+      "a5,a1"
+    ],
+    "fullName": "Sarımsak çiçeği (Garlic scape)",
+    "latinName": "Allium sativum (scape)",
+    "category": "Sarımsak parçası / Sebze",
+    "origin": "Küresel (sarımsak)",
+    "benefits": [
+      "Sarımsak benzeri antimikrobiyal ve kardiovasküler destek iddiaları"
+    ],
+    "mechanism": "Allium bileşikleri (allicin benzeri prekürsörler) ile etki.",
+    "historicalUse": "Taze sebze formunda kullanımı yaygındır; geleneksel tıbbi kullanımlar sarımsak ile paraleldir.",
+    "conditionalNotes": "Kan sulandırıcı etkiler açısından dikkat (özellikle yüksek doz).",
+    "targetSystems": [
+      "Damar",
+      "Bağışıklık"
+    ],
+    "sideEffects": [
+      "Ağız kokusu, mide hassasiyeti, kanama riski artışı (yüksek doz)"
+    ],
+    "usage": "Taze yemek olarak veya hafifçe pişirilmiş; çay/infusion olarak nadiren.",
+    "dosageDetail": "Gıda düzeyinde güvenli; takviye/doz formlarında dikkat.",
+    "activeCompounds": [
+      "Sülfür bileşikleri (allicin türevleri)"
+    ],
+    "preparationWarnings": "Kan sulandırıcı ilaçlarla birlikte yüksek dozlardan kaçınılmalı.",
+    "avoidWith": {
+      "codes": [
+        "a5",
+        "a1"
+      ],
+      "reason": "Sarımsak (a1) ve zeytin yaprağı (a5) ile kanama/antiplatelet etkiler toplanabilir."
+    },
+    "timing": "Gün içinde yemeklerle alınabilir.",
+    "longTermSafety": "Gıda düzeyinde uzun süreli tüketim güvenlidir; ekstre yüksek dozlarında dikkat."
+  },
+  "a28": {
+    "table": [
+      "🌿 Beyaz dut yaprağı",
+      "🟡",
+      4,
+      2,
+      1,
+      2,
+      2,
+      2,
+      4,
+      2.2,
+      "0",
+      "0"
+    ],
+    "fullName": "Beyaz dut yaprağı",
+    "latinName": "Morus alba (leaf)",
+    "category": "Yaprak",
+    "origin": "Asya",
+    "benefits": [
+      "Geleneksel olarak kan şekeri kontrolünde, sindirim desteğinde kullanılmıştır"
+    ],
+    "mechanism": "Farklı flavonoidler ve polifenoller metabolizma üzerinde etki gösterebilir.",
+    "historicalUse": "Geleneksel tıpta uzun geçmişi vardır.",
+    "conditionalNotes": "Diyabetik ilaçlarla birlikte kan şekeri etkisi olabileceği için doktor kontrolü önerilir.",
+    "targetSystems": [
+      "Metabolizma",
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay veya ekstre formu.",
+    "dosageDetail": "Ürüne göre değişir; diyabet hastaları için takip gereklidir.",
+    "activeCompounds": [
+      "Flavonoidler, DNJ-benzeri bileşikler (bazı morus türlerinde)"
+    ],
+    "preparationWarnings": "Diyabetik ilaç kullananlar hekim kontrolünde olsun.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "İlaç etkileşimleri olabilir."
+    },
+    "timing": "Gün içinde, yemeklerle tercih edilebilir.",
+    "longTermSafety": "Gıda/çay düzeyinde genelde güvenli; takviye yüksek dozlarında dikkat."
+  },
+  "i3_goldenseal": {
+    "table": [
+      "🌿 Altınmühür (Goldenseal)",
+      "🔴",
+      1,
+      4,
+      1,
+      4,
+      1,
+      1,
+      1,
+      2.0,
+      "i3",
+      "i2,a37,a36"
+    ],
+    "fullName": "Altınmühür (Goldenseal)",
+    "latinName": "Hydrastis canadensis",
+    "category": "Kök",
+    "origin": "Kuzey Amerika",
+    "benefits": [
+      "Topikal/yerel antimikrobiyal geleneksel kullanım; bazı sindirim/solunum iddiaları"
+    ],
+    "mechanism": "Berberin ve ilgili alkaloidler ile antimikrobiyal ve farmakokinetik etki potansiyeli.",
+    "historicalUse": "Yerli halk tıbbında uzun kullanım öyküsü vardır.",
+    "conditionalNotes": "Güçlü CYP etkileşimleri potansiyeli; birçok ilaçla etkileşim olabilir.",
+    "targetSystems": [
+      "Gastrointestinal",
+      "Hepatik metabolizma (CYP etkisi)"
+    ],
+    "sideEffects": [
+      "CYP inhibisyonuna bağlı ilaç etkileşim riski, gastrointestinal rahatsızlık"
+    ],
+    "usage": "Kısa süreli, kontrollü kullanım; tıbbi gözetim gerekli.",
+    "dosageDetail": "Standart ekstraktlarda üretici talimatı takip edilmeli.",
+    "activeCompounds": [
+      "Berberin, hydrastine"
+    ],
+    "preparationWarnings": "Farmakokinetik etkileşim potansiyeli nedeniyle reçeteli ilaç kullananlar kaçınmalı veya hekim gözetiminde kullanmalı.",
+    "avoidWith": {
+      "codes": [
+        "i2",
+        "a37",
+        "a36"
+      ],
+      "reason": "St John's Wort (CYP indüksiyonu) veya uyarıcı/kafein içeren ürünlerle kombinasyonlar farmakokinetik karışıklık oluşturabilir."
+    },
+    "timing": "Kısa süreli, öğünlerle birlikte uygun olabilir.",
+    "longTermSafety": "Uzun süreli kullanım ve ilaç kombinasyonlarında risk yüksek; uzman gözetimi gerekir."
+  },
+  "a58": {
+    "table": [
+      "🌿 Süsen kökü (Orris root)",
+      "🟠",
+      2,
+      1,
+      1,
+      1,
+      1,
+      3,
+      1,
+      1.3,
+      "0",
+      "0"
+    ],
+    "fullName": "Süsen kökü (Orris root)",
+    "latinName": "Iris germanica (orris)",
+    "category": "Kök",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Parfümeri ve geleneksel kullanım; tıbbi etkinliği sınırlı/destekleyici"
+    ],
+    "mechanism": "Uçucu aromatic bileşikler içerebilir; tıbbi kanıt sınırlı.",
+    "historicalUse": "Parfüm/renk/aroma amaçlı geleneksel kullanım geçmişi.",
+    "conditionalNotes": "Gıda dışı kullanımda dikkat; tıbbi endikasyonlar sınırlı.",
+    "targetSystems": [
+      "Topikal/aroma"
+    ],
+    "sideEffects": [
+      "Alerjik temas dermatiti"
+    ],
+    "usage": "Parfümeri/aroma formu; tıbbi kullanım sınırlı.",
+    "dosageDetail": "Tıbbi doz bilgisi sınırlı.",
+    "activeCompounds": [
+      "Aroma bileşikleri"
+    ],
+    "preparationWarnings": "Yutulması ve tıbbi amaçlarla kullanımı konusunda veri sınırlı.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Tıbbi kullanımdan önce uzman görüşü alınmalı."
+    },
+    "timing": "Aroma/topikal kullanımlarda gerektikçe.",
+    "longTermSafety": "Tıbbi formülasyonlarda veri yetersiz."
+  },
+  "a23": {
+    "table": [
+      "🌿 Çoban çantası",
+      "🟠",
+      2,
+      1,
+      1,
+      2,
+      3,
+      3,
+      1,
+      1.5,
+      "0",
+      "0"
+    ],
+    "fullName": "Çoban çantası",
+    "latinName": "Capsella bursa-pastoris",
+    "category": "Ot / Yaprak",
+    "origin": "Küresel (yaygın)",
+    "benefits": [
+      "Geleneksel olarak hemostatik (kanama kontrolü) ve menstrüel destek iddiaları"
+    ],
+    "mechanism": "Flavonoid ve tannin içeriğiyle lokal hemostatik etki iddiaları.",
+    "historicalUse": "Halk tıbbında yara ve adet sorunlarında kullanılmıştır.",
+    "conditionalNotes": "Kan pıhtılaşmasını etkileyen ilaçlarla kombinasyonda dikkat gerekir.",
+    "targetSystems": [
+      "Damar/kanama mekanizmaları"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay veya topikal formda halk uygulamaları.",
+    "dosageDetail": "Kısa süreli kullanımlar için geleneksel dozlarda tercih edilir.",
+    "activeCompounds": [
+      "Flavonoidler, tanninler"
+    ],
+    "preparationWarnings": "Antikoagülan ilaçlarla etkileşim riski olabilir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Kanama eğilimi olan kişiler dikkat etmeli."
+    },
+    "timing": "Gün içinde kısa süreli kullanımlar.",
+    "longTermSafety": "Uzun süreli kullanımda veri sınırlı."
+  },
+  "a24": {
+    "table": [
+      "🌿 Kırlangıç otu (celandine)",
+      "🟠",
+      3,
+      2,
+      1,
+      2,
+      2,
+      2,
+      1,
+      1.7,
+      "0",
+      "0"
+    ],
+    "fullName": "Kırlangıç otu (Celandine)",
+    "latinName": "Chelidonium majus",
+    "category": "Ot",
+    "origin": "Avrupa, Asya",
+    "benefits": [
+      "Geleneksel safra/donanım iddiaları; bazı karaciğer etkisi tartışmalı"
+    ],
+    "mechanism": "Alkaloidler içerir; karaciğer üzerinde etkiler ve toksisite riski bildirilen türler vardır.",
+    "historicalUse": "Halk tıbbında çeşitli dahili kullanımları olsa da toksisite nedeniyle dikkatli olunur.",
+    "conditionalNotes": "Karaciğer toksisitesi bildirildiği için reçeteli ilaçlarla birlikte ve kronik kullanım risklidir.",
+    "targetSystems": [
+      "Karaciğer",
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Karaciğer toksisitesi potansiyeli"
+    ],
+    "usage": "Tıbbi gözetim olmaksızın dahili kullanım önerilmez.",
+    "dosageDetail": "Güvenlik verisi sınırlı; uzman gözetimi şart.",
+    "activeCompounds": [
+      "Isoquinoline alkaloids"
+    ],
+    "preparationWarnings": "Karaciğer sorunları ve uzun süreli kullanım risklidir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Hepatotoksik etki potansiyeli."
+    },
+    "timing": "Tıbbi gözetim altında alınmalı.",
+    "longTermSafety": "Uzun süreli kullanımı önerilmez."
+  },
+  "a59": {
+    "table": [
+      "🌿 Şerbetçi otu",
+      "🟡",
+      3,
+      1,
+      3,
+      1,
+      1,
+      3,
+      1,
+      1.7,
+      "a59",
+      "b11"
+    ],
+    "fullName": "Şerbetçi otu (Humulus lupulus)",
+    "latinName": "Humulus lupulus",
+    "category": "Çiçek / Kozalak",
+    "origin": "Avrupa",
+    "benefits": [
+      "Uyku/rahatlama amaçlı geleneksel kullanım"
+    ],
+    "mechanism": "Bazı phloroglucinol ve flavonoidler sedatif etki taşıyabilir.",
+    "historicalUse": "Bira yapımında yaygın; aynı zamanda tıbbi halk kullanımı mevcuttur.",
+    "conditionalNotes": "Sedatif ilaçlarla birlikte etkiler toplanabilir.",
+    "targetSystems": [
+      "Sinir sistemi"
+    ],
+    "sideEffects": [
+      "Duyarlılık, uterus/östrojen ile ilişkili iddialarda dikkat"
+    ],
+    "usage": "Çay ve ekstakt formları",
+    "dosageDetail": "Kısa dönem kullanımlar önerilir.",
+    "activeCompounds": [
+      "Myren, humulone"
+    ],
+    "preparationWarnings": "Sedatif ilaçlarla birlikte kullanımda dikkat.",
+    "avoidWith": {
+      "codes": [
+        "b11"
+      ],
+      "reason": "Kava gibi sedatif bitkilerle etki toplanabilir."
+    },
+    "timing": "Akşam alımı tercih edilir.",
+    "longTermSafety": "Kısa süreli kullanım güvenli; uzun süreli veriler sınırlı."
+  },
+  "c4": {
+    "table": [
+      "🌿 Kızılağaç kabuğu",
+      "🟠",
+      2,
+      3,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1.5,
+      "c4",
+      "0"
+    ],
+    "fullName": "Kızılağaç kabuğu",
+    "latinName": "Alnus spp. (bark)",
+    "category": "Kabuk",
+    "origin": "Kuzey Yarımküre",
+    "benefits": [
+      "Topikal ve geleneksel bazı uygulamalar; anti-inflamatuar iddialar"
+    ],
+    "mechanism": "Taninler ve fenolikler ile lokal etkiler olabilir.",
+    "historicalUse": "Topikal ve yöresel kullanım geçmişi var.",
+    "conditionalNotes": "Alerji ve hassasiyet durumunda dikkat.",
+    "targetSystems": [
+      "Deri / lokal"
+    ],
+    "sideEffects": [
+      "Deri tahrişi"
+    ],
+    "usage": "Topikal veya infüzyon biçimleri.",
+    "dosageDetail": "Ticari ürün yoksa yerel uygulamalarda temkinli olun.",
+    "activeCompounds": [
+      "Taninler, fenolik bileşikler"
+    ],
+    "preparationWarnings": "Ham kabuk uygulamalarında dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Alerji geçmişi olanlarda dikkat."
+    },
+    "timing": "Topikal/yerel kullanımda gerektikçe.",
+    "longTermSafety": "Uzun süreli kullanım verisi yetersiz."
+  },
+  "h5": {
+    "table": [
+      "🌸 Ebegümeci",
+      "🟢",
+      4,
+      1,
+      1,
+      2,
+      1,
+      4,
+      1,
+      1.8,
+      "h5",
+      "0"
+    ],
+    "fullName": "Ebegümeci",
+    "latinName": "Althaea officinalis",
+    "category": "Çiçek / Kök",
+    "origin": "Avrupa, Asya",
+    "benefits": [
+      "Öksürük/sakızlaştırıcı etkiler için geleneksel kullanımı vardır"
+    ],
+    "mechanism": "Mukilajlar boğazı kaplayarak yatıştırıcı etki sağlayabilir.",
+    "historicalUse": "Geleneksel öksürük/boğaz rahatlatıcı bitkidir.",
+    "conditionalNotes": "Gıda/çay düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Solunum / boğaz"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay, şurup, pastil formları",
+    "dosageDetail": "Geleneksel çay dozları genellikle güvenlidir.",
+    "activeCompounds": [
+      "Mukilajlar, polisakkaritler"
+    ],
+    "preparationWarnings": "Gıda düzeyinde genelde güvenli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda/çay düzeyinde güvenli."
+    },
+    "timing": "Gün içinde gerektikçe.",
+    "longTermSafety": "Gıda/çay düzeyinde güvenlidir."
+  },
+  "a60": {
+    "table": [
+      "🌿 Mullein (Sığırkuyruğu)",
+      "🟡",
+      4,
+      2,
+      1,
+      2,
+      1,
+      4,
+      1,
+      1.8,
+      "a60",
+      "0"
+    ],
+    "fullName": "Mullein (Sığırkuyruğu)",
+    "latinName": "Verbascum thapsus",
+    "category": "Yaprak / Çiçek",
+    "origin": "Avrupa, Asya",
+    "benefits": [
+      "Geleneksel olarak solunum yolu desteği, öksürük rahatlatma"
+    ],
+    "mechanism": "Mucilage ve uçucu bileşiklerle lokal yatıştırıcı/antienflamatuar etki sağlayabilir.",
+    "historicalUse": "Yüzyıllardır solunum yolu rahatsızlıklarında kullanılmıştır.",
+    "conditionalNotes": "Topikal/inhalasyon/kullanım formlarına göre güvenlik değişir.",
+    "targetSystems": [
+      "Solunum sistemi"
+    ],
+    "sideEffects": [
+      "Nadir alerji, inhalasyon hassasiyeti"
+    ],
+    "usage": "Çay, inhalasyon veya tentür",
+    "dosageDetail": "Günlük çay kullanımı kısa süreli etkilidir.",
+    "activeCompounds": [
+      "Mukilajlar, flavonoidler"
+    ],
+    "preparationWarnings": "Toz inhalasyonunda dikkat; alerjik kişiler dikkat etmeli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "İnhalasyon formlarında hassasiyet olabilir."
+    },
+    "timing": "Gerektiğinde inhalasyon veya çay formu."
+  },
+  "a36_2": {
+    "table": [
+      "🌿 Yerba mate (kavrulmamış)",
+      "🟡",
+      3,
+      2,
+      3,
+      2,
+      2,
+      1,
+      3,
+      2.2,
+      "a36",
+      "i3"
+    ],
+    "fullName": "Yerba mate (kavrulmamış)",
+    "latinName": "Ilex paraguariensis",
+    "category": "Yaprak / İçecek",
+    "origin": "Güney Amerika",
+    "benefits": [
+      "Uyarıcı/enerji ve antioksidan iddiaları"
+    ],
+    "mechanism": "Kafein ve kafein benzeri xanthine bileşikleri uyarıcı etki verir; polifenoller antioksidan katkıda bulunur.",
+    "historicalUse": "Geleneksel Güney Amerika içeceği olarak uzun kullanım.",
+    "conditionalNotes": "Yüksek doz kafein etkileri; karaciğer hassasiyeti raporları nadiren bildirilmiştir (özellikle ekstraktlarda).",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Uykusuzluk, çarpıntı, mide rahatsızlığı"
+    ],
+    "usage": "Çay, infüzyon veya ekstrakt formları",
+    "dosageDetail": "Günlük kafein toleransına göre ayarlanmalı.",
+    "activeCompounds": [
+      "Kafein, teobromin, polifenoller"
+    ],
+    "preparationWarnings": "Ekstrakt ve yüksek doz formlarında karaciğer/uyarıcı etkiler için dikkat.",
+    "avoidWith": {
+      "codes": [
+        "i3"
+      ],
+      "reason": "Goldenseal gibi güçlü CYP etkileyicileri ile dikkat."
+    },
+    "timing": "Sabah/öğlen tercih edilir; akşam alımından kaçının."
+  },
+  "a37": {
+    "table": [
+      "🌿 Guarana",
+      "🟠",
+      2,
+      1,
+      4,
+      1,
+      1,
+      1,
+      4,
+      2.1,
+      "a37",
+      "i3"
+    ],
+    "fullName": "Guarana",
+    "latinName": "Paullinia cupana",
+    "category": "Tohum / Uyarıcı",
+    "origin": "Amazon",
+    "benefits": [
+      "Uyarıcı enerji desteği (kafein kaynaklı)"
+    ],
+    "mechanism": "Yüksek kafein içeriğiyle merkezi sinir sistemi uyarımı sağlar.",
+    "historicalUse": "Güney Amerika yerlileri tarafından uyarıcı olarak kullanılmıştır.",
+    "conditionalNotes": "Kafein hassasiyeti, hipertansiyon, hamilelik, anti-anksiyete ilaçları ile dikkat.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Uykusuzluk, çarpıntı, mide sorunları"
+    ],
+    "usage": "Kapsül, toz veya içecek formları",
+    "dosageDetail": "Kafein toleransına göre ayarlanmalı; yüksek dozdan kaçınılmalı.",
+    "activeCompounds": [
+      "Kafein, teobromin"
+    ],
+    "preparationWarnings": "Goldenseal (CYP) veya diğer ilaçlarla etkileşim riski.",
+    "avoidWith": {
+      "codes": [
+        "i3"
+      ],
+      "reason": "Goldenseal gibi ürünlerle farmakokinetik etkileşim riski."
+    },
+    "timing": "Sabah/öğlen; akşam kaçının.",
+    "longTermSafety": "Uzun süreli yüksek doz kafein tüketimi sağlık riskleri taşır."
+  },
+  "a61": {
+    "table": [
+      "🌿 Keneotu (Castor leaf)",
+      "🟠",
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      1,
+      1.3,
+      "a61",
+      "0"
+    ],
+    "fullName": "Keneotu (Castor leaf)",
+    "latinName": "Ricinus communis",
+    "category": "Yaprak/Tohum (tehlikeli)",
+    "origin": "Tropikler",
+    "benefits": [
+      "Geleneksel yerel uygulamalar; tohumları tehlikeli (ricin içerir)"
+    ],
+    "mechanism": "Tohumlar güçlü toksin içerir; yaprak kullanımında dikkat.",
+    "historicalUse": "Geleneksel bazı yerel uygulamalarda sınırlı kullanım.",
+    "conditionalNotes": "Tohum ve özleri son derece toksiktir; tüketim çok risklidir.",
+    "targetSystems": [
+      "Gastrointestinal (toksik etkiler)"
+    ],
+    "sideEffects": [
+      "Ciddi toksisite (ricin) — ölümcül olabilir"
+    ],
+    "usage": "Tıbbi/ev kullanımda önerilmez; tohumlardan kaçınılmalı.",
+    "dosageDetail": "Tıbbi gözetim haricinde kullanılmamalı.",
+    "activeCompounds": [
+      "Ricin (tohumlarda)"
+    ],
+    "preparationWarnings": "Toksisite yüksek; güvenli değildir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Toksisite nedeniyle kullanım önerilmez."
+    },
+    "timing": "Kullanılmamalı.",
+    "longTermSafety": "Güvenli değildir."
+  },
+  "a62": {
+    "table": [
+      "🌿 Yulaf samanı (Oat straw)",
+      "🟡",
+      4,
+      1,
+      3,
+      2,
+      2,
+      1,
+      1,
+      1.7,
+      "a62",
+      "0"
+    ],
+    "fullName": "Yulaf samanı (Oat straw)",
+    "latinName": "Avena sativa (straw)",
+    "category": "Saman / Ot",
+    "origin": "Kuzey yarımküre",
+    "benefits": [
+      "Geleneksel olarak sinir sistemi/enerji desteği iddiaları"
+    ],
+    "mechanism": "Mineraller ve flavonoidler ile hafif besleyici/sinirsel destek iddiaları.",
+    "historicalUse": "Halk tıbbında yüzyıllık kullanım geçmişi.",
+    "conditionalNotes": "Gıda/çay düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay veya infüzyon.",
+    "dosageDetail": "Günlük çay şeklinde kullanımı yaygındır.",
+    "activeCompounds": [
+      "Mineraller, flavonoidler"
+    ],
+    "preparationWarnings": "Gıda düzeyinde güvenli ürün seçilmeli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda/çay düzeyinde güvenli."
+    },
+    "timing": "Gün içinde alınabilir.",
+    "longTermSafety": "Gıda/çay düzeyinde güvenlidir."
+  },
+  "i1": {
+    "table": [
+      "🌸 Echinacea purpurea çiçeği",
+      "🟠",
+      2,
+      2,
+      1,
+      5,
+      1,
+      1,
+      1,
+      1.8,
+      "i1",
+      "0"
+    ],
+    "fullName": "Echinacea purpurea",
+    "latinName": "Echinacea purpurea",
+    "category": "Çiçek",
+    "origin": "Kuzey Amerika",
+    "benefits": [
+      "Kısa süreli üst solunum yolu destekleyici iddialar"
+    ],
+    "mechanism": "Polisakkaritler ve bazı fenolikler bağışıklık hücrelerini etkileyebilir.",
+    "historicalUse": "Geleneksel kuzey Amerika halk ilaçlarında yaygın.",
+    "conditionalNotes": "Otoimmün hastalığı olanlarda dikkat; kronik kullanımda etkiler değişken.",
+    "targetSystems": [
+      "Bağışıklık"
+    ],
+    "sideEffects": [
+      "Nadir alerji, özellikle bitkiye duyarlı kişiler"
+    ],
+    "usage": "Kısa süreli destek amaçlı takviye/ekstrakt.",
+    "dosageDetail": "Kısa dönem (haftalar) kullanım umumidir.",
+    "activeCompounds": [
+      "Alkamidler, polisakkaritler"
+    ],
+    "preparationWarnings": "Kronik otoimmün hastalığı olanlarda doktor kontrolü.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Otoimmün durumlarda doktor onayı."
+    },
+    "timing": "Semptom başlangıcında kısa süreli kullanım.",
+    "longTermSafety": "Uzun süreli kullanım verisi sınırlı."
+  },
+  "a63": {
+    "table": [
+      "🌿 Safran",
+      "🟡",
+      4,
+      4,
+      3,
+      2,
+      2,
+      2,
+      2,
+      2.5,
+      "a63",
+      "0"
+    ],
+    "fullName": "Safran",
+    "latinName": "Crocus sativus",
+    "category": "Çiçek / İplikçi",
+    "origin": "Akdeniz / Orta Doğu",
+    "benefits": [
+      "Geleneksel olarak ruh hali ve antidepresan destek iddiaları (kısıtlı çalışmalar var)"
+    ],
+    "mechanism": "Safranal ve crocin gibi bileşikler nörotransmitter etkileşimleriyle ilişkilendirilmiştir.",
+    "historicalUse": "Yemek ve tıbbi amaçlarda uzun tarihsel kullanım.",
+    "conditionalNotes": "Yüksek dozlarda toksisite riski; hamilelikte dikkat.",
+    "targetSystems": [
+      "Sinir sistemi"
+    ],
+    "sideEffects": [
+      "Yüksek dozda toksisite, mide şikayetleri"
+    ],
+    "usage": "Gıda, çay veya standart ekstrakt formları",
+    "dosageDetail": "Gıda miktarları güvenli; terapötik ekstraktlar için standart doz uygulanmalı.",
+    "activeCompounds": [
+      "Crocin, safranal"
+    ],
+    "preparationWarnings": "Hamilelikte yüksek dozdan kaçınılmalı.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Hamilelik ve ilaçlarla etkileşim potansiyeli."
+    },
+    "timing": "Gün içinde, yemeklerle birlikte alınabilir.",
+    "longTermSafety": "Uzun süreli yüksek doz kullanımından kaçınılmalı."
+  },
+  "g6": {
+    "table": [
+      "🌿 Sumac berry (tane)",
+      "🟡",
+      4,
+      3,
+      1,
+      3,
+      3,
+      2,
+      2,
+      2.3,
+      "g6",
+      "0"
+    ],
+    "fullName": "Sumac berry (tane)",
+    "latinName": "Rhus coriaria",
+    "category": "Meyve / Baharat",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Antioksidan ve lezzet arttırıcı gıda olarak geleneksel kullanım"
+    ],
+    "mechanism": "Polifenoller antioksidan etki sağlar.",
+    "historicalUse": "Baharat ve geleneksel tıbbi kullanımlar.",
+    "conditionalNotes": "Alerjik kişilerde dikkat.",
+    "targetSystems": [
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Baharat, çay veya ekstrakt formları",
+    "dosageDetail": "Gıda düzeyinde genelde güvenli.",
+    "activeCompounds": [
+      "Polifenoller"
+    ],
+    "preparationWarnings": "Gıda formlarında tercih ediniz.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde genelde güvenli."
+    },
+    "timing": "Yemeklerle birlikte uygun.",
+    "longTermSafety": "Gıda düzeyinde güvenli."
+  },
+  "a64": {
+    "table": [
+      "🌿 Damarotu (Plantain leaf)",
+      "🟡",
+      4,
+      2,
+      1,
+      3,
+      2,
+      4,
+      1,
+      2.2,
+      "a64",
+      "0"
+    ],
+    "fullName": "Damarotu (Plantain leaf)",
+    "latinName": "Plantago major",
+    "category": "Yaprak",
+    "origin": "Küresel",
+    "benefits": [
+      "Topikal yatıştırıcı, lokal inflamasyon desteği; boğaz/öksürükte mukilaj etkiler"
+    ],
+    "mechanism": "Mukilajlar ve fenolikler ile lokal yatıştırma",
+    "historicalUse": "Çay ve topikal kullanımlar geleneksel.",
+    "conditionalNotes": "Gıda/çay düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Deri",
+      "Solunum",
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay, topikal uygulama",
+    "dosageDetail": "Günlük çay veya gerektiğinde topikal",
+    "activeCompounds": [
+      "Mukilajlar, flavonoidler"
+    ],
+    "preparationWarnings": "Alerjisi olanlar dikkat etmeli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda/çay düzeyinde güvenli."
+    },
+    "timing": "Gün içinde uygun."
+  },
+  "f7": {
+    "table": [
+      "🌿 Yabani sarımsak (Ramsons)",
+      "🟡",
+      4,
+      3,
+      2,
+      3,
+      4,
+      2,
+      2,
+      3.0,
+      "f7",
+      "0"
+    ],
+    "fullName": "Yabani sarımsak (Ramsons)",
+    "latinName": "Allium ursinum",
+    "category": "Yaprak / Ot",
+    "origin": "Avrupa",
+    "benefits": [
+      "Sarımsak benzeri sağlık iddiaları; antioksidan ve kardiovasküler fayda iddiaları"
+    ],
+    "mechanism": "Allium ailesi sülfür bileşikleri ile benzer etkilere sahip olabilir.",
+    "historicalUse": "Geleneksel olarak sebze ve tıbbi amaçlı kullanılmıştır.",
+    "conditionalNotes": "Kan sulandırıcı ilaçlarla birlikte dikkat.",
+    "targetSystems": [
+      "Damar",
+      "Bağışıklık"
+    ],
+    "sideEffects": [
+      "Ağız kokusu, mide hassasiyeti, kanama riski (yüksek doz)"
+    ],
+    "usage": "Taze yaprak olarak yemeklerde veya çay.",
+    "dosageDetail": "Gıda düzeyinde genelde güvenli; takviye formlarında dikkat.",
+    "activeCompounds": [
+      "Sülfür bileşikleri"
+    ],
+    "preparationWarnings": "Kan sulandırıcılarla kombine kullanımda dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Kanama eğilimi olan kişiler dikkat etmeli."
+    },
+    "timing": "Gün içinde yemek olarak alınabilir."
+  },
+  "a25": {
+    "table": [
+      "🌿 Çöven kökü",
+      "🟠",
+      2,
+      2,
+      1,
+      2,
+      2,
+      3,
+      1,
+      1.8,
+      "a25",
+      "0"
+    ],
+    "fullName": "Çöven kökü",
+    "latinName": "Althaea officinalis (root)",
+    "category": "Kök",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Mukilaj içeriğiyle boğaz/sindirim yatıştırıcı etkiler"
+    ],
+    "mechanism": "Mukilajlar lokal koruyucu ve yumuşatıcı etki sağlar.",
+    "historicalUse": "Öksürük/sakızlaştırıcı halk kullanımı.",
+    "conditionalNotes": "Gıda/çay düzeyinde güvenli.",
+    "targetSystems": [
+      "Solunum",
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay, şurup",
+    "dosageDetail": "Günlük çay şeklinde kullanım yaygındır.",
+    "activeCompounds": [
+      "Mukilajlar"
+    ],
+    "preparationWarnings": "Gıda/çay düzeyinde tercih edilmelidir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Genel olarak güvenli."
+    },
+    "timing": "Gün içinde gerektikçe."
+  },
+  "b8": {
+    "table": [
+      "🌿 Yer bademi (Chufa)",
+      "🟡",
+      4,
+      1,
+      2,
+      1,
+      2,
+      3,
+      3,
+      2.0,
+      "b8",
+      "0"
+    ],
+    "fullName": "Yer bademi (Chufa)",
+    "latinName": "Cyperus esculentus",
+    "category": "Kök / Yumru (tubercle)",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Geleneksel olarak besleyici özellikleri ve lif içeriği ile sindirim/metabolik destek iddiaları"
+    ],
+    "mechanism": "Karbonhidrat, lif ve yağ içeriği ile beslenme destekleri sağlar.",
+    "historicalUse": "Geleneksel yiyecek kaynağıdır.",
+    "conditionalNotes": "Alerjenik potansiyel nadir.",
+    "targetSystems": [
+      "Sindirim",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Atıştırmalık veya öğütülmüş formlarda kullanılır.",
+    "dosageDetail": "Gıda düzeyinde tüketim güvenlidir.",
+    "activeCompounds": [
+      "Karbonhidrat, yağ, lif"
+    ],
+    "preparationWarnings": "Alerji öyküsü olanlar dikkat.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde genelde güvenli."
+    },
+    "timing": "Yemeklerle birlikte uygun."
+  },
+  "a31": {
+    "table": [
+      "🌸 Ardıç meyvesi",
+      "🟠",
+      2,
+      3,
+      2,
+      2,
+      2,
+      3,
+      2,
+      2.3,
+      "a31",
+      "0"
+    ],
+    "fullName": "Ardıç meyvesi (Juniper)",
+    "latinName": "Juniperus communis",
+    "category": "Meyve / Baya",
+    "origin": "Kuzey yarımküre",
+    "benefits": [
+      "Geleneksel olarak idrar söktürücü ve sindirim desteği iddiaları"
+    ],
+    "mechanism": "Uçucu yağlar ve terpenler diüretik/sindirim etkileriyle ilişkilendirilebilir.",
+    "historicalUse": "Baharat ve tıbbi amaçlarla geleneksel kullanım.",
+    "conditionalNotes": "Böbrek hastalığı veya gebelikte kullanılmamalıdır.",
+    "targetSystems": [
+      "Böbrekler",
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Böbrek tahrişi, uterotonik etkiler (yüksek doz)"
+    ],
+    "usage": "Çay veya baharat formunda",
+    "dosageDetail": "Kısa dönem, düşük dozlarda kullanım.",
+    "activeCompounds": [
+      "Pinen, sabinen (terpenler)"
+    ],
+    "preparationWarnings": "Böbrek hastalarında kontrendike olabilir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Böbrek hastalığı ve hamilelikte sakıncalı."
+    },
+    "timing": "Gün içinde kısa süreli kullanımlar."
+  },
+  "a32": {
+    "table": [
+      "🌿 Kişniş yaprağı",
+      "🟡",
+      5,
+      2,
+      1,
+      2,
+      3,
+      4,
+      2,
+      2.3,
+      "a32",
+      "0"
+    ],
+    "fullName": "Kişniş yaprağı (Coriander leaf)",
+    "latinName": "Coriandrum sativum",
+    "category": "Yaprak / Baharat",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Sindirim desteği, antioksidan etkiler (gıda düzeyinde)"
+    ],
+    "mechanism": "Uçucu yağlar ve fenolikler sindirim/detoks süreçlerine katkı sağlayabilir.",
+    "historicalUse": "Mutfak ve halk tıbbında uzun geçmiş.",
+    "conditionalNotes": "Gıda düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Sindirim",
+      "Metabolizma"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Taze yaprak, baharat veya çay",
+    "dosageDetail": "Gıda düzeyinde güvenli.",
+    "activeCompounds": [
+      "Linalool, fenolikler"
+    ],
+    "preparationWarnings": "Ekstraktlarda doz kontrolü önerilir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde genelde güvenli."
+    },
+    "timing": "Yemeklerle birlikte uygundur."
+  },
+  "g8": {
+    "table": [
+      "🌰 Muskat (Nutmeg)",
+      "🔴",
+      1,
+      3,
+      1,
+      1,
+      1,
+      1,
+      3,
+      1.8,
+      "g8",
+      "0"
+    ],
+    "fullName": "Muskat (Nutmeg)",
+    "latinName": "Myristica fragrans",
+    "category": "Tohum / Baharat",
+    "origin": "Hint Okyanusu bölgesi",
+    "benefits": [
+      "Mutfak baharatı; bazı geleneksel sindirim/rahatlama iddiaları"
+    ],
+    "mechanism": "Myristicin gibi bileşikler merkezi etkiler yapabilir; yüksek dozlarda psikoaktif etki riski vardır.",
+    "historicalUse": "Yemek ve tıbbi amaçlarda geleneksel kullanım.",
+    "conditionalNotes": "Büyük dozlarda toksik/halüsinasyon yapıcı etkiler olabilir; çocuklarda ve hamilelikte dikkat.",
+    "targetSystems": [
+      "Sinir sistemi"
+    ],
+    "sideEffects": [
+      "Yüksek dozda halüsinasyon, toksisite"
+    ],
+    "usage": "Gıda düzeyinde küçük miktarlar güvenlidir; tıbbi yüksek dozlardan kaçınılmalı.",
+    "dosageDetail": "Küçük baharat düzeyinde kullanın; terapötik yüksek dozlar tehlikelidir.",
+    "activeCompounds": [
+      "Myristicin"
+    ],
+    "preparationWarnings": "Yüksek doz kullanımından kaçının.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Psikoaktif/toxik etki potansiyeli."
+    },
+    "timing": "Gün içinde yemeklerde kullanıma uygun."
+  },
+  "g3": {
+    "table": [
+      "🌿 Kimyon tohumu",
+      "🟡",
+      4,
+      2,
+      1,
+      2,
+      3,
+      4,
+      3,
+      2.5,
+      "g3",
+      "0"
+    ],
+    "fullName": "Kimyon tohumu",
+    "latinName": "Cuminum cyminum",
+    "category": "Tohum / Baharat",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Sindirim destek iddiaları, antioksidan etki"
+    ],
+    "mechanism": "Uçucu yağlar sindirim enzimlerini etkileyebilir.",
+    "historicalUse": "Geleneksel yemek ve tıbbi kullanımlar.",
+    "conditionalNotes": "Gıda düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Baharat, çay, ekstrakt",
+    "dosageDetail": "Gıda düzeyinde güvenli.",
+    "activeCompounds": [
+      "Uçucu yağlar (kumin aldehit vb.)"
+    ],
+    "preparationWarnings": "Ekstraktlarda doz kontrolü.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde genelde güvenli."
+    },
+    "timing": "Yemeklerle birlikte."
+  },
+  "g4": {
+    "table": [
+      "🌿 Anason",
+      "🟡",
+      4,
+      2,
+      1,
+      2,
+      2,
+      4,
+      1,
+      2.0,
+      "g4",
+      "0"
+    ],
+    "fullName": "Anason",
+    "latinName": "Pimpinella anisum",
+    "category": "Tohum / Baharat",
+    "origin": "Akdeniz",
+    "benefits": [
+      "Sindirim rahatlatıcı, gaz giderici geleneksel etkiler"
+    ],
+    "mechanism": "Uçucu yağlar ve fenolikler sindirim sistemini rahatlatabilir.",
+    "historicalUse": "Yemek ve tıbbi amaçlarda uzun kullanım.",
+    "conditionalNotes": "Gıda/çay düzeyinde genelde güvenli; yüksek dozlarda hassasiyet.",
+    "targetSystems": [
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay, baharat, ekstrakt",
+    "dosageDetail": "Gıda düzeyinde tüketim güvenlidir.",
+    "activeCompounds": [
+      "Anethole (uçucu yağ)"
+    ],
+    "preparationWarnings": "Ekstraktlarda doz kontrolü.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde güvenli."
+    },
+    "timing": "Yemek sonrası uygundur."
+  },
+  "e4_2": {
+    "table": [
+      "🌿 Kakao nibs",
+      "🟡",
+      4,
+      3,
+      4,
+      2,
+      4,
+      2,
+      2,
+      2.8,
+      "e4",
+      "0"
+    ],
+    "fullName": "Kakao nibs / Ham kakao",
+    "latinName": "Theobroma cacao",
+    "category": "Tohum / Kuruyemiş",
+    "origin": "Tropikler",
+    "benefits": [
+      "Antioksidan ve ruh hali üzerinde hafif olumlu etkiler (besin düzeyinde)"
+    ],
+    "mechanism": "Flavanoller ve metilksantinler (kafein/teobromin) ile antioksidan/uyarıcı etkiler.",
+    "historicalUse": "Geleneksel içecek ve besin kaynağı.",
+    "conditionalNotes": "Kafein hassasiyeti olanlarda dikkat.",
+    "targetSystems": [
+      "Sinir sistemi",
+      "Damar"
+    ],
+    "sideEffects": [
+      "Çarpıntı, uyku bozukluğu (yüksek tüketim)"
+    ],
+    "usage": "Kakao nibs veya toz olarak gıda formlarında tercih edilir.",
+    "dosageDetail": "Gıda düzeyinde güvenli; ekstrakt yüksek dozlarında dikkat.",
+    "activeCompounds": [
+      "Flavanoller, teobromin, kafein"
+    ],
+    "preparationWarnings": "Yüksek kafein/teobromin içeren formlarda doz kontrolü.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Kafein hassasiyeti olanlarda dikkat."
+    },
+    "timing": "Sabah/öğlen tercih edilebilir."
+  },
+  "a38": {
+    "table": [
+      "🌿 Rooibos",
+      "🟢",
+      5,
+      1,
+      2,
+      2,
+      2,
+      2,
+      2,
+      1.8,
+      "a38",
+      "0"
+    ],
+    "fullName": "Rooibos",
+    "latinName": "Aspalathus linearis",
+    "category": "Çay / Yaprak",
+    "origin": "Güney Afrika",
+    "benefits": [
+      "Kafeinsiz antioksidan çay; sindirim ve genel rahatlama iddiaları"
+    ],
+    "mechanism": "Polifenoller ile antioksidan etki sağlar; kafeinsiz oluşu uykuyu etkilemez.",
+    "historicalUse": "Geleneksel içecek ve tıbbi kullanım.",
+    "conditionalNotes": "Gıda düzeyinde genelde güvenli.",
+    "targetSystems": [
+      "Genel / Metabolizma"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay formlarında yaygın.",
+    "dosageDetail": "Günlük çay tüketimi güvenlidir.",
+    "activeCompounds": [
+      "Aspalathin, nothofagin (polifenoller)"
+    ],
+    "preparationWarnings": "Kafeinsiz olması sebebiyle daha geniş kullanıma uygun.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda düzeyinde güvenli."
+    },
+    "timing": "Akşam rahatlatıcı olarak uygundur."
+  },
+  "a30": {
+    "table": [
+      "🌿 Yerba santa",
+      "🟠",
+      2,
+      1,
+      2,
+      1,
+      1,
+      4,
+      1,
+      1.8,
+      "a30",
+      "0"
+    ],
+    "fullName": "Yerba santa",
+    "latinName": "Eriodictyon californicum",
+    "category": "Yaprak",
+    "origin": "Kuzey Amerika",
+    "benefits": [
+      "Geleneksel olarak solunum yolu yatıştırıcı ve balgam söktürücü"
+    ],
+    "mechanism": "Flavonoidler ve fenolik bileşikler lokal etkiler verebilir.",
+    "historicalUse": "Yerli Amerikalı uygulamalarında solunum desteği.",
+    "conditionalNotes": "Alerjik reaksiyon riski; hamilelikte dikkat.",
+    "targetSystems": [
+      "Solunum"
+    ],
+    "sideEffects": [
+      "Nadir alerji"
+    ],
+    "usage": "Çay veya tentür formları",
+    "dosageDetail": "Kısa süreli kullanımlar tavsiye edilir.",
+    "activeCompounds": [
+      "Flavonoidler"
+    ],
+    "preparationWarnings": "Alerjik kişiler dikkat etmeli.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Gıda/çay düzeyinde genelde güvenli."
+    },
+    "timing": "Gün içinde gerekirse kullanılabilir."
+  },
+  "i4": {
+    "table": [
+      "🌿 Chaparral",
+      "🔴",
+      1,
+      4,
+      1,
+      3,
+      1,
+      1,
+      1,
+      1.8,
+      "i4",
+      "i5,i6,b11"
+    ],
+    "fullName": "Chaparral (Larrea tridentata)",
+    "latinName": "Larrea tridentata",
+    "category": "Yaprak / Ot",
+    "origin": "Kuzey Amerika (çöl)",
+    "benefits": [
+      "Geleneksel olarak bazı deri/yerel kullanım iddiaları"
+    ],
+    "mechanism": "Lignans ve fenolik bileşikler içerir; karaciğer toksisitesi raporları vardır.",
+    "historicalUse": "Yerel halk tıbbında sınırlı olmuştur.",
+    "conditionalNotes": "Hepatotoksisite raporları nedeniyle önerilmez/uzun süreli kullanımdan kaçınılmalı.",
+    "targetSystems": [
+      "Karaciğer"
+    ],
+    "sideEffects": [
+      "Karaciğer hasarı raporları"
+    ],
+    "usage": "Tıbbi gözetimsiz kullanılmamalı.",
+    "dosageDetail": "Kullanılmaması tavsiye edilir.",
+    "activeCompounds": [
+      "Nordihydroguaiaretic acid (NDGA) ve benzerleri"
+    ],
+    "preparationWarnings": "Hepatotoksisite riski nedeniyle kullanım önerilmez.",
+    "avoidWith": {
+      "codes": [
+        "i5",
+        "i6",
+        "b11"
+      ],
+      "reason": "Diğer hepatotoksik/suspect ürünlerle birleşince risk artar."
+    },
+    "timing": "Kullanılmamalı.",
+    "longTermSafety": "Güvenli değildir; kullanımdan kaçınılmalı."
+  },
+  "i5": {
+    "table": [
+      "🌿 Pau d’Arco",
+      "🟠",
+      2,
+      3,
+      1,
+      4,
+      1,
+      1,
+      1,
+      1.8,
+      "i5",
+      "i4,i6,b11"
+    ],
+    "fullName": "Pau d’Arco",
+    "latinName": "Tabebuia impetiginosa (veya Handroanthus spp.)",
+    "category": "Kabuk",
+    "origin": "Güney Amerika",
+    "benefits": [
+      "Geleneksel olarak antimikrobiyal/bağışıklık destek iddiaları"
+    ],
+    "mechanism": "Naphthoquinone ve benzeri bileşikler ile lokal antimikrobiyal etki iddiası.",
+    "historicalUse": "Geleneksel Güney Amerika tıbbında kabuk çayı formunda kullanılmıştır.",
+    "conditionalNotes": "Karaciğer/ilaç etkileşimleri konusunda dikkat; yüksek dozlarda güvenlik verisi sınırlı.",
+    "targetSystems": [
+      "Bağışıklık",
+      "Sindirim"
+    ],
+    "sideEffects": [
+      "Nadir gastrointestinal şikayetler"
+    ],
+    "usage": "Çay veya ekstre formu",
+    "dosageDetail": "Ürüne göre değişir; uzun süreli yüksek dozdan kaçınılmalı.",
+    "activeCompounds": [
+      "Naphthoquinones"
+    ],
+    "preparationWarnings": "Hepatotoksisite riski olan ürünlerle birlikte dikkat.",
+    "avoidWith": {
+      "codes": [
+        "i4",
+        "i6",
+        "b11"
+      ],
+      "reason": "Hepatotoksik şüphelenilen ürünlerle kombinasyonlar sakıncalı."
+    },
+    "timing": "Kısa dönem kullanımlarında dikkat."
+  },
+  "a65": {
+    "table": [
+      "🌿 Uva ursi (Ayı üzümü)",
+      "🟠",
+      1,
+      2,
+      1,
+      3,
+      1,
+      4,
+      1,
+      2.0,
+      "a65",
+      "0"
+    ],
+    "fullName": "Uva ursi (Ayı üzümü)",
+    "latinName": "Arctostaphylos uva-ursi",
+    "category": "Yaprak",
+    "origin": "Kuzey yarımküre",
+    "benefits": [
+      "Geleneksel olarak idrar yolu destek iddiaları (kısa dönem kullanımlarda)"
+    ],
+    "mechanism": "Arbutin içerir; antibakteriyel etkiler iddia edilir, ancak asıl kullanımda pH/urine alkalinity etkileri önemlidir.",
+    "historicalUse": "Geleneksel idrar yolu çayı olarak kullanılmıştır.",
+    "conditionalNotes": "Uzun süreli veya yüksek doz kullanımı karaciğer/renal risk taşıyabilir; gebelikte kontrendike olabilir.",
+    "targetSystems": [
+      "İdrar yolu"
+    ],
+    "sideEffects": [
+      "Mide rahatsızlık, uzun süreli kullanımda toksisite"
+    ],
+    "usage": "Kısa süreli infüzyonlar/çay",
+    "dosageDetail": "Kısa rejimler için geleneksel dozlar; uzun süreli kullanım önerilmez.",
+    "activeCompounds": [
+      "Arbutin"
+    ],
+    "preparationWarnings": "Uzun süreli kullanım ve gebelikte kontraendike olabilir.",
+    "avoidWith": {
+      "codes": [],
+      "reason": "Uzun süreli kullanımdan kaçının."
+    },
+    "timing": "Kısa uygulamalar."
+  },
+  "b7": {
+    "table": [
+      "🌿 Şakayık kökü (Peony root)",
+      "🟡",
+      3,
+      2,
+      2,
+      3,
+      2,
+      2,
+      1,
+      2.0,
+      "b7",
+      "0"
+    ],
+    "fullName": "Şakayık kökü (Peony root)",
+    "latinName": "Paeonia officinalis (root)",
+    "category": "Kök",
+    "origin": "Avrupa / Asya",
+    "benefits": [
+      "Geleneksel olarak ağrı/il"
+
+    ]}
 };
 
-let db;
-let chartInstance1 = null;
-let chartInstance2 = null;
-let chartInstance3 = null;
-let chartInstance4 = null;
-let isFullMode = false;
+        const COLUMN_HEADERS = [
+            { key: 'name', label: '🌱 Bitki', sticky: true },
+            { key: 'dose', label: '💊 Doz', sticky: false },
+            { key: 'antiinf', label: '🔥 Anti-inf.', sticky: false },
+            { key: 'brain', label: '🧠 Beyin', sticky: false },
+            { key: 'immune', label: '🛡️ Bağışıklık', sticky: false },
+            { key: 'vascular', label: '🫀 Damar', sticky: false },
+            { key: 'digestion', label: '🌬️ Sindirim', sticky: false },
+            { key: 'metabolism', label: '⚖️ Metab.', sticky: false },
+            { key: 'overall', label: '⭐ Genel', sticky: false }
+        ];
 
-const buttonValues = [-1.25, -0.25, 0.75, -1, 0, 1, -0.75, 0.25, 1.25];
-let selectedValue = 0;
-const collectionName = "cumulative_daily_data";
+        // STATE
+        let selectedForComparison = [];
+        let highlightedColumn = null;
 
-try {
-firebase.initializeApp(firebaseConfig);
-db = firebase.firestore();
-console.log("Firebase başarıyla başlatıldı.");
-document.getElementById('date-picker').valueAsDate = new Date();
-} catch (e) {
-console.error("Firebase başlatılırken kritik hata:", e);
-document.body.innerHTML = "<h1>Hata</h1><p>Firebase yapılandırma bilgileri yanlış veya eksik.</p>";
-}
+        // YARDIMCI FONKSİYONLAR
+        function getScoreColor(score) {
+            if (score >= 4) return 'bg-green-100 text-green-800 font-bold';
+            if (score >= 3) return 'bg-yellow-100 text-yellow-800 font-semibold';
+            return 'bg-gray-100 text-gray-600';
+        }
 
-function setupButtons() {
-const container = document.getElementById('button-container');
-container.innerHTML = '';
-buttonValues.forEach(value => {
-const button = document.createElement('button');
-button.textContent = value.toFixed(2);
-button.onclick = () => selectValue(value);
-container.appendChild(button);
-});
-}
+        function getDoseIcon(dose) {
+            if (dose === '🔴') return '🔴';
+            if (dose === '🟠') return '🟠';
+            if (dose === '🟡') return '🟡';
+            return '✅';
+        }
 
-function selectValue(value) {
-selectedValue = value;
-document.getElementById('selected-value').textContent = value.toFixed(2);
-}
+        // TABLO RENDER
+        function renderTable() {
+            const headersRow = document.getElementById('tableHeaders');
+            const tbody = document.getElementById('tableBody');
+            
+            // Headers
+            headersRow.innerHTML = COLUMN_HEADERS.map((header, idx) => `
+                <th onclick="toggleColumnHighlight(${idx})" class="px-4 py-4 text-left cursor-pointer transition-all duration-200 hover:bg-green-600 select-none font-bold ${header.sticky ? 'sticky-column bg-green-700' : ''} ${highlightedColumn === idx ? 'bg-green-500 scale-105' : ''}">
+                    ${header.label}
+                </th>
+            `).join('');
 
-function alertMessage(message, color) {
-const statusElement = document.getElementById('save-status');
-statusElement.textContent = message;
-statusElement.style.color = color;
-setTimeout(() => statusElement.textContent = '', 4000);
-}
+            // Body
+            const tableData = Object.values(PLANT_DATABASE).map(plant => ({
+                id: plant.table[10],
+                name: plant.table[0],
+                dose: plant.table[1],
+                antiinf: plant.table[3],
+                brain: plant.table[4],
+                immune: plant.table[5],
+                vascular: plant.table[6],
+                digestion: plant.table[7],
+                metabolism: plant.table[8],
+                overall: plant.table[9],
+                fullData: plant
+            }));
 
-async function saveData() {
-if (!db) return alertMessage("Firebase başlatılamadı.", 'red');
-const dateInput = document.getElementById('date-picker');
-const date = dateInput.value;
-if (!date) {
-alertMessage("Lütfen bir tarih seçin.", 'red');
-return;
-}
-try {
-await db.collection(collectionName).doc(date).set({
-date: date,
-value: selectedValue,
-timestamp: firebase.firestore.FieldValue.serverTimestamp()
-});
-alertMessage(`✅ ${date} için ${selectedValue.toFixed(2)} kaydedildi!`, 'green');
-generateChart();
-} catch (error) {
-console.error("Veri kaydederken hata oluştu: ", error);
-alertMessage(`❌ Kayıt hatası: Bağlantı veya yetkilendirme sorunu.`, 'red');
-}
-}
+            tbody.innerHTML = tableData.map((row, rowIdx) => `
+                <tr onclick="showDetail('${row.id}')" class="border-b border-gray-200 cursor-pointer transition-all duration-200 hover:bg-green-50 hover:shadow-md ${selectedForComparison.includes(row.id) ? 'bg-blue-50' : rowIdx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">
+                    <td class="px-4 py-4 font-bold text-green-800 sticky-column bg-inherit border-r-2 border-green-200">${row.name}</td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 1 ? 'bg-yellow-100' : ''}">
+                        <span class="text-2xl" title="${row.fullData.dosageDetail}">${getDoseIcon(row.dose)}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 2 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full text-base ${getScoreColor(row.antiinf)}">${row.antiinf}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 3 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full text-base ${getScoreColor(row.brain)}">${row.brain}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 4 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full text-base ${getScoreColor(row.immune)}">${row.immune}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 5 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full text-base ${getScoreColor(row.vascular)}">${row.vascular}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 6 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full text-base ${getScoreColor(row.digestion)}">${row.digestion}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 7 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full text-base ${getScoreColor(row.metabolism)}">${row.metabolism}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center ${highlightedColumn === 8 ? 'bg-yellow-100' : ''}">
+                        <span class="px-3 py-1.5 rounded-full bg-purple-100 text-purple-800 font-bold text-base">${row.overall}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-function toggleChartMode() {
-isFullMode = !isFullMode;
-generateChart();
-}
+        function toggleColumnHighlight(idx) {
+            highlightedColumn = highlightedColumn === idx ? null : idx;
+            renderTable();
+        }
 
-function calculateTrend(data) {
-if (data.length < 2) return { direction: 'neutral', percentage: 0 };
-const sum = data.reduce((a, b) => a + b, 0);
-const avg = sum / data.length;
-const recentSum = data.slice(-Math.max(1, Math.floor(data.length / 2))).reduce((a, b) => a + b, 0);
-const recentAvg = recentSum / Math.max(1, Math.floor(data.length / 2));
-const change = ((recentAvg - avg) / Math.abs(avg || 1)) * 100;
-if (Math.abs(change) < 5) return { direction: 'stable', percentage: change };
-return { direction: change > 0 ? 'up' : 'down', percentage: change };
-}
+        // DETAY MODAL
+        function showDetail(plantId) {
+            const plant = PLANT_DATABASE[plantId];
+            const modal = document.getElementById('detailModal');
+            const header = document.getElementById('detailHeader');
+            const content = document.getElementById('detailContent');
 
-function analyzeTrends(dailyValues) {
-const n = dailyValues.length;
-if (n < 2) return '<p style="text-align: center; color: #7f8c8d;">Trend analizi için yeterli veri yok.</p>';
+            header.innerHTML = `
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold">${plant.fullName}</h2>
+                    <p class="text-green-100 italic text-base md:text-lg">${plant.latinName}</p>
+                </div>
+            `;
 
-const half = Math.floor(n / 2);
-const quarter = Math.floor(n / 4);
-const sixteenth = Math.floor(n / 16);
+            const isInComparison = selectedForComparison.includes(plantId);
+            
+            content.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <p class="font-semibold text-blue-900 mb-1">📍 Köken</p>
+                        <p class="text-gray-700">${plant.origin}</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                        <p class="font-semibold text-purple-900 mb-1">🏷️ Kategori</p>
+                        <p class="text-gray-700">${plant.category}</p>
+                    </div>
+                </div>
 
-const fullData = dailyValues;
-const lastHalf = dailyValues.slice(-half);
-const lastQuarter = dailyValues.slice(-quarter);
-const lastSixteenth = sixteenth > 0 ? dailyValues.slice(-sixteenth) : dailyValues.slice(-1);
+                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                    <p class="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                        ✓ Başlıca Faydalar
+                    </p>
+                    <ul class="space-y-2">
+                        ${plant.benefits.map(b => `<li class="flex items-start gap-2 text-gray-700"><span class="text-green-600 mt-1">•</span><span>${b}</span></li>`).join('')}
+                    </ul>
+                </div>
 
-const fullTrend = calculateTrend(fullData);
-const halfTrend = calculateTrend(lastHalf);
-const quarterTrend = calculateTrend(lastQuarter);
-const sixteenthTrend = calculateTrend(lastSixteenth);
+                <div class="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                    <p class="font-semibold text-indigo-900 mb-2">🧬 Etki Mekanizması</p>
+                    <p class="text-gray-700">${plant.mechanism}</p>
+                </div>
 
-function getTrendText(trend, label) {
-let icon = '📊';
-let className = '';
-let text = '';
-if (trend.direction === 'up') {
-icon = '📈';
-className = 'trend-up';
-text = `<strong>${label}:</strong> Artış trendinde (${trend.percentage.toFixed(1)}% yükseliş)`;
-} else if (trend.direction === 'down') {
-icon = '📉';
-className = 'trend-down';
-text = `<strong>${label}:</strong> Azalış trendinde (${Math.abs(trend.percentage).toFixed(1)}% düşüş)`;
-} else {
-icon = '➡️';
-text = `<strong>${label}:</strong> Stabil trend (${trend.percentage.toFixed(1)}% değişim)`;
-}
-return `<div class="trend-box ${className}">${icon} ${text}</div>`;
-}
+                <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                    <p class="font-semibold text-orange-900 mb-2">🎯 Hedef Organlar</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${plant.targetOrgans.map(o => `<span class="px-3 py-1 bg-orange-200 text-orange-800 rounded-full font-medium">${o}</span>`).join('')}
+                    </div>
+                </div>
 
-return `
-${getTrendText(fullTrend, 'Tüm Veriler')}
-${getTrendText(halfTrend, `Son Yarı (${half} gün)`)}
-${getTrendText(quarterTrend, `Son Çeyrek (${quarter} gün)`)}
-${getTrendText(sixteenthTrend, `Son 1/16 (${lastSixteenth.length} gün)`)}
-`;
-}
+                <div class="bg-teal-50 p-4 rounded-lg border-l-4 border-teal-500">
+                    <p class="font-semibold text-teal-900 mb-2">💊 Kullanım Şekli</p>
+                    <p class="text-gray-700 mb-3">${plant.usage}</p>
+                    <p class="font-semibold text-teal-900 mb-2">⏰ Zamanlama</p>
+                    <p class="text-gray-700">${plant.timing}</p>
+                </div>
 
-async function generateChart() {
-if (!db) return;
+                <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                    <p class="font-semibold text-red-900 mb-3 flex items-center gap-2">
+                        ⚠️ Olası Yan Etkiler
+                    </p>
+                    <ul class="space-y-2">
+                        ${plant.sideEffects.map(s => `<li class="flex items-start gap-2 text-gray-700"><span class="text-red-600 mt-1">⚠️</span><span>${s}</span></li>`).join('')}
+                    </ul>
+                </div>
 
-const snapshot = await db.collection(collectionName).orderBy("date", "asc").get();
+                ${plant.avoidWith.codes.length > 0 ? `
+                <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                    <p class="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                        ❌ Dikkat: Etkileşim Uyarısı
+                    </p>
+                    <p class="text-gray-700 mb-2">${plant.avoidWith.reason}</p>
+                    <p class="text-sm text-gray-600">Kodlar: ${plant.avoidWith.codes.join(', ')}</p>
+                </div>
+                ` : ''}
 
-if (snapshot.empty) {
-if (chartInstance1) chartInstance1.destroy();
-if (chartInstance2) chartInstance2.destroy();
-if (chartInstance3) chartInstance3.destroy();
-if (chartInstance4) chartInstance4.destroy();
-document.getElementById('current-cumulative-value').innerHTML = '**Bugünkü Kümülatif Değer:** 0.00 (Veri Yok)';
-document.getElementById('trend-analysis').innerHTML = '<p style="text-align: center; color: #7f8c8d;">Veri yok.</p>';
-return;
-}
+                <button onclick="toggleComparison('${plantId}')" class="w-full py-4 rounded-lg font-bold text-lg transition-all duration-200 ${isInComparison ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-green-600 text-white hover:bg-green-700'}">
+                    ${isInComparison ? '✓ Karşılaştırmadan Çıkar' : '+ Karşılaştırmaya Ekle'}
+                </button>
+            `;
 
-const allData = [];
-snapshot.forEach(doc => allData.push(doc.data()));
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
 
-let cumulativeSum = 0;
-let cumulativeSumPlusOne = 0;
-const labels = [];
-const dailyValues = [];
-const cumulativeData = [];
-const dailyPlusOneValues = [];
-const cumulativePlusOneData = [];
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.getElementById('detailModal').classList.remove('flex');
+        }
 
-allData.forEach(item => {
-cumulativeSum += item.value;
-cumulativeSumPlusOne += (item.value + 1);
-labels.push(item.date);
-dailyValues.push(item.value);
-cumulativeData.push(cumulativeSum);
-dailyPlusOneValues.push(item.value + 1);
-cumulativePlusOneData.push(cumulativeSumPlusOne);
-});
+        // KARŞILAŞTIRMA
+        function toggleComparison(plantId) {
+            const idx = selectedForComparison.indexOf(plantId);
+            if (idx > -1) {
+                selectedForComparison.splice(idx, 1);
+            } else if (selectedForComparison.length < 5) {
+                selectedForComparison.push(plantId);
+            }
+            updateComparisonButton();
+            renderTable();
+            closeDetailModal();
+        }
 
-const finalCumulativeValue = cumulativeSum.toFixed(2);
-document.getElementById('current-cumulative-value').innerHTML = `**Bugünkü Kümülatif Değer:** ${finalCumulativeValue}`;
+        function updateComparisonButton() {
+            const badge = document.getElementById('comparisonBadge');
+            const button = document.getElementById('comparisonButton');
+            
+            if (selectedForComparison.length > 0) {
+                badge.textContent = selectedForComparison.length;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                button.classList.add('animate-pulse');
+                button.className = button.className.replace('from-green-600 to-emerald-600', 'from-blue-600 to-indigo-600');
+            } else {
+                badge.classList.add('hidden');
+                button.classList.remove('animate-pulse');
+                button.className = button.className.replace('from-blue-600 to-indigo-600', 'from-green-600 to-emerald-600');
+            }
+        }
 
-document.getElementById('trend-analysis').innerHTML = analyzeTrends(dailyValues);
+        function openComparisonModal() {
+            const modal = document.getElementById('comparisonModal');
+            const content = document.getElementById('comparisonContent');
+            const countEl = document.getElementById('comparisonCount');
+            
+            countEl.textContent = `${selectedForComparison.length} bitki seçildi`;
 
-const chartWidth = isFullMode ? Math.max(600, labels.length * 50) : '100%';
+            if (selectedForComparison.length < 2) {
+                content.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        <p class="text-xl">En az 2 bitki seçin</p>
+                        <p class="text-sm mt-2">Tablodan bitkilere tıklayarak karşılaştırma listesine ekleyin</p>
+                    </div>
+                `;
+            } else {
+                const plants = selectedForComparison.map(id => PLANT_DATABASE[id]);
+                
+                // Ortak faydalar
+                const commonBenefits = plants[0].benefits.filter(benefit =>
+                    plants.every(p => p.benefits.includes(benefit))
+                );
 
-const chartOptions = {
-responsive: true,
-maintainAspectRatio: !isFullMode,
-aspectRatio: isFullMode ? 3 : 2,
-plugins: {
-legend: { display: false }
-},
-scales: {
-x: {
-title: { display: true, text: 'Tarih', font: { size: 12 } },
-grid: { display: false }
-},
-y: {
-title: { display: true, text: 'Değer', font: { size: 12 } },
-beginAtZero: false
-}
-}
-};
+                // Ortak organlar
+                const commonOrgans = plants[0].targetOrgans.filter(organ =>
+                    plants.every(p => p.targetOrgans.includes(organ))
+                );
 
-if (chartInstance1) chartInstance1.destroy();
-const ctx1 = document.getElementById('cumulativeChart').getContext('2d');
-document.getElementById('cumulativeChart').parentElement.style.width = chartWidth;
-chartInstance1 = new Chart(ctx1, {
-type: 'line',
-data: {
-labels: labels,
-datasets: [{
-label: 'Kümülatif Değer',
-data: cumulativeData,
-borderColor: '#3498db',
-backgroundColor: 'rgba(52, 152, 219, 0.2)',
-tension: 0.3,
-fill: true,
-pointRadius: 4,
-pointBackgroundColor: '#2ecc71',
-borderWidth: 2
-}]
-},
-options: chartOptions
-});
+                // Etkileşimler
+                const interactions = [];
+                for (let i = 0; i < plants.length; i++) {
+                    for (let j = i + 1; j < plants.length; j++) {
+                        if (plants[i].avoidWith.codes.includes(plants[j].table[10])) {
+                            interactions.push({
+                                plant1: plants[i].fullName,
+                                plant2: plants[j].fullName,
+                                reason: plants[i].avoidWith.reason
+                            });
+                        }
+                    }
+                }
 
-if (chartInstance2) chartInstance2.destroy();
-const ctx2 = document.getElementById('dailyChart').getContext('2d');
-document.getElementById('dailyChart').parentElement.style.width = chartWidth;
-chartInstance2 = new Chart(ctx2, {
-type: 'bar',
-data: {
-labels: labels,
-datasets: [{
-label: 'Günlük Değer',
-data: dailyValues,
-backgroundColor: dailyValues.map(v => v >= 0 ? 'rgba(46, 204, 113, 0.6)' : 'rgba(231, 76, 60, 0.6)'),
-borderColor: dailyValues.map(v => v >= 0 ? '#2ecc71' : '#e74c3c'),
-borderWidth: 2
-}]
-},
-options: chartOptions
-});
+                content.innerHTML = `
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+                        <p class="font-bold text-gray-800 mb-3">Seçili Bitkiler:</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${plants.map(p => `
+                                <div class="bg-white px-4 py-2 rounded-full shadow-sm flex items-center gap-2">
+                                    <span class="font-semibold text-gray-800">${p.fullName}</span>
+                                    <button onclick="toggleComparison('${p.table[10]}')" class="text-red-500 hover:text-red-700 font-bold">×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
 
-if (chartInstance3) chartInstance3.destroy();
-const ctx3 = document.getElementById('cumulativePlusOneChart').getContext('2d');
-document.getElementById('cumulativePlusOneChart').parentElement.style.width = chartWidth;
-chartInstance3 = new Chart(ctx3, {
-type: 'line',
-data: {
-labels: labels,
-datasets: [{
-label: 'Kümülatif Değer (+1)',
-data: cumulativePlusOneData,
-borderColor: '#9b59b6',
-backgroundColor: 'rgba(155, 89, 182, 0.2)',
-tension: 0.3,
-fill: true,
-pointRadius: 4,
-pointBackgroundColor: '#8e44ad',
-borderWidth: 2
-}]
-},
-options: chartOptions
-});
+                    ${commonBenefits.length > 0 ? `
+                    <div class="bg-emerald-50 p-4 rounded-lg border-l-4 border-emerald-500">
+                        <p class="font-bold text-emerald-900 mb-3">✓ Ortak Faydalar</p>
+                        <ul class="space-y-2">
+                            ${commonBenefits.map(b => `<li class="flex items-start gap-2 text-gray-700"><span class="text-emerald-600 mt-1">✓</span><span>${b}</span></li>`).join('')}
+                        </ul>
+                    </div>` : ''}
 
-if (chartInstance4) chartInstance4.destroy();
-const ctx4 = document.getElementById('dailyPlusOneChart').getContext('2d');
-document.getElementById('dailyPlusOneChart').parentElement.style.width = chartWidth;
-chartInstance4 = new Chart(ctx4, {
-type: 'bar',
-data: {
-labels: labels,
-datasets: [{
-label: 'Günlük Değer (+1)',
-data: dailyPlusOneValues,
-backgroundColor: dailyPlusOneValues.map(v => v >= 0 ? 'rgba(46, 204, 113, 0.6)' : 'rgba(231, 76, 60, 0.6)'),
-borderColor: dailyPlusOneValues.map(v => v >= 0 ? '#2ecc71' : '#e74c3c'),
-borderWidth: 2
-}]
-},
-options: chartOptions
-});
-}
+                    ${commonOrgans.length > 0 ? `
+                    <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                        <p class="font-bold text-orange-900 mb-3">🎯 Ortak Hedef Organlar</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${commonOrgans.map(o => `<span class="px-3 py-1 bg-orange-200 text-orange-800 rounded-full font-medium">${o}</span>`).join('')}
+                        </div>
+                    </div>` : ''}
 
-window.onload = () => {
-setupButtons();
-generateChart();
-};
-</script>
+                    ${interactions.length > 0 ? `
+                    <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                        <p class="font-bold text-red-900 mb-3">⚠️ DİKKAT: Etkileşim Uyarıları</p>
+                        <div class="space-y-3">
+                            ${interactions.map(i => `
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="font-semibold text-red-800 mb-1">⚠️ ${i.plant1} + ${i.plant2}</p>
+                                    <p class="text-sm text-gray-700">${i.reason}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>` : ''}
 
+                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <p class="font-bold text-blue-900 mb-3">⏰ Önerilen Zamanlama</p>
+                        <div class="space-y-2">
+                            ${plants.map(p => `
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="font-semibold text-gray-800">${p.fullName}</p>
+                                    <p class="text-sm text-gray-600 mt-1">⏰ ${p.timing}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-500">
+                        <p class="font-bold text-gray-900 mb-3">💡 Genel Öneriler</p>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li>• Bu karşılaştırma bilgilendirme amaçlıdır, tıbbi tavsiye niteliği taşımaz</li>
+                            <li>• Kronik hastalığınız veya düzenli ilaç kullanımınız varsa doktorunuza danışın</li>
+                            <li>• Hamilelik ve emzirme döneminde kullanım öncesi mutlaka uzman görüşü alın</li>
+                            <li>• Yeni başladığınız bitkileri düşük dozdan başlayarak deneyin</li>
+                            <li>• Beklenmedik yan etki durumunda kullanımı durdurun ve doktora başvurun</li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeComparisonModal() {
+            document.getElementById('comparisonModal').classList.add('hidden');
+            document.getElementById('comparisonModal').classList.remove('flex');
+            renderTable();
+        }
+
+        // İLK YÜKLEME
+        renderTable();
+    </script>
 </body>
 </html>
