@@ -52,12 +52,27 @@ input[type="number"] { padding: 10px; font-size: 16px; border: 1px solid #ccc; b
 .modal-content { background-color: #fefefe; margin: 2% auto; padding: 20px; border-radius: 12px; width: 90%; max-width: 1200px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
 .close-modal { color: #aaa; float: right; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 20px; }
 .close-modal:hover, .close-modal:focus { color: #000; }
-.modal-chart-wrapper { position: relative; height: 400px; margin: 20px 0; }
+.modal-chart-wrapper { position: relative; height: 400px; margin: 20px 0 50px 0; }
+.chart-info-row { display: flex; gap: 15px; justify-content: space-between; margin: 20px 0; }
+.chart-info-row .slope-display, .chart-info-row .today-value-display { flex: 1; margin: 0; }
+.chart-info-row .s-parameter-control { flex: 0 0 auto; margin: 0; }
+.s-parameter-control { background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 2px solid #3498db; display: flex; align-items: center; gap: 8px; }
+.s-parameter-control label { font-weight: bold; color: #2c3e50; font-size: 16px; margin: 0; }
+.s-parameter-control input { padding: 8px 12px; font-size: 16px; border: 2px solid #3498db; border-radius: 6px; width: 80px; text-align: center; }
 .calc-results { background-color: #ecf0f1; padding: 20px; border-radius: 8px; margin: 20px 0; }
 .calc-results h4 { color: #2c3e50; margin-bottom: 15px; }
 .calc-item { padding: 10px; margin: 8px 0; background-color: white; border-radius: 6px; border-left: 4px solid #3498db; font-size: 15px; }
-.slope-display { background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107; font-size: 16px; font-weight: bold; color: #856404; }
+.slope-display { background-color: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; font-size: 16px; font-weight: bold; color: #856404; }
 .today-value { background-color: #d1ecf1; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #17a2b8; font-size: 16px; font-weight: bold; color: #0c5460; }
+.today-value-display { background-color: #d1ecf1; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8; font-size: 16px; font-weight: bold; color: #0c5460; }
+.date-range-control { display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+.range-btn { padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s; }
+.range-btn:hover { background-color: #2980b9; }
+.range-btn:active { transform: translateY(2px); }
+#days-range-input { padding: 8px; font-size: 14px; border: 2px solid #3498db; border-radius: 6px; width: 120px; text-align: center; }
+.missing-dates-container { background-color: #fff3cd; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107; }
+.missing-dates-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.missing-date-item { background-color: white; padding: 6px 12px; border-radius: 4px; font-size: 13px; color: #856404; border: 1px solid #ffc107; }
 @media (max-width: 768px) {
 .container { flex-direction: column; }
 .data-section { max-width: none; }
@@ -67,7 +82,10 @@ h1 { font-size: 20px; }
 .chart-wrapper.zoom-mode { height: 300px; }
 .chart-wrapper.full-mode { height: 350px; }
 .modal-content { width: 95%; margin: 5% auto; padding: 15px; }
-.modal-chart-wrapper { height: 300px; }
+.modal-chart-wrapper { height: 300px; margin: 20px 0 40px 0; }
+.chart-info-row { flex-direction: column; }
+.s-parameter-control { padding: 10px; justify-content: center; }
+.s-parameter-control label { margin-bottom: 0; }
 }
 </style>
 </head>
@@ -145,15 +163,39 @@ h1 { font-size: 20px; }
 <div class="modal-content">
 <span class="close-modal" onclick="closeSpecialCalculation()">&times;</span>
 <h2 style="text-align: center; color: #2c3e50; margin-bottom: 20px;">🔬 Özel Hesaplama Grafiği</h2>
+<div class="date-range-control">
+<button class="range-btn" onclick="adjustDateRange(-30)">-30 Gün</button>
+<button class="range-btn" onclick="adjustDateRange(-10)">-10 Gün</button>
+<input type="number" id="days-range-input" value="0" min="0" placeholder="Son kaç gün">
+<button class="range-btn" onclick="adjustDateRange(10)">+10 Gün</button>
+<button class="range-btn" onclick="adjustDateRange(30)">+30 Gün</button>
+</div>
 <div class="modal-chart-wrapper">
 <canvas id="specialCalcChart"></canvas>
 </div>
+<div class="chart-info-row">
 <div class="slope-display" id="slope-display"></div>
-<div class="today-value" id="today-value-display"></div>
+<div class="today-value-display" id="today-value-display"></div>
+</div>
+<div class="modal-chart-wrapper" style="margin-top: 30px;">
+<canvas id="specialCalcChart2"></canvas>
+</div>
+<div class="chart-info-row">
+<div class="s-parameter-control">
+<label for="s-parameter-input">Değer:</label>
+<input type="number" id="s-parameter-input" value="12" step="0.1" onchange="renderSpecialCharts()">
+</div>
+<div class="slope-display" id="slope-display-2"></div>
+<div class="today-value-display" id="today-value-display-2"></div>
+</div>
 <div class="calc-results">
 <h4>📊 Bugünün Hesaplamaları</h4>
 <div class="calc-item" id="calc-result-1"></div>
 <div class="calc-item" id="calc-result-2"></div>
+</div>
+<div class="missing-dates-container">
+<h4 style="color: #2c3e50; margin-bottom: 15px;">📅 Veri Girilmeyen Tarihler</h4>
+<div id="missing-dates-list"></div>
 </div>
 </div>
 </div>
@@ -174,8 +216,11 @@ let chartInstance2 = null;
 let chartInstance3 = null;
 let chartInstance4 = null;
 let specialChartInstance = null;
+let specialChartInstance2 = null;
 let chartMode = 0;
 let trendVisible = false;
+let currentDaysRange = 0;
+let allSpecialData = null;
 
 const buttonValues = [-1.25, -0.25, 0.75, -1, 0, 1, -0.75, 0.25, 1.25];
 let selectedValue = 0;
@@ -513,6 +558,8 @@ currentDate.setDate(currentDate.getDate() + 1);
 
 const labels = [];
 const calculatedValues = [];
+const calculatedValues2 = [];
+const missingDates = [];
 let Tp = 0; // Toplam puan
 let Bg = 0; // Boş gün sayısı
 
@@ -525,9 +572,10 @@ if (value !== undefined) {
 Tp += value;
 } else {
 Bg++;
+missingDates.push(date);
 }
 
-// Denklem: 100*sign(((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365))*(abs(((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)/(4*((990+Tg)/365)))^(1.62)) / (1 + abs((((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)/(4*((990+Tg)/365)))^(0.62) - 1)))
+// Denklem 1: 100*sign(((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365))*(abs(((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)/(4*((990+Tg)/365)))^(1.62)) / (1 + abs((((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)/(4*((990+Tg)/365)))^(0.62) - 1)))
 const numerator = 2843 + 4 * (Tp + (Tg - Bg)) + (Bg * 0.5);
 const numeratorDiv365 = numerator / 365;
 const denomBase = 4 * ((990 + Tg) / 365);
@@ -538,48 +586,125 @@ const term2 = Math.pow(absRatio, 0.62);
 const denominator = 1 + Math.abs(term2 - 1);
 const result = 100 * sign(numeratorDiv365) * (term1 / denominator);
 
+// Denklem 2: (s*(−((990+Tg)/365)*sin(arctan(4))+((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)*cos(arctan(4))))
+// x = ((990+Tg)/365)
+// y = ((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)
+const x = (990 + Tg) / 365;
+const y = (2843 + 4 * (Tp + (Tg - Bg)) + (Bg * 0.5)) / 365;
+const result2_base_x = x;
+const result2_base_y = y;
+
 labels.push(date);
 calculatedValues.push(result);
+calculatedValues2.push({ x: result2_base_x, y: result2_base_y }); // x ve y'yi sakla
 }
 
-// Eğim hesaplama (ilk ve son değer arasında)
-const firstValue = calculatedValues[0];
-const lastValue = calculatedValues[calculatedValues.length - 1];
-const slope = ((lastValue - firstValue) / calculatedValues.length).toFixed(4);
+// Verileri global değişkene kaydet
+allSpecialData = {
+labels: labels,
+calculatedValues: calculatedValues,
+calculatedValues2: calculatedValues2,
+missingDates: missingDates,
+finalTg: allDates.length,
+finalTp: Tp,
+finalBg: Bg
+};
 
-// Bugünün değeri
-const todayValue = lastValue.toFixed(4);
-
-// Son gün için Tg, Tp, Bg
-const finalTg = allDates.length;
-const finalTp = Tp;
-const finalBg = Bg;
-
-// 1. denklem: ((990+Tg)/365)
-const calc1 = ((990 + finalTg) / 365).toFixed(4);
-
-// 2. denklem: ((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)
-const calc2 = ((2843 + 4 * (finalTp + (finalTg - finalBg)) + (finalBg * 0.5)) / 365).toFixed(4);
+// Başlangıçta tüm veriyi göster
+currentDaysRange = 0;
+document.getElementById('days-range-input').value = 0;
 
 // Modal'ı aç
 document.getElementById('special-calc-modal').style.display = 'block';
 
-// Sonuçları göster
-document.getElementById('slope-display').innerHTML = `📈 Eğim (İlk Günden Bugüne): <strong>${slope}</strong>`;
-document.getElementById('today-value-display').innerHTML = `📅 Bugünün Değeri: <strong>${todayValue}</strong>`;
-document.getElementById('calc-result-1').innerHTML = `<strong>Denklem 1:</strong> ((990+Tg)/365) = <strong>${calc1}</strong>`;
-document.getElementById('calc-result-2').innerHTML = `<strong>Denklem 2:</strong> ((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365) = <strong>${calc2}</strong>`;
+// Grafikleri çiz
+renderSpecialCharts();
+}
 
-// Grafik oluştur
+function renderSpecialCharts() {
+if (!allSpecialData) return;
+
+const { labels, calculatedValues, calculatedValues2, missingDates, finalTg, finalTp, finalBg } = allSpecialData;
+
+// S parametresini al
+const S = parseFloat(document.getElementById('s-parameter-input').value) || 12;
+
+// calculatedValues2'deki x ve y değerlerini kullanarak gerçek değerleri hesapla
+// Yeni formül: (s*(−((990+Tg)/365)*sin(arctan(4))+((2843+4*(Tp+(Tg-Bg))+(Bg*(0.5)))/365)*cos(arctan(4))))
+const actualValues2 = calculatedValues2.map(item => {
+const arctan4 = Math.atan(4);
+return S * (-(item.x * Math.sin(arctan4)) + (item.y * Math.cos(arctan4)));
+});
+
+// Tarih aralığına göre veriyi filtrele
+let displayLabels = labels;
+let displayValues = calculatedValues;
+let displayValues2 = actualValues2;
+
+if (currentDaysRange > 0 && currentDaysRange < labels.length) {
+displayLabels = labels.slice(-currentDaysRange);
+displayValues = calculatedValues.slice(-currentDaysRange);
+displayValues2 = actualValues2.slice(-currentDaysRange);
+}
+
+// Tarihleri formatla (gün.ay.yıl formatında)
+const formattedLabels = displayLabels.map(date => {
+const d = new Date(date);
+const day = String(d.getDate()).padStart(2, '0');
+const month = String(d.getMonth() + 1).padStart(2, '0');
+const year = String(d.getFullYear()).slice(-2);
+return `${day}.${month}.${year}`;
+});
+
+// Eğim hesaplama (görüntülenen veri için)
+const firstValue = displayValues[0];
+const lastValue = displayValues[displayValues.length - 1];
+const slope = ((lastValue - firstValue) / displayValues.length).toFixed(4);
+
+const firstValue2 = displayValues2[0];
+const lastValue2 = displayValues2[displayValues2.length - 1];
+const slope2 = ((lastValue2 - firstValue2) / displayValues2.length).toFixed(4);
+
+// Bugünün değerleri (her zaman son değer)
+const todayValue = calculatedValues[calculatedValues.length - 1].toFixed(4);
+const todayValue2 = actualValues2[actualValues2.length - 1].toFixed(4);
+
+// Bugün için iki ek hesaplama
+const lastData = calculatedValues2[calculatedValues2.length - 1];
+const arctan4 = Math.atan(4);
+const todayCalc1 = Math.round(S * (-(lastData.x * Math.sin(arctan4)) + (lastData.y * Math.cos(arctan4))) * 100) / 100;
+const todayCalc2 = Math.round(S * ((lastData.x * Math.cos(arctan4)) + (lastData.y * Math.sin(arctan4))) * 100) / 100;
+
+// Hesaplamaları göster
+const calc1 = ((990 + finalTg) / 365).toFixed(4);
+const calc2 = ((2843 + 4 * (finalTp + (finalTg - finalBg)) + (finalBg * 0.5)) / 365).toFixed(4);
+
+document.getElementById('slope-display').innerHTML = `📈 Eğim (Görüntülenen Aralık): <strong>${slope}</strong>`;
+document.getElementById('today-value-display').innerHTML = `📅 Bugünün Değeri: <strong>${todayValue}</strong>`;
+document.getElementById('slope-display-2').innerHTML = `📈 Eğim (Görüntülenen Aralık): <strong>${slope2}</strong>`;
+document.getElementById('today-value-display-2').innerHTML = `📅 Bugünün Değerleri: <strong>${todayCalc1}</strong> , <strong>${todayCalc2}</strong>`;
+document.getElementById('calc-result-1').innerHTML = `<strong>${calc1}</strong>`;
+document.getElementById('calc-result-2').innerHTML = `<strong>${calc2}</strong>`;
+
+// Eksik tarihleri göster
+const missingDatesHtml = missingDates.length > 0 
+? missingDates.map(date => {
+const d = new Date(date);
+return `<span class="missing-date-item">${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}</span>`;
+}).join('')
+: '<p style="text-align: center; color: #27ae60;">Tüm günlere veri girilmiş! 🎉</p>';
+document.getElementById('missing-dates-list').innerHTML = missingDatesHtml;
+
+// Grafik 1 oluştur
 if (specialChartInstance) specialChartInstance.destroy();
 const ctx = document.getElementById('specialCalcChart').getContext('2d');
 specialChartInstance = new Chart(ctx, {
 type: 'line',
 data: {
-labels: labels,
+labels: formattedLabels,
 datasets: [{
-label: 'Özel Hesaplama Değeri',
-data: calculatedValues,
+label: 'Grafik 1 Değeri',
+data: displayValues,
 borderColor: '#e74c3c',
 backgroundColor: 'rgba(231, 76, 60, 0.2)',
 tension: 0.3,
@@ -598,15 +723,87 @@ legend: { display: true }
 scales: {
 x: {
 title: { display: true, text: 'Tarih', font: { size: 12 } },
-grid: { display: false }
+grid: { display: false },
+ticks: {
+maxRotation: 45,
+minRotation: 45,
+autoSkip: true,
+maxTicksLimit: 20
+}
 },
 y: {
-title: { display: true, text: 'Hesaplanan Değer', font: { size: 12 } },
+title: { display: true, text: 'Değer', font: { size: 12 } },
 beginAtZero: false
 }
 }
 }
 });
+
+// Grafik 2 oluştur
+if (specialChartInstance2) specialChartInstance2.destroy();
+const ctx2 = document.getElementById('specialCalcChart2').getContext('2d');
+specialChartInstance2 = new Chart(ctx2, {
+type: 'line',
+data: {
+labels: formattedLabels,
+datasets: [{
+label: 'Grafik 2 Değeri',
+data: displayValues2,
+borderColor: '#9b59b6',
+backgroundColor: 'rgba(155, 89, 182, 0.2)',
+tension: 0.3,
+fill: true,
+pointRadius: 2,
+pointBackgroundColor: '#8e44ad',
+borderWidth: 2
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: true,
+plugins: {
+legend: { display: true }
+},
+scales: {
+x: {
+title: { display: true, text: 'Tarih', font: { size: 12 } },
+grid: { display: false },
+ticks: {
+maxRotation: 45,
+minRotation: 45,
+autoSkip: true,
+maxTicksLimit: 20
+}
+},
+y: {
+title: { display: true, text: 'Değer', font: { size: 12 } },
+beginAtZero: false
+}
+}
+}
+});
+}
+
+function adjustDateRange(delta) {
+const input = document.getElementById('days-range-input');
+let newValue = parseInt(input.value) || 0;
+newValue += delta;
+if (newValue < 0) newValue = 0;
+if (allSpecialData && newValue > allSpecialData.labels.length) {
+newValue = allSpecialData.labels.length;
+}
+input.value = newValue;
+applyDateRange();
+}
+
+function applyDateRange() {
+const input = document.getElementById('days-range-input');
+currentDaysRange = parseInt(input.value) || 0;
+if (currentDaysRange < 0) currentDaysRange = 0;
+if (allSpecialData && currentDaysRange > allSpecialData.labels.length) {
+currentDaysRange = allSpecialData.labels.length;
+}
+renderSpecialCharts();
 }
 
 function closeSpecialCalculation() {
